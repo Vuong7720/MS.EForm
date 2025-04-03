@@ -16,6 +16,7 @@ function configureRoutes(routesService: RoutesService) {
         layout: eLayoutType.application,
       },
       {
+        
         path: '/form-category',
         name: 'Danh mục biểu mẫu',
         iconClass: 'fas fa-list',
