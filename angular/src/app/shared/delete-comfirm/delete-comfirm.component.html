@@ -1,0 +1,39 @@
+<div class="modal-content">
+	<div class="modal-header">
+	  <h4 class="modal-title fw-bold">Cảnh báo</h4>
+	  <button
+		type="button"
+		class="btn-close"
+		data-dismiss="modal"
+		aria-label="Close"
+		(click)="activeModal.close('Close click')"
+	  ></button>
+	</div>
+	<!-- <form [formGroup]="form"> -->
+	  <div class="modal-body">
+		<nz-result nzStatus="info" nzTitle="Bạn xác nhận xóa ?">
+			<div nz-result-extra>
+			</div>
+		  </nz-result>
+	  </div>
+	  <div class="modal-footer">
+		<button
+		  (click)="activeModal.close('Close click')"
+		  class="btn btn-light btn-sm me-1"
+		  type="button"
+		  id="btn-add-category"
+		>
+		  <i class="fa fa-times" aria-hidden="true"></i> Đóng
+		</button>
+		&nbsp; &nbsp;
+		<button (click)="save()" class="btn btn-success btn-sm me-1">
+		  <i class="fa fa-floppy-o" aria-hidden="true"></i> Xóa
+		</button>
+	  </div>
+	<!-- </form> -->
+  </div>
+  
+  
+  
+  
+  

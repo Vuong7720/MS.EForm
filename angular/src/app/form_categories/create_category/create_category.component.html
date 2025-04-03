@@ -1,0 +1,45 @@
+<div class="modal-content">
+	<div class="modal-header">
+	  <h4 class="modal-title fw-bold">Thêm mới danh mục form</h4>
+	  <button
+		type="button"
+		class="btn-close"
+		data-dismiss="modal"
+		aria-label="Close"
+		(click)="activeModal.close('Close click')"
+	  ></button>
+	</div>
+	<!-- <form [formGroup]="form"> -->
+	  <div class="modal-body">
+  
+		<div class="mt-1">
+		  <label for="category-title" class="form-label fw-bold">Tên danh mục</label>
+		  <input nz-input rows="4" placeholder="Nhập tên danh mục">
+		</div>
+		<div class="mt-1 mb-5">
+			<label for="category-title" class="form-label fw-bold">Mô tả</label>
+			<textarea nz-input rows="4" placeholder="nhập mô tả"></textarea>
+		  </div>
+	  
+	  </div>
+	  <div class="modal-footer">
+		<button
+		  (click)="activeModal.close('Close click')"
+		  class="btn btn-light btn-sm me-1"
+		  type="button"
+		  id="btn-add-category"
+		>
+		  <i class="fa fa-times" aria-hidden="true"></i> Đóng
+		</button>
+		&nbsp; &nbsp;
+		<button (click)="save()" class="btn btn-success btn-sm me-1">
+		  <i class="fa fa-floppy-o" aria-hidden="true"></i> Cập nhật
+		</button>
+	  </div>
+	<!-- </form> -->
+  </div>
+  
+  
+  
+  
+  

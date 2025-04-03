@@ -1,0 +1,8 @@
+:host ::ng-deep .ant-upload-drag {
+  margin-bottom: 1rem !important;
+}
+
+:host ::ng-deep .ant-upload-list-text .ant-upload-list-item-name,
+.ant-upload-list-picture .ant-upload-list-item-name {
+  color: #a4a4a4 !important;
+}

@@ -1,0 +1,51 @@
+<div *nzModalTitle>
+  <h3 class="fw-bold">Upload file DOC</h3>
+</div>
+<nz-spin [nzSpinning]="isSpinning" [nzSize]="'large'">
+  <div>
+    <nz-upload
+      nzType="drag"
+      [nzMultiple]="false"
+      nzListType="text"
+      [nzAccept]="nzAccept"
+      [nzBeforeUpload]="OnBeforeUpload"
+      [nzLimit]="nzLimit"
+      [nzSize]="nzSize"
+      [nzRemove]="OnRemove"
+    >
+      <p class="ant-upload-drag-icon">
+        <span nz-icon nzType="inbox"></span>
+      </p>
+      <p class="ant-upload-text">Chọn file để upload</p>
+      <p class="ant-upload-hint text-left ps-5">
+        <span class="fw-bold"> Các định dạng file cho phép: </span>
+        Doc / Docx
+      </p>
+      <p class="ant-upload-hint text-left ps-5">
+        <span class="fw-bold">Số file / lần: </span>
+        1
+      </p>
+      <p class="ant-upload-hint text-left ps-5">
+        <span class="fw-bold">Dung lượng / 1 file: </span>
+        30 (Mb)
+      </p>
+      <p class="ant-upload-hint text-left ps-5">
+        <span class="fw-bold">File khoảng 15 trang quay lại </span>
+      </p>
+    </nz-upload>
+  </div>
+</nz-spin>
+<div *nzModalFooter>
+  <button
+    [disabled]="files.length === 0"
+    (click)="handleUpload()"
+    class="btn btn-sm btn-primary me-2"
+    [nzLoading]="isSpinning"
+    nz-button
+  >
+    <i class="bi-upload bi fs-4 me-2"></i> Upload
+  </button>
+  <a href="javascript:;" (click)="OnClose()" class="btn btn-sm btn-secondary me-2"
+    ><i class="fa fa-times fs-4 me-2"></i> Thoát</a
+  >
+</div>

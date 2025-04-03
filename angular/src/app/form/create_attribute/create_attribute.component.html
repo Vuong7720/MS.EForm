@@ -1,0 +1,41 @@
+<div class="modal-content">
+	<div class="modal-header">
+		<h4 class="modal-title fw-bold">Thêm mới thuộc tính</h4>
+		<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
+			(click)="activeModal.close('Close click')"></button>
+	</div>
+	<form [formGroup]="form">
+		<div class="modal-body">
+
+			<div class="mt-1">
+				<label for="category-title" class="form-label fw-bold">Tên thuộc tính</label>
+				<input nz-input formControlName="title" placeholder="Nhập tên thuộc tính">
+			</div>
+			<div class="mt-1">
+				<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label>
+				<input nz-input formControlName="code" placeholder="Nhập mã thuộc tính">
+			</div>
+			<div class="mt-1">
+				<label for="category-title" class="form-label fw-bold">Kiểu dữ liệu</label>
+				<div>
+					<nz-select nzShowSearch nzAllowClear nzPlaceHolder="Select a person" formControlName="type"
+						style="width: 100%;">
+						<nz-option nzLabel="text" nzValue="text"></nz-option>
+						<nz-option nzLabel="number" nzValue="number"></nz-option>
+						<nz-option nzLabel="select" nzValue="select"></nz-option>
+					</nz-select>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button (click)="activeModal.close('Close click')" class="btn btn-light btn-sm me-1" type="button"
+				id="btn-add-category">
+				<i class="fa fa-times" aria-hidden="true"></i> Đóng
+			</button>
+			&nbsp; &nbsp;
+			<button (click)="save()" class="btn btn-success btn-sm me-1">
+				<i class="fa fa-floppy-o" aria-hidden="true"></i> Cập nhật
+			</button>
+		</div>
+	</form>
+</div>

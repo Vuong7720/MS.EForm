@@ -1,0 +1,63 @@
+<div *nzModalTitle>
+  <h3 class="fw-bold">Nhập các thông tin</h3>
+</div>
+<nz-spin [nzSpinning]="isSpinning" [nzSize]="'large'">
+  <nz-form *ngIf="form" skipValidation [formGroup]="form">
+    <!-- Link trang web -->
+    <nz-form-item class="d-flex flex-column mb-2 fv-row">
+      <nz-form-label
+        [nzFor]="'pathContent'"
+        [nzNoColon]="true"
+        class="d-flex align-items-center fs-6 fw-semibold"
+      >
+        <span class="required">Nguồn</span>
+      </nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="pathContent" nzPlaceHolder="" nzAllowClear class="w-100">
+          <nz-option
+            *ngFor="let item of data"
+            [nzValue]="item.pathCloneContent"
+            [nzLabel]="item.title"
+          ></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+    <!-- Trang chi tiết -->
+    <nz-form-item class="d-flex flex-column mb-2 fv-row">
+      <nz-form-label
+        [nzFor]="'linkUrl'"
+        [nzNoColon]="true"
+        class="d-flex align-items-center fs-6 fw-semibold"
+      >
+        <span class="required">Trang chi tiết</span>
+      </nz-form-label>
+      <nz-form-control nzHasFeedback [nzErrorTip]="pathContentErrorTpl">
+        <input nz-input placeholder="" formControlName="linkUrl" />
+        <ng-template #pathContentErrorTpl let-control>
+          <ng-container *ngIf="control.hasError('required')"> Trường bắt buộc nhập </ng-container>
+          <ng-container *ngIf="control.hasError('minlength')">
+            Trang chi tiết tối thiểu 2 ký tự
+          </ng-container>
+          <ng-container *ngIf="control.hasError('maxlength')">
+            Trang chi tiết tối đa 350 ký tự
+          </ng-container>
+        </ng-template>
+      </nz-form-control>
+    </nz-form-item>
+  </nz-form>
+</nz-spin>
+<div *nzModalFooter>
+  <button
+    (click)="submitForm()"
+    *ngIf="form"
+    [disabled]="!form.valid"
+    class="btn btn-sm btn-primary me-2"
+    nz-button
+    [nzLoading]="isSpinning"
+  >
+    <i class="fa fa-clone fs-4 me-2"></i> Lấy nội dung
+  </button>
+  <a href="javascript:;" (click)="onBack()" class="btn btn-sm btn-secondary me-2"
+    ><i class="fa fa-times fs-4 me-2"></i> Đóng</a
+  >
+</div>

@@ -1,0 +1,51 @@
+<nz-spin [nzSpinning]="isSpinning" [nzSize]="'large'">
+  <ng-container *ngIf="disableTwoWayDataBinding">
+    <ckeditor
+      [editor]="Editor"
+      [config]="config"
+      [disabled]="readonly"
+      (ready)="onReady($event)"
+      [disableTwoWayDataBinding]="true"
+      [data]="value"
+      #editor
+    ></ckeditor>
+  </ng-container>
+  <ng-container *ngIf="!disableTwoWayDataBinding">
+    <ckeditor
+      [editor]="Editor"
+      [config]="config"
+      [disabled]="readonly"
+      (ready)="onReady($event)"
+      [(ngModel)]="value"
+      #editor
+    ></ckeditor>
+  </ng-container>
+  <!-- open file management -->
+  <a id="btnFCKChoosefile" hidden (click)="clkbtnFCKChoosefile()"></a>
+  <!-- Chọn file doc / docx -->
+  <a id="btnFCKCloneFromDoc" hidden (click)="onBtnFCKCloneFromDoc()"></a>
+  <!-- Chọn Clone từ 1 nguồn Url -->
+  <a id="btnFCKCloneFromLink" hidden (click)="onBtnFCKCloneFromLink()"></a>
+  <!-- Edit file ảnh -->
+  <a id="btnFCKEditFileImage" hidden (click)="clkbtnFCKEditImage()"></a>
+  <!-- Chọn template slides -->
+  <a id="btnSlidesManagerFCK" hidden (click)="clkbtnFCKSlidesManagerFCK()"></a>
+  <!-- Chọn template news -->
+  <a id="btnNewTemplatesManagerFCK" hidden (click)="btnNewTemplatesManagerFCK()"></a>
+</nz-spin>
+
+<!-- Công cụ chỉnh sửa ảnh -->
+<!-- <pintura-editor-modal
+  *ngIf="modalVisible"
+  [options]="editorOptions"
+  [src]="modalSrc"
+  [imageCropAspectRatio]="1"
+  (hide)="modalVisible = false"
+  (load)="handleModalLoad($event)"
+  (process)="handleModalProcess($event)"
+  [stickers]="stickers"
+  [cropSelectPresetOptions]="cropSelectPresetOptions"
+  [imageScrambler]="imageScrambler"
+  [fillOptions]="fillOptions"
+  [cropWillRenderTools]="cropWillRenderTools"
+></pintura-editor-modal> -->

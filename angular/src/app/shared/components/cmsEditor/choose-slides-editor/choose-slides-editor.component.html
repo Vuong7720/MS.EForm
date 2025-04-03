@@ -1,0 +1,121 @@
+<div *nzModalTitle>
+  <h3 class="fw-bold">Chọn 1 mẫu slide</h3>
+</div>
+<nz-spin [nzSpinning]="isSpinning" [nzSize]="'large'">
+  <div class="row">
+    <nz-image-group>
+      <nz-radio-group
+        [(ngModel)]="valueSlide"
+        (ngModelChange)="onChangSelectFileThumbRadio($event)"
+      >
+        <div class="row g-10">
+          <div class="col-6 col-sm-6 col-lg-4 col-xl-4 col-xxl-4" *ngFor="let img of listSlides">
+            <div class="card-xl-stretch">
+              <a class="d-block overlay" data-fslightbox="lightbox-hot-sales">
+                <div>
+                  <img
+                    style="height: 70px; object-fit: contain"
+                    nz-image
+                    class="me-3 symbol w-100"
+                    [nzSrc]="img.imageThumbs"
+                  />
+                </div>
+              </a>
+              <div class="mt-2">
+                <!--begin::Action-->
+                <div class="text-center">
+                  <div class="fw-semibold fs-8 text-gray-600 text-dark mt-2">
+                    {{ img.lable }}
+                  </div>
+                  <label [nzValue]="img" nz-radio class="fw-semibold fs-8 text-gray-600 text-dark"
+                    >Chọn</label
+                  >
+                </div>
+                <!--end::Action-->
+              </div>
+            </div>
+          </div>
+        </div>
+      </nz-radio-group>
+    </nz-image-group>
+    <!-- Danh sách ảnh đã chọn -->
+    <ng-container *ngIf="ImageInSlides?.length > 0">
+      <nz-divider nzPlain nzText="Danh sách ảnh đã chọn" nzOrientation="left"></nz-divider>
+      <div class="row" style="max-height: 300px; overflow-y: auto">
+        <div class="card mb-4" *ngFor="let img of ImageInSlides; let i = index">
+          <div class="card-body pt-3 p-0">
+            <div class="d-flex flex-wrap flex-sm-nowrap">
+              <div class="me-3 mb-3">
+                <div class="symbol symbol-100px symbol-fixed position-relative">
+                  <img [src]="apiUrl + img.link" class="object-fit-image" alt="" />
+                  <div class="w-100 text-center mt-1">
+                    <span
+                      class="box-action-item"
+                      nzTooltipColor="blue"
+                      nz-tooltip
+                      nzTooltipTitle="Xóa ảnh"
+                    >
+                      <a (click)="deleteItem(img.link)">
+                        <i class="fs-4 text-danger ki-outline ki-trash"></i>
+                      </a>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <!--begin::Info-->
+                <div class="d-flex flex-wrap justify-content-start">
+                  <!-- Form để nhập thông tin cho ảnh -->
+                  <div class="d-flex flex-wrap w-100">
+                    <textarea
+                      placeholder="Mô tả hình ảnh"
+                      [(ngModel)]="img.lable"
+                      class="form-control form-control-sm w-100 mb-1"
+                      (ngModelChange)="changTitle($event, i)"
+                      rows="3"
+                    ></textarea>
+                    <input
+                      placeholder="Số thứ tự"
+                      [(ngModel)]="img.order"
+                      class="form-control form-control-sm w-100"
+                      type="number"
+                      (ngModelChange)="changOrder($event, i)"
+                      min="1"
+                      max="9999"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</nz-spin>
+<div *nzModalFooter>
+  <span class="me-2 fw-semibold text-muted fs-8" *ngIf="ImageInSlides.length > 0">
+    {{ ImageInSlides.length }} ảnh đã chọn.
+  </span>
+  <button
+    (click)="onComplete()"
+    *ngIf="ImageInSlides.length > 1"
+    class="btn btn-sm btn-success"
+    nz-button
+    [nzLoading]="isSpinning"
+  >
+    <i class="fa fa-floppy-o fs-4 me-2"></i> Hoàn thành
+  </button>
+  <button
+    (click)="onChooseImages()"
+    *ngIf="valueSlide"
+    class="btn btn-sm btn-primary me-2"
+    nz-button
+    [nzLoading]="isSpinning"
+  >
+    <i class="bi bi-images fs-4 me-2"></i> Chọn ảnh
+  </button>
+  <a href="javascript:;" (click)="onBack()" class="btn btn-sm btn-secondary me-2"
+    ><i class="fa fa-times fs-4 me-2"></i> Đóng</a
+  >
+</div>

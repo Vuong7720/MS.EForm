@@ -1,0 +1,71 @@
+<div class="modal-content">
+	<div class="modal-header">
+		<h4 class="modal-title fw-bold">Thêm mới biểu mẫu</h4>
+		<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
+			(click)="activeModal.close('Close click')"></button>
+	</div>
+	<form [formGroup]="form">
+		<div class="modal-body">
+
+			<div class="mt-1">
+				<div class="row">
+					<div class="col-8">
+						<label for="category-title" class="form-label fw-bold">Tên biểu mẫu</label>
+						<input nz-input formControlName="title" placeholder="Nhập tên danh mục">
+					</div>
+					<div class="col-4">
+						<label for="category-title" class="form-label fw-bold">Danh mục</label>
+						<div>
+							<nz-select nzShowSearch nzAllowClear nzPlaceHolder="Select a person" formControlName="categoryId"
+								style="width: 100%;">
+								<nz-option nzLabel="Jack" nzValue="jack"></nz-option>
+								<nz-option nzLabel="Lucy" nzValue="lucy"></nz-option>
+								<nz-option nzLabel="Tom" nzValue="tom"></nz-option>
+							</nz-select>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="mt-1 mb-5">
+				<div class="row">
+					<div class="col-8">
+						<label for="category-title" class="form-label fw-bold">Nội dung biểu mẫu</label>
+						<app-editor id="editorSEOContent" [readonly]="false" formControlName="content" #editorSEOContent
+							[disableTwoWayDataBinding]="false" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+						</app-editor>
+
+					</div>
+					<div class="col-4">
+						<div class="d-flex align-items-center justify-content-between">
+							<label for="category-title" class="form-label fw-bold">Danh sách thuộc tính</label>
+							<button nz-button nzType="primary" 
+							nz-tooltip nzTooltipTitle="Thêm mới thuộc tính"
+							nzShape="circle" nzSize="small" (click)="addAttribute(null)">
+								<i class="bi bi-plus-circle-dotted"></i>
+							</button>
+						</div>
+						<nz-list nzBordered nzSize="small">
+							<nz-list-item *ngFor="let item of data" draggable="true" class="cursor-pointer"
+							  (dragstart)="onDragStart($event, item)">
+							  {{ item.title }}
+							</nz-list-item>
+						  </nz-list>
+						  
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button (click)="activeModal.close('Close click')" class="btn btn-light btn-sm me-1" type="button"
+				id="btn-add-category">
+				<i class="fa fa-times" aria-hidden="true"></i> Đóng
+			</button>
+			&nbsp; &nbsp;
+			<button (click)="save()" class="btn btn-success btn-sm me-1">
+				<i class="fa fa-floppy-o" aria-hidden="true"></i> Cập nhật
+			</button>
+		</div>
+	</form>
+</div>

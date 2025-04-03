@@ -1,0 +1,147 @@
+<div *nzModalTitle>
+  <h3 class="fw-bold">Chọn 1 mẫu hiển thị Box bài viết</h3>
+</div>
+<nz-spin [nzSpinning]="isSpinning" [nzSize]="'large'">
+  <div class="row">
+    <nz-image-group>
+      <nz-radio-group
+        [(ngModel)]="valueSlide"
+        (ngModelChange)="onChangSelectFileThumbRadio($event)"
+      >
+        <div class="row g-10">
+          <div class="col-6 col-sm-6 col-lg-4 col-xl-4 col-xxl-4" *ngFor="let img of listSlides">
+            <div class="card-xl-stretch">
+              <a class="d-block overlay" data-fslightbox="lightbox-hot-sales">
+                <div>
+                  <img
+                    style="height: 70px; object-fit: contain"
+                    nz-image
+                    class="me-3 symbol w-100"
+                    [nzSrc]="img.imageThumbs"
+                  />
+                </div>
+              </a>
+              <div class="mt-2">
+                <!--begin::Action-->
+                <div class="text-center">
+                  <div class="fw-semibold fs-8 text-gray-600 text-dark mt-2">
+                    {{ img.lable }}
+                  </div>
+                  <label [nzValue]="img" nz-radio class="fw-semibold fs-8 text-gray-600 text-dark"
+                    >Chọn</label
+                  >
+                </div>
+                <!--end::Action-->
+              </div>
+            </div>
+          </div>
+        </div>
+      </nz-radio-group>
+    </nz-image-group>
+    <!-- Danh sách bài viết đã chọn -->
+    <ng-container *ngIf="newRelateInfos?.length > 0">
+      <nz-divider nzPlain nzText="Danh sách bài viết đã chọn" nzOrientation="left"></nz-divider>
+      <div class="row" style="max-height: 300px; overflow-y: auto">
+        <div class="card mb-4" *ngFor="let img of newRelateInfos; let i = index">
+          <div class="card-body pt-3 p-0">
+            <div class="d-flex flex-wrap flex-sm-nowrap">
+              <div class="me-3 mb-3">
+                <div class="symbol symbol-175px symbol-fixed position-relative">
+                  <img [src]="GetImageUrl(img.image)" class="object-fit-image" alt="" />
+                  <div class="w-100 text-center mt-1">
+                    <span
+                      class="box-action-item"
+                      nzTooltipColor="blue"
+                      nz-tooltip
+                      nzTooltipTitle="Xóa bài viết"
+                    >
+                      <a (click)="deleteItem(img.id)">
+                        <i class="fs-4 text-danger ki-outline ki-trash"></i>
+                      </a>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <!--begin::Info-->
+                <div class="d-flex flex-wrap justify-content-start">
+                  <!-- Form để nhập thông tin cho bài viết -->
+                  <div class="d-flex flex-wrap w-100">
+                    <textarea
+                      placeholder="Tiêu đề bài viết"
+                      [(ngModel)]="img.title"
+                      class="form-control form-control-sm w-100 mb-1"
+                      (ngModelChange)="changTitle($event, i)"
+                      rows="2"
+                    ></textarea>
+                    <textarea
+                      placeholder="Mô tả bài viết"
+                      [(ngModel)]="img.description"
+                      class="form-control form-control-sm w-100 mb-1"
+                      (ngModelChange)="changDes($event, i)"
+                      rows="5"
+                    ></textarea>
+                    <input
+                      placeholder="Số thứ tự"
+                      [(ngModel)]="img.order"
+                      class="form-control form-control-sm w-100"
+                      type="number"
+                      (ngModelChange)="changOrder($event, i)"
+                      min="1"
+                      max="9999"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</nz-spin>
+<div *nzModalFooter>
+  <!-- TextBox nhập tiêu đề Box title -->
+  <ng-container
+    *ngIf="
+      valueSlide &&
+      (valueSlide.slideType === templateNews.TMPTITLEDESCRIPTIONIMAGE ||
+        valueSlide.slideType === templateNews.TMPTITLE ||
+        valueSlide.slideType === templateNews.TMPBOX5 ||
+        valueSlide.slideType === templateNews.TMPBOX8)
+    "
+  >
+    <div style="float: left" class="d-flex align-items-center position-relative float-start ms-2">
+      <input
+        type="text"
+        class="form-control form-control-sm w-250px"
+        placeholder="Tiêu đề Box bài viết"
+        [(ngModel)]="titleBox"
+      />
+    </div>
+  </ng-container>
+  <span class="me-2 fw-semibold text-muted fs-8" *ngIf="newRelateInfos.length > 0">
+    {{ newRelateInfos.length }} bài viết đã chọn.
+  </span>
+  <button
+    (click)="onComplete()"
+    *ngIf="newRelateInfos.length > 0"
+    class="btn btn-sm btn-success"
+    nz-button
+    [nzLoading]="isSpinning"
+  >
+    <i class="fa fa-floppy-o fs-4 me-2"></i> Hoàn thành
+  </button>
+  <button
+    (click)="onChooseBaiViets()"
+    *ngIf="valueSlide"
+    class="btn btn-sm btn-primary me-2"
+    nz-button
+    [nzLoading]="isSpinning"
+  >
+    <i class="fa-solid fa-newspaper fs-4 me-2"></i> Chọn bài viết
+  </button>
+  <a href="javascript:;" (click)="onBack()" class="btn btn-sm btn-secondary me-2"
+    ><i class="fa fa-times fs-4 me-2"></i> Đóng</a
+  >
+</div>
