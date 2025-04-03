@@ -118,7 +118,26 @@ namespace MS.EForm.FormServices
 				result.Content = model.Content;
 				result.CategoryId = model.CategoryId;
 
-				await _repository.InsertAsync(result);
+				var insert = await _repository.InsertAsync(result);
+
+				if (model.FormFields!= null && model.FormFields.Any())
+				{
+					var lstField = model.FormFields
+					.Select(a => new FormField
+					{
+						Title = a.Title,
+						Code = a.Code,
+						Type = a.Type,
+						Config = a.Config,
+						FormId = insert.Id
+					})
+					.ToList();
+					if (lstField.Any())
+					{
+						await _formFieldRepository.InsertManyAsync(lstField);
+					}
+				}
+
 				return new MessageDto
 				{
 					Status = true,

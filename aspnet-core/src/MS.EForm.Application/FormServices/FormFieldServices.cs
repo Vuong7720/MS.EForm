@@ -4,6 +4,7 @@ using EForm.IFormServices;
 using Microsoft.Extensions.Configuration;
 using MS.EForm.FormModels.FormCategories;
 using MS.EForm.FormModels.FormFields;
+using MS.EForm.FormModels.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -312,6 +313,29 @@ namespace MS.EForm.FormServices
 			);
 		}
 
+		// get field by formId
+		public async Task<List<FormFieldDto>> GetFieldByFormId(Guid formId)
+		{
+			var field = await _repository.GetQueryableAsync();
+			if (field.Any())
+			{
+				var query = field.Where(a => a.FormId == formId).ToList();
+				if(query != null)
+				{
+					var result = query.Select(a => new FormFieldDto {
+						Title = a.Title,
+						Code = a.Code,
+						Type = a.Type,
+						Config = a.Config,
+						FormId = a.FormId
+					}).ToList();
+
+					return result;
+
+				}
+			}
+			return new List<FormFieldDto>();
+		}
 
 
 

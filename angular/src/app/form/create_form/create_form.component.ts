@@ -103,7 +103,6 @@ export class CreateFormComponent implements OnInit  {
   
       if (editorInstance) {
         let fieldHtml = "";
-  
           switch (item.type) {
             case 1: // Input text
             case 2: // Datetime picker

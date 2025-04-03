@@ -913,6 +913,43 @@
               "allowAnonymous": null,
               "implementFrom": "MS.EForm.Controllers.EFormController"
             },
+            "DeleteMultiFormCategoryByIds": {
+              "uniqueName": "DeleteMultiFormCategoryByIds",
+              "name": "DeleteMultiFormCategory",
+              "httpMethod": "DELETE",
+              "url": "api/eform/delete-multi-form-category",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "ids",
+                  "typeAsString": "System.Collections.Generic.List`1[[System.Guid, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                  "type": "System.Collections.Generic.List<System.Guid>",
+                  "typeSimple": "[string]",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "ids",
+                  "name": "ids",
+                  "jsonName": null,
+                  "type": "System.Collections.Generic.List<System.Guid>",
+                  "typeSimple": "[string]",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "EForm.MessageDto",
+                "typeSimple": "EForm.MessageDto"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MS.EForm.Controllers.EFormController"
+            },
             "GetAllFormCate": {
               "uniqueName": "GetAllFormCate",
               "name": "GetAllFormCate",
@@ -981,6 +1018,43 @@
               "returnValue": {
                 "type": "Volo.Abp.Application.Dtos.PagedResultDto<MS.EForm.FormModels.FormCategories.FormCategoryDto>",
                 "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MS.EForm.FormModels.FormCategories.FormCategoryDto>"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MS.EForm.Controllers.EFormController"
+            },
+            "GetCategoryByIdById": {
+              "uniqueName": "GetCategoryByIdById",
+              "name": "GetCategoryById",
+              "httpMethod": "GET",
+              "url": "api/eform/get-category-by-id",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MS.EForm.FormModels.FormCategories.FormCategoryDto",
+                "typeSimple": "MS.EForm.FormModels.FormCategories.FormCategoryDto"
               },
               "allowAnonymous": null,
               "implementFrom": "MS.EForm.Controllers.EFormController"
@@ -1221,6 +1295,43 @@
               "returnValue": {
                 "type": "Volo.Abp.Application.Dtos.PagedResultDto<MS.EForm.FormModels.FormFields.FormFieldDto>",
                 "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MS.EForm.FormModels.FormFields.FormFieldDto>"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MS.EForm.Controllers.EFormController"
+            },
+            "GetFieldByFormIdByFormId": {
+              "uniqueName": "GetFieldByFormIdByFormId",
+              "name": "GetFieldByFormId",
+              "httpMethod": "GET",
+              "url": "api/eform/get-form-field-by-formid",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "formId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "formId",
+                  "name": "formId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MS.EForm.FormModels.FormFields.FormFieldDto>",
+                "typeSimple": "[MS.EForm.FormModels.FormFields.FormFieldDto]"
               },
               "allowAnonymous": null,
               "implementFrom": "MS.EForm.Controllers.EFormController"
@@ -4435,6 +4546,18 @@
           "jsonName": null,
           "type": "System.Guid?",
           "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FormFields",
+          "jsonName": null,
+          "type": "[MS.EForm.FormModels.FormFields.CreateUpdateFormField]",
+          "typeSimple": "[MS.EForm.FormModels.FormFields.CreateUpdateFormField]",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,

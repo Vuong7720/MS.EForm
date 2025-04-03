@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MS.EForm.FormModels.FormFields;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,5 +12,6 @@ namespace MS.EForm.FormModels.Forms
 		public string Title { get; set; }
 		public string? Content { get; set; }
 		public Guid? CategoryId { get; set; }
+		public List<CreateUpdateFormField>? FormFields { get; set; }
 	}
 }

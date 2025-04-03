@@ -67,6 +67,15 @@ export class EFormService {
     { apiName: this.apiName,...config });
   
 
+  deleteMultiFormCategoryByIds = (ids: string[], config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'DELETE',
+      url: '/api/eform/delete-multi-form-category',
+      params: { ids },
+    },
+    { apiName: this.apiName,...config });
+  
+
   get = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, FormDto>({
       method: 'GET',
@@ -114,6 +123,24 @@ export class EFormService {
       method: 'GET',
       url: '/api/eform/get-paging-form-field',
       params: { pageNumber, pageSize },
+    },
+    { apiName: this.apiName,...config });
+  
+
+  getCategoryByIdById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, FormCategoryDto>({
+      method: 'GET',
+      url: '/api/eform/get-category-by-id',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+  
+
+  getFieldByFormIdByFormId = (formId: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, FormFieldDto[]>({
+      method: 'GET',
+      url: '/api/eform/get-form-field-by-formid',
+      params: { formId },
     },
     { apiName: this.apiName,...config });
   

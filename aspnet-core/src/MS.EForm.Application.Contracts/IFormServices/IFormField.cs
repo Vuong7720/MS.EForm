@@ -18,5 +18,6 @@ namespace EForm.IFormServices
 		Task<List<FormFieldDto>> GetAllFormField();
 		Task<FormFieldDto> GetFormFieldById(Guid id);
 		Task<PagedResultDto<FormFieldDto>> GetAllFormFieldPagedAsync(int pageNumber, int pageSize);
+		Task<List<FormFieldDto>> GetFieldByFormId(Guid formId);
 	}
 }

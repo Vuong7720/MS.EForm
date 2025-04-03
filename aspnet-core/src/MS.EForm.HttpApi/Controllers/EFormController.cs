@@ -53,6 +53,12 @@ public class EFormController : AbpControllerBase
 		return await _formCategory.DeleteFormCategory(id);
 	}
 
+	[HttpDelete("delete-multi-form-category")]
+	public async Task<MessageDto> DeleteMultiFormCategory(List<Guid> ids)
+	{
+		return await _formCategory.DeleteMultiFormCategory(ids);	
+	}
+
 	[HttpGet("get-all-form-category")]
 	public async Task<List<FormCategoryDto>> GetAllFormCate()
 	{
@@ -63,6 +69,12 @@ public class EFormController : AbpControllerBase
 	public async Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
 	{
 		return await _formCategory.GetAllFormCatePagedAsync(pageNumber, pageSize);
+	}
+
+	[HttpGet("get-category-by-id")]
+	public async Task<FormCategoryDto> GetCategoryById(Guid id)
+	{
+		return await _formCategory.GetCategoryById(id);
 	}
 
 	#endregion
@@ -104,6 +116,12 @@ public class EFormController : AbpControllerBase
 	public async Task<PagedResultDto<FormFieldDto>> GetAllFormFieldPagedAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
 	{
 		return await _formField.GetAllFormFieldPagedAsync(pageNumber, pageSize);
+	}
+
+	[HttpGet("get-form-field-by-formid")]
+	public async Task<List<FormFieldDto>> GetFieldByFormId(Guid formId)
+	{
+		return await _formField.GetFieldByFormId(formId);
 	}
 
 	#endregion

@@ -14,7 +14,7 @@ import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { CreateCategoryComponent } from './create_category/create_category.component';
-
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 @NgModule({
   declarations: [FormCategoryComponent, CreateCategoryComponent],
   imports: [
@@ -29,7 +29,8 @@ import { CreateCategoryComponent } from './create_category/create_category.compo
     NzPageHeaderModule,
     NzSpaceModule,
     NzDividerModule,
-    NzDropDownModule
+    NzDropDownModule,
+    NzInputNumberModule
   ],
 })
 export class FormCategoryModule {}

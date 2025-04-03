@@ -14,7 +14,9 @@ namespace EForm.IFormServices
 		Task<MessageDto> CreateFormCategory(CreateUpdateFormCateDto model);
 		Task<MessageDto> UpdateFormCategory(Guid id, CreateUpdateFormCateDto model);
 		Task<MessageDto> DeleteFormCategory(Guid id);
+		Task<MessageDto> DeleteMultiFormCategory(List<Guid> ids);
 		Task<List<FormCategoryDto>> GetAllFormCate();
 		Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(int pageNumber, int pageSize);
+		Task<FormCategoryDto> GetCategoryById(Guid id);
 	}
 }

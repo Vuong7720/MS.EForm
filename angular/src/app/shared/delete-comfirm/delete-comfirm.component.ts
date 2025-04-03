@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 @Component({
@@ -9,6 +9,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 })
 export class DeleteComfirmComponent implements OnInit {
   form: FormGroup;
+  @Output() success = new EventEmitter();
   constructor( public activeModal: NgbActiveModal){
 
   }
@@ -18,6 +19,7 @@ export class DeleteComfirmComponent implements OnInit {
 
   
   save(){
-
+    this.success.emit(true);
+    this.activeModal.close();
   }
 }

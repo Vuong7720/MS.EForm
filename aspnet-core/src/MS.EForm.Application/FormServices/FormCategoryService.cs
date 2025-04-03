@@ -27,20 +27,36 @@ namespace EForm.FormServices
 			_repository = repository;
 		}
 
-		private async Task<bool> CheckTitleMach(string title, Guid? id)
+		private async Task<MessageDto> CheckTitleMach(string? title, Guid? id)
 		{
-			var result = await _repository.FindAsync(a => a.Title.Contains(title) && a.Id != id);
-			if(result != null)
+			if (string.IsNullOrEmpty(title))
 			{
-				return true;
+				return new MessageDto
+				{
+					Status = false,
+					Messages = "Tên danh mục không được bỏ trống !"
+				};
 			}
-			return false;
+			var result = await _repository.FindAsync(a => a.Title.Contains(title) && a.Id != id);
+			if (result != null)
+			{
+				return new MessageDto
+				{
+					Status = false,
+					Messages = "Tên danh mục đã có. vui lòng nhập tên khác !"
+				};
+			}
+			return new MessageDto
+			{
+				Status = true,
+				Messages = "Hợp lệ"
+			};
 		}
 
 		// thêm mới anh mục form
 		public async Task<MessageDto> CreateFormCategory(CreateUpdateFormCateDto model)
 		{
-			if(model == null)
+			if (model == null)
 			{
 				return new MessageDto
 				{
@@ -48,21 +64,14 @@ namespace EForm.FormServices
 					Messages = "Không có dữ liệu truyền vào"
 				};
 			}
-			if(model.Title != null && model.Title != "")
+			var check = await CheckTitleMach(model.Title, null);
+			if (!check.Status)
 			{
-				var check = await CheckTitleMach(model.Title, null);
-				if (check)
-				{
-					return new MessageDto
-					{
-						Status = false,
-						Messages = "Tên danh mục đã có. vui lòng nhập tên khác!"
-					};
-				}
+				return check;
 			}
 
 			var result = new FormCategories();
-			result.Title = model.Title; 
+			result.Title = model.Title;
 			result.Description = model.Description;
 			result.Index = model.Index;
 
@@ -78,20 +87,14 @@ namespace EForm.FormServices
 		//cập nhật danh mục form
 		public async Task<MessageDto> UpdateFormCategory(Guid id, CreateUpdateFormCateDto model)
 		{
-			if (model.Title != null && model.Title != "")
+
+			var check = await CheckTitleMach(model.Title, id);
+			if (!check.Status)
 			{
-				var check = await CheckTitleMach(model.Title, id);
-				if (check)
-				{
-					return new MessageDto
-					{
-						Status = false,
-						Messages = "Tên danh mục đã có. vui lòng nhập tên khác!"
-					};
-				}
+				return check;
 			}
 			var categories = await _repository.FirstOrDefaultAsync(a => a.Id == id);
-			if(categories != null)
+			if (categories != null)
 			{
 				categories.Title = model.Title;
 				categories.Description = model.Description;
@@ -113,7 +116,7 @@ namespace EForm.FormServices
 		public async Task<MessageDto> DeleteFormCategory(Guid id)
 		{
 			var query = await _repository.FindAsync(id);
-			if(query != null)
+			if (query != null)
 			{
 				await _repository.DeleteAsync(query);
 				return new MessageDto
@@ -128,6 +131,52 @@ namespace EForm.FormServices
 				Messages = "Không tồn tại danh mục này"
 			};
 		}
+
+		// xóa danh mục form theo danh sách id
+		public async Task<MessageDto> DeleteMultiFormCategory(List<Guid> ids)
+		{
+			if (ids == null || !ids.Any())
+			{
+				return new MessageDto
+				{
+					Status = false,
+					Messages = "Danh sách ID không hợp lệ"
+				};
+			}
+
+			var query = await _repository.GetQueryableAsync();
+
+			if (query == null)
+			{
+				return new MessageDto
+				{
+					Status = false,
+					Messages = "Không thể truy vấn danh mục"
+				};
+			}
+
+			// Lọc các danh mục có trong danh sách cần xóa
+			var categoriesToDelete = query.Where(a => ids.Contains(a.Id)).ToList();
+
+			if (!categoriesToDelete.Any())
+			{
+				return new MessageDto
+				{
+					Status = false,
+					Messages = "Không tìm thấy danh mục cần xóa"
+				};
+			}
+
+			// Xóa danh mục
+			await _repository.DeleteManyAsync(categoriesToDelete);
+
+			return new MessageDto
+			{
+				Status = true,
+				Messages = $"Đã xóa {categoriesToDelete.Count} danh mục thành công"
+			};
+		}
+
 
 		// get all danh mục form
 		public async Task<List<FormCategoryDto>> GetAllFormCate()
@@ -171,6 +220,21 @@ namespace EForm.FormServices
 				totalCount,  // Tổng số bản ghi
 				items        // Danh sách sau khi phân trang
 			);
+		}
+
+		public async Task<FormCategoryDto> GetCategoryById(Guid id)
+		{
+			var allCate = await _repository.FindAsync(id);
+			if(allCate != null)
+			{
+				return new FormCategoryDto
+				{
+					Title = allCate.Title,
+					Description= allCate.Description,
+					Index = allCate.Index
+				};
+			}
+			return new FormCategoryDto();
 		}
 
 	}
