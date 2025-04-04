@@ -16,7 +16,7 @@ namespace EForm.IFormServices
 		Task<MessageDto> DeleteFormCategory(Guid id);
 		Task<MessageDto> DeleteMultiFormCategory(List<Guid> ids);
 		Task<List<FormCategoryDto>> GetAllFormCate();
-		Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(int pageNumber, int pageSize);
+		Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(CatePagingDto page);
 		Task<FormCategoryDto> GetCategoryById(Guid id);
 	}
 }

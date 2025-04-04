@@ -4,8 +4,9 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CreateCategoryComponent } from './create_category/create_category.component';
 import { DeleteComfirmComponent } from '../shared/delete-comfirm/delete-comfirm.component';
 import { EFormService } from '@proxy/controllers';
-import { FormCategoryDto } from '@proxy/form-models/form-categories';
+import { CatePagingDto, FormCategoryDto } from '@proxy/form-models/form-categories';
 import { ToasterService } from '@abp/ng.theme.shared';
+import { NzTableQueryParams } from 'ng-zorro-antd/table';
 
 @Component({
   standalone: false,
@@ -22,6 +23,12 @@ export class FormCategoryComponent implements OnInit {
   listOfCurrentPageData: readonly FormCategoryDto[] = [];
   setOfCheckedId = new Set<string>();
   lstId = [];
+  totalCount: number
+  pageCate = {
+    pageIndex: 1,
+    pageSize: 10
+  }as CatePagingDto;
+  searchTitle:string = "";
 
   constructor(
     private modalService: NgbModal,
@@ -30,16 +37,16 @@ export class FormCategoryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.getPagingCategory(1, 10);
+    this.getPagingCategory(this.pageCate);
   }
 
-  getPagingCategory(pageNumber: number, pageSize: number) {
-    if (pageNumber != null && pageSize != null) {
-      this.service.getAllFormCatePaged(pageNumber, pageSize).subscribe(res => {
+  getPagingCategory(pageCate: CatePagingDto) {
+      this.service.getAllFormCatePaged(this.pageCate).subscribe(res => {
         this.dataResultPaging = res;
+        this.totalCount = res.totalCount;
         this.formCategory = res.items;
+        console.log(res.items.length)
       });
-    }
   }
 
   addCategory(id: string) {
@@ -50,7 +57,7 @@ export class FormCategoryComponent implements OnInit {
     });
     modalRef.componentInstance.Id = id;
     modalRef.componentInstance.categoryUpdate.subscribe(res => {
-      this.getPagingCategory(1, 10);
+      this.getPagingCategory(this.pageCate);
     });
   }
 
@@ -65,7 +72,7 @@ export class FormCategoryComponent implements OnInit {
       this.service.deleteFormCategoryById(id).subscribe(res => {
         if (res.status) {
           this.toasterService.success(res.messages);
-          this.getPagingCategory(1, 10);
+          this.getPagingCategory(this.pageCate);
         } else {
           this.toasterService.error(res.messages);
         }
@@ -85,7 +92,7 @@ export class FormCategoryComponent implements OnInit {
         this.service.deleteMultiFormCategoryByIds(this.lstId).subscribe(res => {
           if (res.status) {
             this.toasterService.success(res.messages);
-            this.getPagingCategory(1, 10);
+            this.getPagingCategory(this.pageCate);
           } else {
             this.toasterService.error(res.messages);
           }
@@ -93,6 +100,21 @@ export class FormCategoryComponent implements OnInit {
       });
     }
   }
+  search(event){
+    const inputValue = event.target.value;
+    this.pageCate.title = inputValue;
+    this.getPagingCategory(this.pageCate);
+  }
+
+  // phân trang
+  onQueryParamsChange(params: NzTableQueryParams): void {
+    const { pageSize, pageIndex, sort, filter } = params;
+    const currentSort = sort.find(item => item.value !== null);
+    this.pageCate.pageIndex = params.pageIndex;
+    this.pageCate.pageSize = params.pageSize;
+    this.getPagingCategory(this.pageCate);
+  }
+
 
   updateCheckedSet(id: string, checked: boolean): void {
     if (checked) {

@@ -66,9 +66,9 @@ public class EFormController : AbpControllerBase
 	}
 
 	[HttpGet("get-paging-form-category")]
-	public async Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+	public async Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(CatePagingDto page)
 	{
-		return await _formCategory.GetAllFormCatePagedAsync(pageNumber, pageSize);
+		return await _formCategory.GetAllFormCatePagedAsync(page);
 	}
 
 	[HttpGet("get-category-by-id")]

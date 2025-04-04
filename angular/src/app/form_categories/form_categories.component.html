@@ -1,51 +1,60 @@
 <nz-page-header [nzGhost]="false">
 	<nz-page-header-title>Danh mục form</nz-page-header-title>
 	<nz-page-header-extra>
-	  <nz-space>
-		<button *nzSpaceItem nz-button nzType="primary" (click)="addCategory(null)">Thêm mới</button>
-		<button *nzSpaceItem nz-button nzType="default" nzDanger (click)="deleteMultiCate()" [disabled]="lstId.length <= 0 ">Xóa tất cả</button>
-	  </nz-space>
+		<nz-space>
+		
+		</nz-space>
+		<nz-space>
+			<button *nzSpaceItem nz-button nzType="primary" (click)="addCategory(null)">Thêm mới</button>
+			<button *nzSpaceItem nz-button nzType="default" nzDanger (click)="deleteMultiCate()"
+				[disabled]="lstId.length <= 0 ">Xóa tất cả ({{lstId.length}})</button>
+		</nz-space>
 	</nz-page-header-extra>
-  </nz-page-header>
+	<nz-page-header-content>
+        <nz-descriptions nzSize="small" [nzColumn]="3">
+			<nz-descriptions-item nzTitle="Tìm kiếm" [nzSpan]="1">
+				<nz-input-group ([ngModel])="searchTitle" nzSearch>
+					<input type="text" nz-input placeholder="Nhập tên danh mục" (change)="search($event)"/>
+				  </nz-input-group>
+				  
+			</nz-descriptions-item>
 
-  <nz-table #basicTable [nzData]="formCategory" (nzCurrentPageDataChange)="onCurrentPageDataChange($event)">
+		</nz-descriptions>
+	</nz-page-header-content>
+</nz-page-header>
+<nz-table #basicTable [nzData]="dataResultPaging.items" [nzShowPagination]="true" [nzFrontPagination]="false" nzShowSizeChanger [nzLoading]="loading"
+[nzTotal]="totalCount"
+	(nzQueryParams)="onQueryParamsChange($event)" (nzCurrentPageDataChange)="onCurrentPageDataChange($event)">
 	<thead>
-	  <tr>
-		<th
-            [nzChecked]="checked"
-            [nzIndeterminate]="indeterminate"
-            nzLabel="Select all"
-            (nzCheckedChange)="onAllChecked($event)"
-          ></th>
-		<th>TT</th>
-		<th>Tên danh mục</th>
-		<th>Mô tả</th>
-		<th><i class="bi bi-gear-wide"></i></th>
-	  </tr>
+		<tr>
+			<th [nzChecked]="checked" [nzIndeterminate]="indeterminate" nzLabel="Select all"
+				(nzCheckedChange)="onAllChecked($event)"></th>
+			<th>TT</th>
+			<th>Tên danh mục</th>
+			<th>Mô tả</th>
+			<th>Thứ tự</th>
+			<th><i class="bi bi-gear-wide"></i></th>
+		</tr>
 	</thead>
 	<tbody>
 		<tr *ngFor="let data of basicTable.data; let i = index">
-			<td
-              [nzChecked]="setOfCheckedId.has(data.id)"
-              [nzDisabled]="data.disabled"
-              [nzLabel]="data.name"
-              (nzCheckedChange)="onItemChecked(data.id, $event)"
-            ></td>
-		  <td>{{ i+1 }}</td>
-		  <td>{{ data.title }}</td>
-		  <td>{{ data.description }}</td>
-		  <td>
-			<a nz-dropdown [nzDropdownMenu]="menu">
-				<i class="bi bi-three-dots-vertical"></i>
-			  </a>
-			  <nz-dropdown-menu #menu="nzDropdownMenu">
-				<ul nz-menu nzSelectable>
-				  <li nz-menu-item (click)="addCategory(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
-				  <li nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
-				</ul>
-			  </nz-dropdown-menu>
-		  </td>
+			<td [nzChecked]="setOfCheckedId.has(data.id)" [nzDisabled]="data.disabled" [nzLabel]="data.name"
+				(nzCheckedChange)="onItemChecked(data.id, $event)"></td>
+			<td>{{ i+1 }}</td>
+			<td>{{ data.title }}</td>
+			<td>{{ data.description }}</td>
+			<td>{{ data.index }}</td>
+			<td>
+				<a nz-dropdown [nzDropdownMenu]="menu">
+					<i class="bi bi-three-dots-vertical"></i>
+				</a>
+				<nz-dropdown-menu #menu="nzDropdownMenu">
+					<ul nz-menu nzSelectable>
+						<li nz-menu-item (click)="addCategory(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
+						<li nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
+					</ul>
+				</nz-dropdown-menu>
+			</td>
 		</tr>
 	</tbody>
-  </nz-table>
-
+</nz-table>

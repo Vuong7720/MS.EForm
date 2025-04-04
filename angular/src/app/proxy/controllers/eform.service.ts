@@ -2,7 +2,7 @@ import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
-import type { CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
+import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
 import type { CreateUpdateForm, FormDto } from '../form-models/forms/models';
 
@@ -101,11 +101,11 @@ export class EFormService {
     { apiName: this.apiName,...config });
   
 
-  getAllFormCatePaged = (pageNumber: number = 1, pageSize: number = 10, config?: Partial<Rest.Config>) =>
+  getAllFormCatePaged = (page: CatePagingDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<FormCategoryDto>>({
       method: 'GET',
       url: '/api/eform/get-paging-form-category',
-      params: { pageNumber, pageSize },
+      params: { title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
     },
     { apiName: this.apiName,...config });
   

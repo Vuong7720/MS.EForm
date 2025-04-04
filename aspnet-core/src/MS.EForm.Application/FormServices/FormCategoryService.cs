@@ -197,16 +197,19 @@ namespace EForm.FormServices
 		}
 
 		// get phân trang danh mục form
-		public async Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(int pageNumber, int pageSize)
+		public async Task<PagedResultDto<FormCategoryDto>> GetAllFormCatePagedAsync(CatePagingDto page)
 		{
 			var query = await _repository.GetQueryableAsync();
 
+			if (!string.IsNullOrEmpty(page.Title))
+			{
+				query = query.Where(a => a.Title.ToLower().Contains(page.Title.ToLower()));
+			}
 			var totalCount = query.Count(); // Tổng số bản ghi
-
 			var items = query
 				.OrderBy(c => c.Index)
-				.Skip((pageNumber - 1) * pageSize)
-				.Take(pageSize)
+				.Skip((page.PageIndex - 1) * page.PageSize)
+				.Take(page.PageSize)
 				.Select(a => new FormCategoryDto
 				{
 					Title = a.Title,
