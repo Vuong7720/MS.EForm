@@ -1,41 +1,49 @@
-<div class="modal-content">
-	<div class="modal-header">
-		<h4 class="modal-title fw-bold">Thêm mới thuộc tính</h4>
-		<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
-			(click)="activeModal.close('Close click')"></button>
+<div *nzModalTitle>
+	<h3 class="fw-bold">
+		Thêm mới thuộc tính
+	</h3>
+</div>
+<form [formGroup]="form">
+	<div class="mt-1">
+		<label for="category-title" class="form-label fw-bold">Tên thuộc tính</label><span class="text-danger">*</span>
+		<input nz-input formControlName="title" placeholder="Nhập tên thuộc tính"
+			(ngModelChange)="onTitleChange($event)">
+		<div class="text-danger" *ngIf="form.get('title')?.invalid && form.get('title')?.touched">
+			<div *ngIf="form.get('title')?.errors?.['required']">
+				Vui lòng nhập tên thuộc tính!
+			</div>
+			<div *ngIf="form.get('title')?.errors?.['maxlength']">
+				Tên thuộc tính không được vượt quá 128 ký tự!
+			</div>
+			<div *ngIf="form.get('title')?.errors?.['duplicate']">
+				Tên thuộc tính đã tồn tại!
+			  </div>
+		</div>
 	</div>
-	<form [formGroup]="form">
-		<div class="modal-body">
+	<div class="mt-1">
+		<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label>
+		<input nz-input formControlName="code" placeholder="Gợi ý mã tự động sinh">
+		<div *ngIf="form.get('code')?.hasError('duplicate')" class="text-danger">
+			Mã thuộc tính đã tồn tại, xin Hoàng thượng nhập mã khác ạ!
+		  </div>
+	</div>
+	<div class="mt-1">
+		<label for="category-title" class="form-label fw-bold">Kiểu dữ liệu</label>
+		<div>
+			<nz-select nzShowSearch nzPlaceHolder="Select a person" formControlName="type"
+				style="width: 100%;">
+				<nz-option *ngFor="let item of lstDataType" [nzLabel]="item.title" [nzValue]="item.value"></nz-option>
+			</nz-select>
+		</div>
+	</div>
+</form>
 
-			<div class="mt-1">
-				<label for="category-title" class="form-label fw-bold">Tên thuộc tính</label>
-				<input nz-input formControlName="title" placeholder="Nhập tên thuộc tính">
-			</div>
-			<div class="mt-1">
-				<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label>
-				<input nz-input formControlName="code" placeholder="Nhập mã thuộc tính">
-			</div>
-			<div class="mt-1">
-				<label for="category-title" class="form-label fw-bold">Kiểu dữ liệu</label>
-				<div>
-					<nz-select nzShowSearch nzAllowClear nzPlaceHolder="Select a person" formControlName="type"
-						style="width: 100%;">
-						<nz-option nzLabel="text" nzValue="text"></nz-option>
-						<nz-option nzLabel="number" nzValue="number"></nz-option>
-						<nz-option nzLabel="select" nzValue="select"></nz-option>
-					</nz-select>
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<button (click)="activeModal.close('Close click')" class="btn btn-light btn-sm me-1" type="button"
-				id="btn-add-category">
-				<i class="fa fa-times" aria-hidden="true"></i> Đóng
-			</button>
-			&nbsp; &nbsp;
-			<button (click)="save()" class="btn btn-success btn-sm me-1">
-				<i class="fa fa-floppy-o" aria-hidden="true"></i> Cập nhật
-			</button>
-		</div>
-	</form>
+<div *nzModalFooter>
+	<button (click)="onBack()" class="btn btn-light btn-sm me-1" type="button" id="btn-add-category">
+		<i class="fa fa-times" aria-hidden="true"></i> Đóng
+	</button>
+	&nbsp; &nbsp;
+	<button (click)="save()" class="btn btn-success btn-sm me-1">
+		<i class="fa fa-floppy-o" aria-hidden="true"></i> Cập nhật
+	</button>
 </div>

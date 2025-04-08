@@ -13,6 +13,6 @@ namespace MS.EForm.FormModels.FormFields
 		public string Code { get; set; }
 		public TypeField Type { get; set; }
 		public string? Config { get; set; }
-		public Guid FormId { get; set; }
+		public Guid? FormId { get; set; }
 	}
 }

@@ -71,10 +71,9 @@ namespace MS.EForm.FormServices
 			};
 		}
 		// check null form
-		private async Task<MessageDto> CheckFormMach(Guid formId)
+		private async Task<MessageDto> CheckFormMach(Guid? formId)
 		{
-			var result = await _formRepository.FindAsync(formId);
-			if (result == null)
+			if(formId == null)
 			{
 				return new MessageDto
 				{
@@ -82,11 +81,23 @@ namespace MS.EForm.FormServices
 					Messages = "Không tồn tại form này"
 				};
 			}
-			return new MessageDto
+			else
 			{
-				Status = true,
-				Messages = ""
-			};
+				var result = await _formRepository.FindAsync(formId.Value);
+				if (result == null)
+				{
+					return new MessageDto
+					{
+						Status = false,
+						Messages = "Không tồn tại form này"
+					};
+				}
+				return new MessageDto
+				{
+					Status = true,
+					Messages = ""
+				};
+			}
 		}
 
 		// messages err
@@ -132,7 +143,7 @@ namespace MS.EForm.FormServices
 				}
 				if (model.FormId != null) // ----> check có tồn tại form
 				{
-					var check = await CheckFormMach(model.FormId);
+					var check = await CheckFormMach(model.FormId.Value);
 					if (!check.Status)
 					{
 						return check;
@@ -143,7 +154,7 @@ namespace MS.EForm.FormServices
 				result.Title = model.Title;
 				result.Code = model.Code;
 				result.Type = model.Type;
-				result.FormId = model.FormId;
+				result.FormId = model.FormId.Value;
 
 				await _repository.InsertAsync(result);
 				return new MessageDto

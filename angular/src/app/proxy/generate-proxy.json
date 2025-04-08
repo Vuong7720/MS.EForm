@@ -1523,54 +1523,58 @@
               "allowAnonymous": null,
               "implementFrom": "MS.EForm.Controllers.EFormController"
             },
-            "GetListAsyncByPageNumberAndPageSize": {
-              "uniqueName": "GetListAsyncByPageNumberAndPageSize",
+            "GetListAsyncByPage": {
+              "uniqueName": "GetListAsyncByPage",
               "name": "GetListAsync",
               "httpMethod": "GET",
               "url": "api/eform/get-paging-form",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
-                  "name": "pageNumber",
-                  "typeAsString": "System.Int32, System.Private.CoreLib",
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": true,
-                  "defaultValue": 1
-                },
-                {
-                  "name": "pageSize",
-                  "typeAsString": "System.Int32, System.Private.CoreLib",
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": true,
-                  "defaultValue": 10
+                  "name": "page",
+                  "typeAsString": "MS.EForm.FormModels.Forms.FormPagingFilterDto, MS.EForm.Application.Contracts",
+                  "type": "MS.EForm.FormModels.Forms.FormPagingFilterDto",
+                  "typeSimple": "MS.EForm.FormModels.Forms.FormPagingFilterDto",
+                  "isOptional": false,
+                  "defaultValue": null
                 }
               ],
               "parameters": [
                 {
-                  "nameOnMethod": "pageNumber",
-                  "name": "pageNumber",
+                  "nameOnMethod": "page",
+                  "name": "Title",
                   "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
+                  "type": "System.String",
+                  "typeSimple": "string",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
-                  "bindingSourceId": "Query",
-                  "descriptorName": ""
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "page"
                 },
                 {
-                  "nameOnMethod": "pageSize",
-                  "name": "pageSize",
+                  "nameOnMethod": "page",
+                  "name": "PageSize",
                   "jsonName": null,
                   "type": "System.Int32",
                   "typeSimple": "number",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
-                  "bindingSourceId": "Query",
-                  "descriptorName": ""
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "page"
+                },
+                {
+                  "nameOnMethod": "page",
+                  "name": "PageIndex",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "page"
                 }
               ],
               "returnValue": {
@@ -4652,6 +4656,51 @@
           "jsonName": null,
           "type": "System.Guid?",
           "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "MS.EForm.FormModels.Forms.FormPagingFilterDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Title",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PageSize",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PageIndex",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,

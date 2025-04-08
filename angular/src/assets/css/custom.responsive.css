@@ -1,0 +1,576 @@
+/* Large desktop : >1920px. */
+@media (min-width: 1920px) {
+  .w-modal-dialog {
+    width: 45% !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w70-modal-dialog {
+    width: 70% !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  
+  .w90-modal-dialog {
+    width: 90% !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-sort .ant-modal-body {
+    max-height: 50vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-listnew {
+    width: 70% !important;
+  }
+
+  .w-modal-dialog-listnew .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form chi tiết chi tiết tin các thuộc tính thay đổi*/
+  .w-modal-dialog-view-new-entitychange {
+    width: 80% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 30% !important;
+  }
+
+  /* form văn bản */
+  .w-modal-dialog-width-law {
+    width: 55% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 60vh;
+    overflow-y: scroll !important;
+  }
+
+  /* form hỏi đáp */
+  .w-modal-dialog-question {
+    width: 50% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 60vh;
+    overflow-y: scroll !important;
+  }
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 65px;
+    padding: 0;
+  }
+  .menulocalli {
+    margin: 0 45px;
+    padding: 0;
+  }
+}
+
+/* Normal desktop :1920px. */
+@media (min-width: 1500px) and (max-width: 1920px) {
+  .w-modal-dialog {
+    width: 45% !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w70-modal-dialog {
+    width: 70% !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 90% !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-sort .ant-modal-body {
+    max-height: 50vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-listnew {
+    width: 70% !important;
+  }
+
+  .w-modal-dialog-listnew .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 80% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 60vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 55% !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 30% !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 60% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 45px;
+    padding: 0;
+  }
+  .menulocalli {
+    margin: 0 25px;
+    padding: 0;
+  }
+}
+
+/* Normal desktop :1200px. */
+@media (min-width: 1200px) and (max-width: 1500px) {
+  .w-modal-dialog {
+    width: 55% !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w70-modal-dialog {
+    width: 70% !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 90% !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 80% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 30% !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 60% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 60vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 66% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 35px;
+    padding: 0;
+  }
+  .menulocalli {
+    margin: 0 15px;
+    padding: 0;
+  }
+}
+
+/* Normal desktop :992px. */
+@media (min-width: 992px) and (max-width: 1200px) {
+  .w-modal-dialog {
+    width: 65% !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 75vh;
+    overflow-y: scroll !important;
+  }
+  .w70-modal-dialog {
+    width: 70% !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 75vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 90% !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 75vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 86% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 75vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 35% !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 70% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 75vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 60vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 77% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 25px;
+    padding: 0;
+  }
+
+  .menulocalli {
+    margin: 0 6px;
+    padding: 0;
+  }
+}
+
+/* Tablet desktop :768px. */
+@media (min-width: 768px) and (max-width: 991px) {
+  .w-modal-dialog {
+    width: 85% !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: scroll !important;
+  }
+  .w70-modal-dialog {
+    width: 85% !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 85% !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 90% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 50% !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 80% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 55vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 80% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 25px;
+    padding: 0;
+  }
+
+  .menulocalli {
+    margin: 0 7px;
+    padding: 0;
+  }
+}
+
+/* small mobile :320px. */
+@media (max-width: 767px) {
+  .w-modal-dialog {
+    width: 96% !important;
+    display: inline-block !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+  }
+  .w70-modal-dialog {
+    width: 96% !important;
+    display: inline-block !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 96% !important;
+    display: inline-block !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 80vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 94% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 58vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 96% !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 93% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-view-tag .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 95% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 80vh;
+    overflow-y: scroll !important;
+  }
+
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 15px;
+    padding: 0;
+  }
+  .menulocalli {
+    margin: 0 10px;
+    padding: 0;
+  }
+}
+
+/* Large Mobile :480px. */
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+  .w-modal-dialog {
+    width: 90% !important;
+    display: inline-block !important;
+  }
+
+  .w-modal-dialog .ant-modal-body {
+    max-height: 68vh;
+    overflow-y: scroll !important;
+  }
+  .w70-modal-dialog {
+    width: 90% !important;
+    display: inline-block !important;
+  }
+  .w70-modal-dialog .ant-modal-body {
+    max-height: 68vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w90-modal-dialog {
+    width: 90% !important;
+    display: inline-block !important;
+  }
+  .w90-modal-dialog .ant-modal-body {
+    max-height: 68vh;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange {
+    width: 92% !important;
+  }
+
+  .w-modal-dialog-view-new-entitychange .ant-modal-body {
+    max-height: 56vh;
+    overflow-y: scroll !important;
+  }
+
+  /*form mật khẩu*/
+  .w-modal-dialog-password {
+    width: 90% !important;
+  }
+
+  .w-modal-dialog-width-law {
+    width: 90% !important;
+  }
+
+  .w-modal-dialog-view-law .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+
+  .w-modal-dialog-question {
+    width: 95% !important;
+  }
+
+  .w-modal-dialog-view-question .ant-modal-body {
+    height: 70vh;
+    overflow-y: scroll !important;
+  }
+  /* chỉnh ô vị trí menu */
+  .checkboxul .menuli {
+    margin: 0 20px;
+    padding: 0;
+  }
+
+  .menulocalli {
+    margin: 0 16px;
+    padding: 0;
+  }
+}
+
+.object-fit-image {
+  object-fit: cover;
+}
+
+.float-left {
+  float: left;
+}

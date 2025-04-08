@@ -2,6 +2,7 @@
 using EForm.Entities;
 using EForm.IFormServices;
 using Microsoft.Extensions.Configuration;
+using MS.EForm.FormModels.FormCategories;
 using MS.EForm.FormModels.FormFields;
 using MS.EForm.FormModels.Forms;
 using System;
@@ -39,7 +40,7 @@ namespace MS.EForm.FormServices
 		// check trùng tên thuộc tính
 		private async Task<MessageDto> CheckTitleMach(string title, Guid? id)
 		{
-			var result = await _repository.FirstOrDefaultAsync(a => a.Title.Contains(title) && a.Id != id);
+			var result = await _repository.FirstOrDefaultAsync(a => a.Title.Contains(title) && a.Id == id);
 			if (result != null)
 			{
 				return new MessageDto
@@ -177,6 +178,32 @@ namespace MS.EForm.FormServices
 					result.Content = model.Content;
 					result.CategoryId = model.CategoryId;
 					await _repository.UpdateAsync(result);
+
+					if (model.FormFields != null && model.FormFields.Any())
+					{
+						var allField = await _formFieldRepository.GetQueryableAsync();
+						var lstOldField = allField.Where(a => a.FormId == id).ToList();
+						if (lstOldField.Any())
+						{
+							await _formFieldRepository.DeleteManyAsync(lstOldField);
+						}
+						var lstField = model.FormFields
+						.Select(a => new FormField
+						{
+							Title = a.Title,
+							Code = a.Code,
+							Type = a.Type,
+							Config = a.Config,
+							FormId = id
+						})
+						.ToList();
+						if (lstField.Any())
+						{
+							await _formFieldRepository.InsertManyAsync(lstField);
+						}
+					}
+
+
 					return new MessageDto
 					{
 						Status = true,
@@ -263,21 +290,25 @@ namespace MS.EForm.FormServices
 		}
 
 		// get phân trang form
-		public async Task<PagedResultDto<FormDto>> GetListAsync(int pageNumber, int pageSize)
+		public async Task<PagedResultDto<FormDto>> GetListAsync(FormPagingFilterDto page)
 		{
 			var query = await _repository.GetQueryableAsync();
 
+			if (!string.IsNullOrEmpty(page.Title))
+			{
+				query = query.Where(a => a.Title.ToLower().Contains(page.Title.ToLower()));
+			}
 			var totalCount = query.Count(); // Tổng số bản ghi
-
 			var items = query
-				.Skip((pageNumber - 1) * pageSize)
-				.Take(pageSize)
+				.OrderByDescending(c => c.CreationTime)
+				.Skip((page.PageIndex - 1) * page.PageSize)
+				.Take(page.PageSize)
 				.Select(a => new FormDto
 				{
 					Title = a.Title,
 					Content = a.Content,
-					Id = a.Id,
-					CategoryId = a.CategoryId
+					CategoryId = a.CategoryId,	
+					Id = a.Id
 				})
 				.ToList();
 

@@ -16,6 +16,6 @@ namespace EForm.IFormServices
 		Task<MessageDto> DeleteAsync(Guid id);
 		Task<List<FormDto>> GetAllForm();
 		Task<FormDto> GetAsync(Guid id);
-		Task<PagedResultDto<FormDto>> GetListAsync(int pageNumber, int pageSize);
+		Task<PagedResultDto<FormDto>> GetListAsync(FormPagingFilterDto page);
 	}
 }

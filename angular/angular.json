@@ -28,7 +28,12 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "allowedCommonJsDependencies": ["chart.js", "js-sha256"],
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": ["src/favicon.ico", "src/assets",
+            {
+              "glob": "**/*",
+              "input": "node_modules/tinymce",
+              "output": "tinymce/"
+            }],
             "styles": [
               {
                 "input": "node_modules/@volo/ngx-lepton-x.lite/assets/css/bootstrap-dim.css",
@@ -109,6 +114,11 @@
                 "input": "node_modules/@swimlane/ngx-datatable/themes/material.css",
                 "inject": true,
                 "bundleName": "ngx-datatable-material"
+              },
+              {
+                "input": "src/assets/css/custom.responsive.css",
+                "inject": true,
+                "bundleName": "styles"
               },
               "src/styles.scss",
               "node_modules/ng-zorro-antd/ng-zorro-antd.min.css"

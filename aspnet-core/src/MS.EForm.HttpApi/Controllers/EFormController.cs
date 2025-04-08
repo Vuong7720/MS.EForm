@@ -158,9 +158,9 @@ public class EFormController : AbpControllerBase
 	}
 
 	[HttpGet("get-paging-form")]
-	public async Task<PagedResultDto<FormDto>> GetListAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+	public async Task<PagedResultDto<FormDto>> GetListAsync(FormPagingFilterDto page)
 	{
-		return await _formService.GetListAsync(pageNumber, pageSize);
+		return await _formService.GetListAsync(page);
 	}
 	#endregion
 

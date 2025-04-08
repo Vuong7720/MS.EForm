@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
 import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
-import type { CreateUpdateForm, FormDto } from '../form-models/forms/models';
+import type { CreateUpdateForm, FormDto, FormPagingFilterDto } from '../form-models/forms/models';
 
 @Injectable({
   providedIn: 'root',
@@ -154,11 +154,11 @@ export class EFormService {
     { apiName: this.apiName,...config });
   
 
-  getList = (pageNumber: number = 1, pageSize: number = 10, config?: Partial<Rest.Config>) =>
+  getList = (page: FormPagingFilterDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<FormDto>>({
       method: 'GET',
       url: '/api/eform/get-paging-form',
-      params: { pageNumber, pageSize },
+      params: { title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
     },
     { apiName: this.apiName,...config });
   

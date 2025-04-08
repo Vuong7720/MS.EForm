@@ -45,7 +45,6 @@ export class FormCategoryComponent implements OnInit {
         this.dataResultPaging = res;
         this.totalCount = res.totalCount;
         this.formCategory = res.items;
-        console.log(res.items.length)
       });
   }
 

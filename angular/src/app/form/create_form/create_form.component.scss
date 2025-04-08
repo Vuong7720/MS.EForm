@@ -1,7 +1,28 @@
-.cusor_clam{
+.cusor_clam {
     cursor: pointer;
 }
+.cursor-pointer{
+    cursor: pointer;
+}
+
 //---------------------------
-.drag-field{
+.drag-field {
     color: aqua;
 }
+
+.custom-span {
+    resize: horizontal;
+}
+
+.tox-statusbar__branding {
+    display: none !important;
+}
+
+:host ::ng-deep .tox-statusbar {
+    display: none !important;
+}
+
+::ng-deep .custom-dropdown {
+    z-index: 1060 !important; /* cao hơn modal Bootstrap của NgbModal */
+  }
+
