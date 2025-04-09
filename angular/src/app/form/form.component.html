@@ -1,37 +1,39 @@
 <nz-page-header [nzGhost]="false">
 	<nz-page-header-title>Biểu mẫu</nz-page-header-title>
 	<nz-page-header-extra>
-	  <nz-space>
-		<button *nzSpaceItem nz-button nzType="primary" (click)="addForm(null)">Thêm mới</button>
-	  </nz-space>
+		<nz-space>
+			<button *nzSpaceItem nz-button nzType="primary" (click)="addForm(null)">Thêm mới</button>
+		</nz-space>
 	</nz-page-header-extra>
-  </nz-page-header>
+</nz-page-header>
 
-  <nz-table #basicTable [nzData]="dataResultPaging.items" [nzShowPagination]="true" [nzFrontPagination]="false" nzShowSizeChanger [nzLoading]="loading"
-  [nzTotal]="totalCount" (nzQueryParams)="onQueryParamsChange($event)">
+<nz-table #basicTable [nzData]="dataResultPaging.items" [nzShowPagination]="true" [nzFrontPagination]="false"
+	nzShowSizeChanger [nzLoading]="loading" [nzTotal]="totalCount" (nzQueryParams)="onQueryParamsChange($event)"
+	[nzScroll]="{ x: '1200px' }">
 	<thead>
-	  <tr>
-		<th>Tên biểu mẫu</th>
-		<th>Mô tả</th>
-		<th><i class="bi bi-gear-wide"></i></th>
-	  </tr>
+		<tr>
+			<th style="width: 5%;">STT</th>
+			<th style="width: 30%;">Tên biểu mẫu</th>
+			<th style="width: 55%;">Mô tả</th>
+			<th style="width: 10%; text-align: center;"><i class="bi bi-gear-wide"></i></th>
+		</tr>
 	</thead>
 	<tbody>
-		<tr *ngFor="let data of basicTable.data">
-		  <td>{{ data.title }}</td>
-		  <td>{{ data.content }}</td>
-		  <td>
-			<a nz-dropdown [nzDropdownMenu]="menu">
-				<i class="bi bi-three-dots-vertical"></i>
-			  </a>
-			  <nz-dropdown-menu #menu="nzDropdownMenu">
-				<ul nz-menu nzSelectable>
-				  <li nz-menu-item (click)="addForm(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
-				  <li nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
-				</ul>
-			  </nz-dropdown-menu>
-		  </td>
+		<tr *ngFor="let data of basicTable.data; let i = index">
+			<td>{{ i+1 }}</td>
+			<td>{{ data.title }}</td>
+			<td>{{ data.description }}</td>
+			<td style="text-align: center;">
+				<a nz-dropdown [nzDropdownMenu]="menu">
+					<i class="bi bi-three-dots-vertical"></i>
+				</a>
+				<nz-dropdown-menu #menu="nzDropdownMenu">
+					<ul nz-menu nzSelectable>
+						<li nz-menu-item (click)="addForm(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
+						<li nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
+					</ul>
+				</nz-dropdown-menu>
+			</td>
 		</tr>
 	</tbody>
-  </nz-table>
-
+</nz-table>

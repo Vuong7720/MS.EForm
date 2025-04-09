@@ -8,7 +8,7 @@
 	<div class="mt-1">
 		<div class="row">
 			<div class="col-8">
-				<label for="category-title" class="form-label fw-bold">Tên biểu mẫu</label>
+				<label for="category-title" class="form-label fw-bold">Tên biểu mẫu</label><span class="text-danger">*</span>
 				<input nz-input formControlName="title" placeholder="Nhập tên danh mục">
 
 				<div class="text-danger" *ngIf="form.get('title')?.invalid && form.get('title')?.touched">
@@ -21,7 +21,7 @@
 				</div>
 			</div>
 			<div class="col-4">
-				<label for="category-title" class="form-label fw-bold">Danh mục</label>
+				<label for="category-title" class="form-label fw-bold">Danh mục</label><span class="text-danger">*</span>
 				<div>
 					<nz-select formControlName="categoryId" [nzDropdownStyle]="{ 'z-index': 1050 }"
 					[nzDropdownClassName]="'custom-dropdown'" nzPlaceHolder="Chọn" style="width: 100%;">
@@ -38,7 +38,7 @@
 		</div>
 	</div>
 
-	<div class="mt-2 mb-5">
+	<div class="mt-2 mb-1">
 		<div class="row">
 		  <div class="col-8">
 			<label class="form-label fw-bold">Nội dung biểu mẫu</label>
@@ -58,14 +58,27 @@
 			</div>
 			<nz-list nzBordered nzSize="small">
 			  <nz-list-item
-				*ngFor="let item of lstAttribuite"
+				*ngFor="let item of lstAttribuite; let i = index"
 				draggable="true"
-				class="cursor-pointer"
+				class="cursor-pointer d-flex justify-content-between align-items-center"
 				(dragstart)="onDragStart($event, item)">
-				{{ item.title }}
+				{{ i+1 }}. {{ item.title }}
+				<div class="">
+					<i class="bi bi-pencil-square text-primary ms-2" (click)="addAttribute(item.code)" title="Sửa thuộc tính"></i>
+					<i class="bi bi-trash text-danger ms-2" (click)="delete(item.code)" title="Xóa thuộc tính"></i>
+				</div>
 			  </nz-list-item>
 			</nz-list>
 		  </div>
+		</div>
+	  </div>
+
+	  <div class="mt-2 mb-1">
+		<div class="row">
+			<div class="col-8">
+				<label for="category-title" class="form-label fw-bold">Mô tả</label>
+				<textarea nz-input formControlName="description" placeholder="Nhập mô tả"></textarea>
+			</div>
 		</div>
 	  </div>
   </form>

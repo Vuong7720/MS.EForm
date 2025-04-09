@@ -40,7 +40,7 @@ namespace MS.EForm.FormServices
 		// check trùng tên thuộc tính
 		private async Task<MessageDto> CheckTitleMach(string title, Guid? id)
 		{
-			var result = await _repository.FirstOrDefaultAsync(a => a.Title.Contains(title) && a.Id == id);
+			var result = await _repository.FirstOrDefaultAsync(a => a.Title.Contains(title) && a.Id != id);
 			if (result != null)
 			{
 				return new MessageDto
@@ -118,6 +118,7 @@ namespace MS.EForm.FormServices
 				result.Title = model.Title;
 				result.Content = model.Content;
 				result.CategoryId = model.CategoryId;
+				result.Description = model.Description;
 
 				var insert = await _repository.InsertAsync(result);
 
@@ -177,6 +178,7 @@ namespace MS.EForm.FormServices
 					result.Title = model.Title;
 					result.Content = model.Content;
 					result.CategoryId = model.CategoryId;
+					result.Description = model.Description;
 					await _repository.UpdateAsync(result);
 
 					if (model.FormFields != null && model.FormFields.Any())
@@ -185,7 +187,10 @@ namespace MS.EForm.FormServices
 						var lstOldField = allField.Where(a => a.FormId == id).ToList();
 						if (lstOldField.Any())
 						{
-							await _formFieldRepository.DeleteManyAsync(lstOldField);
+							foreach(var item in lstOldField)
+							{
+								await _formFieldRepository.HardDeleteAsync(item);
+							}
 						}
 						var lstField = model.FormFields
 						.Select(a => new FormField
@@ -231,6 +236,13 @@ namespace MS.EForm.FormServices
 		{
 			try
 			{
+				var allField = await _formFieldRepository.GetQueryableAsync();
+				var fieldByForm = allField.Where(a => a.FormId == id).ToList();
+				if (fieldByForm.Any())
+				{
+					await _formFieldRepository.DeleteManyAsync(fieldByForm);
+				}
+
 				var query = await _repository.FindAsync(id);
 				if (query != null)
 				{
@@ -265,6 +277,7 @@ namespace MS.EForm.FormServices
 					Title = a.Title,
 					Content = a.Content,
 					Id = a.Id,
+					Description = a.Description,
 					CategoryId = a.CategoryId,
 				}).ToList();
 			}
@@ -283,6 +296,7 @@ namespace MS.EForm.FormServices
 					Title = query.Title,
 					Content = query.Content,
 					Id = query.Id,
+					Description = query.Description,
 					CategoryId = query.CategoryId,
 				};
 			}
@@ -308,6 +322,7 @@ namespace MS.EForm.FormServices
 					Title = a.Title,
 					Content = a.Content,
 					CategoryId = a.CategoryId,	
+					Description=a.Description,
 					Id = a.Id
 				})
 				.ToList();

@@ -26,3 +26,23 @@
     z-index: 1060 !important; /* cao hơn modal Bootstrap của NgbModal */
   }
 
+  .auto-fill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    white-space: nowrap;
+    padding: 0 8px;
+    position: relative;
+    color: aqua;
+  }
+  
+  .auto-fill::before,
+  .auto-fill::after {
+    content: "................................................................................................................................................................";
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    font-family: monospace;
+  }
+  

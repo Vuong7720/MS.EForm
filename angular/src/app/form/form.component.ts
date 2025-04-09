@@ -7,6 +7,7 @@ import { EFormService } from '@proxy/controllers';
 import { FormDto, FormPagingFilterDto } from '@proxy/form-models/forms';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { PagedResultDto } from '@abp/ng.core';
+import { ToasterService } from '@abp/ng.theme.shared';
 
 @Component({
   standalone: false,
@@ -17,7 +18,7 @@ import { PagedResultDto } from '@abp/ng.core';
 export class FormComponent implements OnInit {
   lstForm: FormDto[] = [];
   totalCount: number = 0;
-  dataResultPaging: PagedResultDto<FormDto>;
+  dataResultPaging: PagedResultDto<FormDto> = new PagedResultDto<FormDto>;
   pageCate = {
     pageIndex: 1,
     pageSize: 10
@@ -29,7 +30,8 @@ export class FormComponent implements OnInit {
     private modalService: NgbModal,
     private nzModal: NzModalService,
     private viewContainerRef: ViewContainerRef,
-    private service: EFormService
+    private service: EFormService,
+    private toasterService: ToasterService
   ) {}
 
   ngOnInit(): void {
@@ -70,6 +72,7 @@ onQueryParamsChange(params: NzTableQueryParams): void {
       this.getPagingCategory(this.pageCate);
     });
   }
+
   delete(id: string) {
     const modalRef = this.modalService.open(DeleteComfirmComponent, {
       size: 'confirm',
@@ -77,6 +80,16 @@ onQueryParamsChange(params: NzTableQueryParams): void {
       centered: true,
     });
     modalRef.componentInstance.id = id;
+    modalRef.componentInstance.success.subscribe(res => {
+      this.service.delete(id).subscribe(res => {
+        if (res.status) {
+          this.toasterService.success(res.messages);
+          this.getPagingCategory(this.pageCate);
+        } else {
+          this.toasterService.error(res.messages);
+        }
+      });
+    });
   }
 
 

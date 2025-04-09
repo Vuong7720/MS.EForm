@@ -17,26 +17,34 @@
 			</div>
 			<div *ngIf="form.get('title')?.errors?.['duplicate']">
 				Tên thuộc tính đã tồn tại!
-			  </div>
+			</div>
 		</div>
 	</div>
 	<div class="mt-1">
-		<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label>
+		<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label><span class="text-danger">*</span>
 		<input nz-input formControlName="code" placeholder="Gợi ý mã tự động sinh">
+		<div class="text-danger" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
+			<div *ngIf="form.get('code')?.errors?.['required']">
+				Vui lòng nhập mã thuộc tính!
+			</div>
+		</div>
 		<div *ngIf="form.get('code')?.hasError('duplicate')" class="text-danger">
 			Mã thuộc tính đã tồn tại, xin Hoàng thượng nhập mã khác ạ!
-		  </div>
+		</div>
 	</div>
 	<div class="mt-1">
 		<label for="category-title" class="form-label fw-bold">Kiểu dữ liệu</label>
 		<div>
-			<nz-select nzShowSearch nzPlaceHolder="Select a person" formControlName="type"
-				style="width: 100%;">
+			<nz-select nzShowSearch nzPlaceHolder="Select a person" formControlName="type" style="width: 100%;">
 				<nz-option *ngFor="let item of lstDataType" [nzLabel]="item.title" [nzValue]="item.value"></nz-option>
 			</nz-select>
 		</div>
 	</div>
+	<div class="mt-1">
+	<label nz-checkbox formControlName="required">Bắt buộc nhập</label>
+</div>
 </form>
+
 
 <div *nzModalFooter>
 	<button (click)="onBack()" class="btn btn-light btn-sm me-1" type="button" id="btn-add-category">

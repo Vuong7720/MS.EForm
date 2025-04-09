@@ -20,7 +20,10 @@ export class CreateAttributeComponent implements OnInit {
   getParams: CategoryParams = inject(NZ_MODAL_DATA);
   formId: string;
   lstAttribute: FormFieldDto[] = [];
-
+  checked = true;
+  code: string
+  attribute: FormFieldDto = {} as FormFieldDto;
+  required = false;
 
   constructor( 
     public activeModal: NgbActiveModal,
@@ -33,18 +36,48 @@ export class CreateAttributeComponent implements OnInit {
   ngOnInit(): void {
     this.formId = this.getParams.id;
     this.lstAttribute = this.getParams.lstAttribute
+    this.getDetail(this.getParams.code)
     this.buildForm();
+  }
+
+  getDetail(code: string){
+    if(code){
+      this.attribute = this.lstAttribute.find(a => a.code === code);
+      console.log(this.attribute)
+      if(this.attribute.config !== null && this.attribute.config.length > 0){
+        var config = this.attribute.config.split(',').reduce((acc, item) => {
+          const [key, rawValue] = item.split(':').map(part => part.trim());
+        
+          let value: any;
+          if (rawValue === 'true') value = true;
+          else if (rawValue === 'false') value = false;
+          else if (!isNaN(Number(rawValue))) value = Number(rawValue);
+          else value = rawValue;
+        
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, any>);
+        
+          this.required = config.required
+
+      }
+    }
   }
 
   buildForm(){
     this.form = this.fb.group({
-      title:[null, [
+      title:[this.attribute.title || null, [
         Validators.required,         // Bắt buộc nhập
         Validators.maxLength(128)    // Giới hạn 128 ký tự
       ]],
-      code:[null],
-      type:[1 || null],
-      formId:[this.formId || null]
+      code:[this.attribute.code || null, [
+        Validators.required,         // Bắt buộc nhập
+        Validators.maxLength(128)    // Giới hạn 128 ký tự
+      ]],
+      type:[this.attribute.type || 1 || null],
+      formId:[this.formId || null],
+      required:[this.required || false],
+      config:[null]
     })
   }
   
@@ -56,7 +89,7 @@ export class CreateAttributeComponent implements OnInit {
       this.toasterService.error('Giá trị khai báo không hợp lệ');
       return;
     }
-  
+    this.form.get('config')?.setValue("required:"+this.form.value.required)
     this.onLoadData.emit(this.form.value);
   
     this.nzModalRef.close({
@@ -162,5 +195,6 @@ export class CreateAttributeComponent implements OnInit {
 export interface CategoryParams {
   id: string;
   isCreated: boolean;
-  lstAttribute: FormFieldDto[]
+  lstAttribute: FormFieldDto[];
+  code: string;
 }

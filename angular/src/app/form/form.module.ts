@@ -23,6 +23,7 @@ import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { CreateAttributeComponent } from './create_attribute/create_attribute.component';
 import { EditorModule } from '../shared/components/editor/editor.module';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 
 @NgModule({
@@ -46,7 +47,8 @@ import { EditorModule } from '../shared/components/editor/editor.module';
     NzListModule,
     NzTypographyModule,
     NzToolTipModule,
-    EditorModule
+    EditorModule,
+    NzCheckboxModule
   ],
 })
 export class FormModule {}
