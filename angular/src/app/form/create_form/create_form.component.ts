@@ -88,27 +88,27 @@ export class CreateFormComponent implements OnInit {
     this.form.get('formFields')?.setValue(this.lstAttribuite);
     this.formId
       ? this.service.update(this.formId, this.form.value).subscribe(res => {
-          if (res.status) {
-            this.toasterService.success(res.messages);
-            this.nzModalRef.close({
-              Success: true,
-              Title: 'Sửa biểu mẫu thành công',
-            });
-          } else {
-            this.toasterService.error(res.messages);
-          }
-        })
+        if (res.status) {
+          this.toasterService.success(res.messages);
+          this.nzModalRef.close({
+            Success: true,
+            Title: 'Sửa biểu mẫu thành công',
+          });
+        } else {
+          this.toasterService.error(res.messages);
+        }
+      })
       : this.service.create(this.form.value).subscribe(res => {
-          if (res.status) {
-            this.toasterService.success(res.messages);
-            this.nzModalRef.close({
-              Success: true,
-              Title: 'Thêm biểu mẫu thành công',
-            });
-          } else {
-            this.toasterService.error(res.messages);
-          }
-        });
+        if (res.status) {
+          this.toasterService.success(res.messages);
+          this.nzModalRef.close({
+            Success: true,
+            Title: 'Thêm biểu mẫu thành công',
+          });
+        } else {
+          this.toasterService.error(res.messages);
+        }
+      });
   }
 
   onEditorChange(content: string) {
@@ -288,8 +288,29 @@ export class CreateFormComponent implements OnInit {
           const originalContent = editor.getContent();
           const temp = document.createElement('div');
           temp.innerHTML = originalContent;
+          // debugger;
+
+          // Hàm tự động resize input
+          function autoResizeInput(input: HTMLInputElement) {
+            let ghostSpan = document.getElementById('ghostSpan') as HTMLSpanElement;
+            if (!ghostSpan) {
+              ghostSpan = document.createElement('span');
+              ghostSpan.id = 'ghostSpan';
+              ghostSpan.style.visibility = 'hidden';
+              ghostSpan.style.position = 'absolute';
+              ghostSpan.style.whiteSpace = 'pre';
+              ghostSpan.style.fontSize = input.style.fontSize || '16px';
+              ghostSpan.style.fontFamily = input.style.fontFamily || 'inherit';
+              document.body.appendChild(ghostSpan);
+            }
+
+            ghostSpan.textContent = input.value || input.placeholder || '';
+            const width = ghostSpan.offsetWidth + 10; // Thêm padding
+            input.style.width = width + 'px';
+          }
 
           temp.querySelectorAll('span.drag-field').forEach(span => {
+            // debugger;
             const fieldType = parseInt(
               Array.from(span.classList)
                 .find(c => c.startsWith('field-type-'))
@@ -319,32 +340,83 @@ export class CreateFormComponent implements OnInit {
                   replacementEl.appendChild(opt);
                 });
                 break;
-              default: replacementEl = document.createElement('input'); replacementEl.type = 'text';
-            }
+              default:
+                replacementEl = document.createElement('input');
+                replacementEl.type = 'text';
 
+                replacementEl.placeholder = placeholder;
+                replacementEl.name = name;
+                replacementEl.style.border = 'none';
+                replacementEl.style.borderBottom = '1px solid #ccc';
+                replacementEl.style.outline = 'none';
+                replacementEl.style.minWidth = '50px';
+                replacementEl.style.width = 'auto';
+                replacementEl.style.fontSize = '16px';
+                replacementEl.style.fontFamily = 'inherit';
+
+                // Gắn sự kiện resize
+                replacementEl.addEventListener('input', () => autoResizeInput(replacementEl));
+
+                // Resize ban đầu
+                setTimeout(() => autoResizeInput(replacementEl), 0);
+                break;
+            }
             replacementEl.placeholder = placeholder;
             replacementEl.name = name;
             replacementEl.style.border = 'none';
             replacementEl.style.borderBottom = '1px solid #ccc';
             replacementEl.style.outline = 'none';
             replacementEl.style.minWidth = '100px';
-
             span.replaceWith(replacementEl);
           });
 
           // Hiển thị bản xem trước trong popup
           const previewWindow = window.open('', 'previewWindow', 'width=800,height=600');
           if (previewWindow) {
+            const resizeScript = `
+              <script>
+                function autoResizeInput(input) {
+                  let ghostSpan = document.getElementById('ghostSpan');
+                  if (!ghostSpan) {
+                    ghostSpan = document.createElement('span');
+                    ghostSpan.id = 'ghostSpan';
+                    ghostSpan.style.visibility = 'hidden';
+                    ghostSpan.style.position = 'absolute';
+                    ghostSpan.style.whiteSpace = 'pre';
+                    ghostSpan.style.fontSize = input.style.fontSize || '16px';
+                    ghostSpan.style.fontFamily = input.style.fontFamily || 'inherit';
+                    document.body.appendChild(ghostSpan);
+                  }
+          
+                  ghostSpan.textContent = input.value || input.placeholder || '';
+                  input.style.width = (ghostSpan.offsetWidth + 10) + 'px';
+                }
+          
+                window.addEventListener('DOMContentLoaded', () => {
+                  const inputs = document.querySelectorAll('input[type="text"]');
+                  inputs.forEach(input => {
+                    input.addEventListener('input', () => autoResizeInput(input));
+                    autoResizeInput(input);
+                  });
+                });
+              </script>
+            `;
+
             previewWindow.document.write(`
               <html>
-                <head><title>Xem trước biểu mẫu</title></head>
-                <body style="font-family: Times New Roman; padding: 20px;">
+                <head>
+                  <title>Xem trước biểu mẫu</title>
+                  <style>body { font-family: 'Times New Roman'; padding: 20px; }</style>
+                </head>
+                <body>
                   ${temp.innerHTML}
+                  ${resizeScript}
                 </body>
               </html>
             `);
             previewWindow.document.close();
-          } else {
+          }
+          else {
             alert('Trình duyệt đã chặn popup xem trước!');
           }
         },
@@ -352,7 +424,7 @@ export class CreateFormComponent implements OnInit {
     },
   };
 
-  
+
 }
 
 
