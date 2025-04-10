@@ -24,10 +24,11 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { CreateAttributeComponent } from './create_attribute/create_attribute.component';
 import { EditorModule } from '../shared/components/editor/editor.module';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { AutoResizeInputDirective } from '../shared/directives/auto-resize-input.directive';
 
 
 @NgModule({
-  declarations: [FormComponent, CreateFormComponent, CreateAttributeComponent],
+  declarations: [FormComponent, CreateFormComponent, CreateAttributeComponent, AutoResizeInputDirective],
   imports: [
     SharedModule,
     FormRoutingModule,
