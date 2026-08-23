@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewContainerRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DeleteComfirmComponent } from '../shared/delete-comfirm/delete-comfirm.component';
 import { CreateFormComponent } from './create_form/create_form.component';
@@ -8,6 +9,7 @@ import { FormDto, FormPagingFilterDto } from '@proxy/form-models/forms';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { PagedResultDto } from '@abp/ng.core';
 import { ToasterService } from '@abp/ng.theme.shared';
+import { getApiErrorMessage } from '../shared/services/http-error.util';
 
 @Component({
   standalone: false,
@@ -31,7 +33,8 @@ export class FormComponent implements OnInit {
     private nzModal: NzModalService,
     private viewContainerRef: ViewContainerRef,
     private service: EFormService,
-    private toasterService: ToasterService
+    private toasterService: ToasterService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -73,6 +76,16 @@ onQueryParamsChange(params: NzTableQueryParams): void {
     });
   }
 
+  viewRecords(id: string) {
+    this.router.navigate(['/form-records'], { queryParams: { formId: id } });
+  }
+
+  copySubmitLink(id: string) {
+    const url = `${window.location.origin}/submit-form/${id}`;
+    navigator.clipboard?.writeText(url);
+    this.toasterService.success('Đã sao chép đường dẫn nộp form');
+  }
+
   delete(id: string) {
     const modalRef = this.modalService.open(DeleteComfirmComponent, {
       size: 'confirm',
@@ -81,13 +94,12 @@ onQueryParamsChange(params: NzTableQueryParams): void {
     });
     modalRef.componentInstance.id = id;
     modalRef.componentInstance.success.subscribe(res => {
-      this.service.delete(id).subscribe(res => {
-        if (res.status) {
+      this.service.delete(id, { skipHandleError: true }).subscribe({
+        next: res => {
           this.toasterService.success(res.messages);
           this.getPagingCategory(this.pageCate);
-        } else {
-          this.toasterService.error(res.messages);
-        }
+        },
+        error: err => this.toasterService.error(getApiErrorMessage(err)),
       });
     });
   }

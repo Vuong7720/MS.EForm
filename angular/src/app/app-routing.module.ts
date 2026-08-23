@@ -18,6 +18,16 @@ const routes: Routes = [
     loadChildren: () => import('./form/form.module').then(m => m.FormModule),
   },
   {
+    // không dùng pathMatch:'full' vì module này có route con 'view/:id'
+    path: 'form-records',
+    loadChildren: () => import('./form-records/form-records.module').then(m => m.FormRecordsModule),
+  },
+  {
+    // trang public để nộp form, không đăng ký vào route.provider.ts (không hiện trong menu admin)
+    path: 'submit-form',
+    loadChildren: () => import('./form-submit/form-submit.module').then(m => m.FormSubmitModule),
+  },
+  {
     path: 'account',
     loadChildren: () => import('@abp/ng.account').then(m => m.AccountModule.forLazy()),
   },

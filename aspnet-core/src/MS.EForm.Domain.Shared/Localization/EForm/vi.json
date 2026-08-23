@@ -4,6 +4,14 @@
     "AppName": "EForm",
     "Menu:Home": "Trang chủ",
     "Welcome": "Chào mừng bạn",
-    "LongWelcomeMessage": "Chào mừng bạn đến ứng dụng. Đây là một dự án khởi nghiệp dựa trên khung ABP. Để biết thêm thông tin, hãy truy cập abp.io."
+    "LongWelcomeMessage": "Chào mừng bạn đến ứng dụng. Đây là một dự án khởi nghiệp dựa trên khung ABP. Để biết thêm thông tin, hãy truy cập abp.io.",
+    "Permission:EForm": "EForm",
+    "Permission:Forms": "Biểu mẫu",
+    "Permission:FormCategories": "Danh mục biểu mẫu",
+    "Permission:FormFields": "Thuộc tính biểu mẫu",
+    "Permission:FormRecords": "Kết quả nộp form",
+    "Permission:Create": "Tạo mới",
+    "Permission:Edit": "Sửa",
+    "Permission:Delete": "Xóa"
   }
 }

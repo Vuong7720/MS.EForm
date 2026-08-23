@@ -21,6 +21,8 @@ import { NZ_MODAL_DATA, NzModalRef, NzModalService } from 'ng-zorro-antd/modal';
 import { ToasterService } from '@abp/ng.theme.shared';
 import { FormDto } from '@proxy/form-models/forms';
 import { DeleteComfirmComponent } from 'src/app/shared/delete-comfirm/delete-comfirm.component';
+import { FormRendererService } from 'src/app/shared/services/form-renderer.service';
+import { getApiErrorMessage } from 'src/app/shared/services/http-error.util';
 @Component({
   standalone: false,
   selector: 'app-create_form',
@@ -49,7 +51,8 @@ export class CreateFormComponent implements OnInit {
     private nzModal: NzModalService,
     private viewContainerRef: ViewContainerRef,
     private toasterService: ToasterService,
-    private nzModalRef: NzModalRef
+    private nzModalRef: NzModalRef,
+    private formRenderer: FormRendererService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -87,27 +90,25 @@ export class CreateFormComponent implements OnInit {
 
     this.form.get('formFields')?.setValue(this.lstAttribuite);
     this.formId
-      ? this.service.update(this.formId, this.form.value).subscribe(res => {
-        if (res.status) {
+      ? this.service.update(this.formId, this.form.value, { skipHandleError: true }).subscribe({
+        next: res => {
           this.toasterService.success(res.messages);
           this.nzModalRef.close({
             Success: true,
             Title: 'Sửa biểu mẫu thành công',
           });
-        } else {
-          this.toasterService.error(res.messages);
-        }
+        },
+        error: err => this.toasterService.error(getApiErrorMessage(err)),
       })
-      : this.service.create(this.form.value).subscribe(res => {
-        if (res.status) {
+      : this.service.create(this.form.value, { skipHandleError: true }).subscribe({
+        next: res => {
           this.toasterService.success(res.messages);
           this.nzModalRef.close({
             Success: true,
             Title: 'Thêm biểu mẫu thành công',
           });
-        } else {
-          this.toasterService.error(res.messages);
-        }
+        },
+        error: err => this.toasterService.error(getApiErrorMessage(err)),
       });
   }
 
@@ -286,89 +287,7 @@ export class CreateFormComponent implements OnInit {
         icon: 'preview',
         onAction: () => {
           const originalContent = editor.getContent();
-          const temp = document.createElement('div');
-          temp.innerHTML = originalContent;
-          // debugger;
-
-          // Hàm tự động resize input
-          function autoResizeInput(input: HTMLInputElement) {
-            let ghostSpan = document.getElementById('ghostSpan') as HTMLSpanElement;
-            if (!ghostSpan) {
-              ghostSpan = document.createElement('span');
-              ghostSpan.id = 'ghostSpan';
-              ghostSpan.style.visibility = 'hidden';
-              ghostSpan.style.position = 'absolute';
-              ghostSpan.style.whiteSpace = 'pre';
-              ghostSpan.style.fontSize = input.style.fontSize || '16px';
-              ghostSpan.style.fontFamily = input.style.fontFamily || 'inherit';
-              document.body.appendChild(ghostSpan);
-            }
-
-            ghostSpan.textContent = input.value || input.placeholder || '';
-            const width = ghostSpan.offsetWidth + 10; // Thêm padding
-            input.style.width = width + 'px';
-          }
-
-          temp.querySelectorAll('span.drag-field').forEach(span => {
-            // debugger;
-            const fieldType = parseInt(
-              Array.from(span.classList)
-                .find(c => c.startsWith('field-type-'))
-                ?.replace('field-type-', '') || '1'
-            );
-
-            const name = span.id || '';
-            const placeholder = span.textContent?.trim() || '..........';
-
-            let replacementEl;
-
-            switch (fieldType) {
-              case 2: replacementEl = document.createElement('textarea'); break;
-              case 3:
-                replacementEl = document.createElement('select');
-                replacementEl.appendChild(new Option('-- Chọn giá trị --'));
-                break;
-              case 4: replacementEl = document.createElement('input'); replacementEl.type = 'checkbox'; break;
-              case 5: replacementEl = document.createElement('input'); replacementEl.type = 'radio'; break;
-              case 6: replacementEl = document.createElement('input'); replacementEl.type = 'datetime-local'; break;
-              case 7: replacementEl = document.createElement('input'); replacementEl.type = 'number'; break;
-              case 8:
-                replacementEl = document.createElement('select');
-                ['-- Chọn --', 'Có', 'Không'].forEach(text => {
-                  const opt = document.createElement('option');
-                  opt.text = text;
-                  replacementEl.appendChild(opt);
-                });
-                break;
-              default:
-                replacementEl = document.createElement('input');
-                replacementEl.type = 'text';
-
-                replacementEl.placeholder = placeholder;
-                replacementEl.name = name;
-                replacementEl.style.border = 'none';
-                replacementEl.style.borderBottom = '1px solid #ccc';
-                replacementEl.style.outline = 'none';
-                replacementEl.style.minWidth = '50px';
-                replacementEl.style.width = 'auto';
-                replacementEl.style.fontSize = '16px';
-                replacementEl.style.fontFamily = 'inherit';
-
-                // Gắn sự kiện resize
-                replacementEl.addEventListener('input', () => autoResizeInput(replacementEl));
-
-                // Resize ban đầu
-                setTimeout(() => autoResizeInput(replacementEl), 0);
-                break;
-            }
-            replacementEl.placeholder = placeholder;
-            replacementEl.name = name;
-            replacementEl.style.border = 'none';
-            replacementEl.style.borderBottom = '1px solid #ccc';
-            replacementEl.style.outline = 'none';
-            replacementEl.style.minWidth = '100px';
-            span.replaceWith(replacementEl);
-          });
+          const temp = this.formRenderer.renderFieldsToElements(originalContent, this.lstAttribuite);
 
           // Hiển thị bản xem trước trong popup
           const previewWindow = window.open('', 'previewWindow', 'width=800,height=600');

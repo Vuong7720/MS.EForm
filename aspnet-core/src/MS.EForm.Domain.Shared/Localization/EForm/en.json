@@ -4,6 +4,14 @@
     "AppName": "EForm",
     "Menu:Home": "Home",
     "Welcome": "Welcome",
-    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io."
+    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io.",
+    "Permission:EForm": "EForm",
+    "Permission:Forms": "Forms",
+    "Permission:FormCategories": "Form Categories",
+    "Permission:FormFields": "Form Fields",
+    "Permission:FormRecords": "Form Records",
+    "Permission:Create": "Create",
+    "Permission:Edit": "Edit",
+    "Permission:Delete": "Delete"
   }
 }

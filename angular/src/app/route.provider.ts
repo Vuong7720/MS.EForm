@@ -16,12 +16,13 @@ function configureRoutes(routesService: RoutesService) {
         layout: eLayoutType.application,
       },
       {
-        
+
         path: '/form-category',
         name: 'Danh mục biểu mẫu',
         iconClass: 'fas fa-list',
         order: 2,
         layout: eLayoutType.application,
+        requiredPolicy: 'EForm.FormCategories',
       },
       {
         path: '/form',
@@ -29,6 +30,22 @@ function configureRoutes(routesService: RoutesService) {
         iconClass: 'bi bi-clipboard-data',
         order: 3,
         layout: eLayoutType.application,
+        requiredPolicy: 'EForm.Forms',
+      },
+      {
+        path: '/form-records',
+        name: 'Kết quả nộp form',
+        iconClass: 'bi bi-card-checklist',
+        order: 4,
+        layout: eLayoutType.application,
+        requiredPolicy: 'EForm.FormRecords',
+      },
+      {
+        // đăng ký để RoutesService biết layout 'empty' cho trang public này (invisible: không hiện trong menu)
+        path: '/submit-form',
+        name: 'Nộp form',
+        invisible: true,
+        layout: eLayoutType.empty,
       }
     ]);
   };

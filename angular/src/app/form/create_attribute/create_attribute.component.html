@@ -41,8 +41,40 @@
 		</div>
 	</div>
 	<div class="mt-1">
-	<label nz-checkbox formControlName="required">Bắt buộc nhập</label>
-</div>
+		<label class="form-label fw-bold">Thứ tự hiển thị</label>
+		<input nz-input type="number" formControlName="displayOrder">
+	</div>
+	<div class="mt-1">
+		<label nz-checkbox formControlName="required">Bắt buộc nhập</label>
+	</div>
+	<div class="mt-1" *ngIf="typesWithOptions.includes(form.get('type')?.value)">
+		<label for="category-options" class="form-label fw-bold">Danh sách lựa chọn (cách nhau bởi dấu phẩy)</label>
+		<textarea nz-input formControlName="options" placeholder="Vd: Có, Không, Chưa rõ" rows="2"></textarea>
+	</div>
+	<div class="row" *ngIf="typesWithLength.includes(form.get('type')?.value)">
+		<div class="mt-1 col-6">
+			<label class="form-label fw-bold">Độ dài tối thiểu</label>
+			<input nz-input type="number" formControlName="minLength" placeholder="Không giới hạn">
+		</div>
+		<div class="mt-1 col-6">
+			<label class="form-label fw-bold">Độ dài tối đa</label>
+			<input nz-input type="number" formControlName="maxLength" placeholder="Không giới hạn">
+		</div>
+	</div>
+	<div class="mt-1" *ngIf="typesWithPattern.includes(form.get('type')?.value)">
+		<label class="form-label fw-bold">Định dạng (regex, không bắt buộc)</label>
+		<input nz-input formControlName="pattern" placeholder="Vd: ^[0-9]{10}$">
+	</div>
+	<div class="row" *ngIf="typesWithMinMax.includes(form.get('type')?.value)">
+		<div class="mt-1 col-6">
+			<label class="form-label fw-bold">Giá trị tối thiểu</label>
+			<input nz-input type="number" formControlName="min" placeholder="Không giới hạn">
+		</div>
+		<div class="mt-1 col-6">
+			<label class="form-label fw-bold">Giá trị tối đa</label>
+			<input nz-input type="number" formControlName="max" placeholder="Không giới hạn">
+		</div>
+	</div>
 </form>
 
 

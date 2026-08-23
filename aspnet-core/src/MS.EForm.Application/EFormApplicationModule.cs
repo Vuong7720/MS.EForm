@@ -36,5 +36,6 @@ public class EFormApplicationModule : AbpModule
 		services.AddTransient<IFormCategory, FormCategoryService>();
 		services.AddTransient<IFormField, FormFieldServices>();
 		services.AddTransient<IFormService, FormService>();
+		services.AddTransient<IFormRecord, FormRecordService>();
 	}
 }

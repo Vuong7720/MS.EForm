@@ -1,0 +1,16 @@
+<nz-page-header [nzGhost]="false" nzBackIcon (nzBack)="back()">
+	<nz-page-header-title>Chi tiết bản ghi</nz-page-header-title>
+</nz-page-header>
+
+<div *ngIf="loading" class="text-center p-5">
+	<i class="fa fa-spinner fa-spin"></i> Đang tải...
+</div>
+
+<div *ngIf="!loading && notFound" class="text-center p-5">
+	<h4>Không tìm thấy bản ghi này</h4>
+</div>
+
+<div *ngIf="!loading && !notFound" class="p-3">
+	<h5 class="fw-bold mb-3">{{ recordDto?.title }}</h5>
+	<div #renderContainer class="form-record-render"></div>
+</div>

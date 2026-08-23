@@ -7,6 +7,7 @@ import { EFormService } from '@proxy/controllers';
 import { CatePagingDto, FormCategoryDto } from '@proxy/form-models/form-categories';
 import { ToasterService } from '@abp/ng.theme.shared';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
+import { getApiErrorMessage } from '../shared/services/http-error.util';
 
 @Component({
   standalone: false,
@@ -15,7 +16,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
   styleUrls: ['./form_categories.component.scss'],
 })
 export class FormCategoryComponent implements OnInit {
-  dataResultPaging: PagedResultDto<FormCategoryDto>;
+  dataResultPaging: PagedResultDto<FormCategoryDto> = new PagedResultDto<FormCategoryDto>();
   formCategory: FormCategoryDto[] = [];
   checked = false;
   loading = false;
@@ -68,13 +69,12 @@ export class FormCategoryComponent implements OnInit {
     });
     modalRef.componentInstance.id = id;
     modalRef.componentInstance.success.subscribe(res => {
-      this.service.deleteFormCategoryById(id).subscribe(res => {
-        if (res.status) {
+      this.service.deleteFormCategoryById(id, { skipHandleError: true }).subscribe({
+        next: res => {
           this.toasterService.success(res.messages);
           this.getPagingCategory(this.pageCate);
-        } else {
-          this.toasterService.error(res.messages);
-        }
+        },
+        error: err => this.toasterService.error(getApiErrorMessage(err)),
       });
     });
   }
@@ -88,13 +88,12 @@ export class FormCategoryComponent implements OnInit {
       });
       // modalRef.componentInstance.id = id;
       modalRef.componentInstance.success.subscribe(res => {
-        this.service.deleteMultiFormCategoryByIds(this.lstId).subscribe(res => {
-          if (res.status) {
+        this.service.deleteMultiFormCategoryByIds(this.lstId, { skipHandleError: true }).subscribe({
+          next: res => {
             this.toasterService.success(res.messages);
             this.getPagingCategory(this.pageCate);
-          } else {
-            this.toasterService.error(res.messages);
-          }
+          },
+          error: err => this.toasterService.error(getApiErrorMessage(err)),
         });
       });
     }

@@ -6,6 +6,8 @@ export interface CreateUpdateFormField {
   code?: string;
   type?: TypeField;
   config?: string;
+  options?: string;
+  displayOrder: number;
   formId?: string;
 }
 
@@ -14,5 +16,17 @@ export interface FormFieldDto extends FullAuditedEntityDto<string> {
   code?: string;
   type?: TypeField;
   config?: string;
+  options?: string;
+  displayOrder: number;
   formId?: string;
+}
+
+// Cấu trúc JSON của trường `config` (thay cho định dạng cũ "required:true")
+export interface FieldConfig {
+  required?: boolean;
+  minLength?: number | null;
+  maxLength?: number | null;
+  min?: number | null;
+  max?: number | null;
+  pattern?: string | null;
 }

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { EFormService } from '@proxy/controllers';
 import { FormCategoryDto } from '@proxy/form-models/form-categories';
+import { getApiErrorMessage } from '../../shared/services/http-error.util';
 @Component({
   standalone: false,
   selector: 'app-create_category',
@@ -55,23 +56,21 @@ export class CreateCategoryComponent implements OnInit {
       return;
     }
     this.Id?
-    this.service.updateFormCategoryByIdAndModel(this.Id, this.form.value).subscribe(res =>{
-      if(res.status){
+    this.service.updateFormCategoryByIdAndModel(this.Id, this.form.value, { skipHandleError: true }).subscribe({
+      next: res => {
         this.toasterService.success(res.messages);
         this.categoryUpdate.emit(res.messages)
         this.activeModal.close();
-      }else{
-        this.toasterService.error(res.messages);
-      }
+      },
+      error: err => this.toasterService.error(getApiErrorMessage(err)),
     })
-    :this.service.createFormCategoryByModel(this.form.value).subscribe(res =>{
-      if(res.status){
+    :this.service.createFormCategoryByModel(this.form.value, { skipHandleError: true }).subscribe({
+      next: res => {
         this.toasterService.success(res.messages);
         this.categoryUpdate.emit(res.messages)
         this.activeModal.close();
-      }else{
-        this.toasterService.error(res.messages);
-      }
+      },
+      error: err => this.toasterService.error(getApiErrorMessage(err)),
     })
   }
 }

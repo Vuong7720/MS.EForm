@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -35,234 +36,153 @@ namespace MS.EForm.FormServices
 			_formCategoryRepository = formCategoryRepository;
 		}
 
-		#region Check 
+		#region Check
 
-		// check trùng tên thuộc tính
-		private async Task<MessageDto> CheckTitleMach(string title, Guid? id)
+		// check trùng tên form
+		private async Task CheckTitleMach(string title, Guid? id)
 		{
-			var result = await _repository.FirstOrDefaultAsync(a => a.Title.Contains(title) && a.Id != id);
+			var result = await _repository.FirstOrDefaultAsync(a => a.Title == title && a.Id != id);
 			if (result != null)
 			{
-				return new MessageDto
-				{
-					Status = false,
-					Messages = "Tên form đã có. vui lòng nhập tên khác!"
-				};
+				throw new UserFriendlyException("Tên form đã có, vui lòng nhập tên khác!");
 			}
-			return new MessageDto
-			{
-				Status = true,
-				Messages = ""
-			};
 		}
-		// check null formCategory
-		private async Task<MessageDto> CheckFormCateMach(Guid formCateId)
+		// check tồn tại danh mục
+		private async Task CheckFormCateMach(Guid formCateId)
 		{
 			var result = await _formCategoryRepository.FindAsync(formCateId);
 			if (result == null)
 			{
-				return new MessageDto
-				{
-					Status = false,
-					Messages = "Không tồn tại danh mục form này"
-				};
+				throw new UserFriendlyException("Không tồn tại danh mục form này");
 			}
-			return new MessageDto
-			{
-				Status = true,
-				Messages = ""
-			};
-		}
-
-		// messages err
-		private async Task<MessageDto> MessagesErr(string err)
-		{
-			return new MessageDto
-			{
-				Status = false,
-				Messages = err
-			};
 		}
 
 		#endregion
 
-		// thêm mới form 
+		// thêm mới form
 		public async Task<MessageDto> CreateAsync(CreateUpdateForm model)
 		{
-			try
+			if (model == null) // ----> check dữ liệu đầu vào
 			{
-				var result = new Form();
-				if (model == null) // ----> check dữ liệu đầu vào
-				{
-					return new MessageDto
-					{
-						Status = false,
-						Messages = "Không có dữ liệu đầu vào"
-					};
-				}
-
-				var check = await CheckTitleMach(model.Title, null); // ----> check trùng tên form
-				if (!check.Status)
-				{
-					return check;
-				}
-				if(model.CategoryId != null) //-----> check tồn tại danh mục
-				{
-					var checkCate = await CheckFormCateMach(model.CategoryId.Value);
-					if (!checkCate.Status)
-					{
-						return checkCate;
-					}
-				}
-
-				result.Title = model.Title;
-				result.Content = model.Content;
-				result.CategoryId = model.CategoryId;
-				result.Description = model.Description;
-
-				var insert = await _repository.InsertAsync(result);
-
-				if (model.FormFields!= null && model.FormFields.Any())
-				{
-					var lstField = model.FormFields
-					.Select(a => new FormField
-					{
-						Title = a.Title,
-						Code = a.Code,
-						Type = a.Type,
-						Config = a.Config,
-						FormId = insert.Id
-					})
-					.ToList();
-					if (lstField.Any())
-					{
-						await _formFieldRepository.InsertManyAsync(lstField);
-					}
-				}
-
-				return new MessageDto
-				{
-					Status = true,
-					Messages = "Thêm mới form thành công"
-				};
-			}
-			catch (Exception ex)
-			{
-				return await MessagesErr(ex.Message);
+				throw new UserFriendlyException("Không có dữ liệu đầu vào");
 			}
 
+			await CheckTitleMach(model.Title, null); // ----> check trùng tên form
+			if (model.CategoryId != null) //-----> check tồn tại danh mục
+			{
+				await CheckFormCateMach(model.CategoryId.Value);
+			}
+
+			var result = new Form
+			{
+				Title = model.Title,
+				Content = model.Content,
+				CategoryId = model.CategoryId,
+				Description = model.Description
+			};
+
+			var insert = await _repository.InsertAsync(result);
+
+			if (model.FormFields != null && model.FormFields.Any())
+			{
+				var lstField = model.FormFields
+				.Select(a => new FormField
+				{
+					Title = a.Title,
+					Code = a.Code,
+					Type = a.Type,
+					Config = a.Config,
+					Options = a.Options,
+					DisplayOrder = a.DisplayOrder,
+					FormId = insert.Id
+				})
+				.ToList();
+				await _formFieldRepository.InsertManyAsync(lstField);
+			}
+
+			return new MessageDto
+			{
+				Status = true,
+				Messages = "Thêm mới form thành công"
+			};
 		}
 
 		// Update form
 		public async Task<MessageDto> UpdateAsync(Guid id, CreateUpdateForm model)
 		{
-			try
+			if (model == null) // ----> check dữ liệu đầu vào
 			{
-				if (model == null) // ----> check dữ liệu đầu vào
-				{
-					return new MessageDto
-					{
-						Status = false,
-						Messages = "Không có dữ liệu đầu vào"
-					};
-				}
-				var check = await CheckTitleMach(model.Title, id); // ----> check trùng tên form
-				if (!check.Status)
-				{
-					return check;
-				}
+				throw new UserFriendlyException("Không có dữ liệu đầu vào");
+			}
+			await CheckTitleMach(model.Title, id); // ----> check trùng tên form
 
-				var result = await _repository.FindAsync(id);
-				if(result != null)
-				{
-					result.Title = model.Title;
-					result.Content = model.Content;
-					result.CategoryId = model.CategoryId;
-					result.Description = model.Description;
-					await _repository.UpdateAsync(result);
+			var result = await _repository.FindAsync(id);
+			if (result == null)
+			{
+				throw new UserFriendlyException("Không tìm thấy form này");
+			}
 
-					if (model.FormFields != null && model.FormFields.Any())
+			result.Title = model.Title;
+			result.Content = model.Content;
+			result.CategoryId = model.CategoryId;
+			result.Description = model.Description;
+			await _repository.UpdateAsync(result);
+
+			if (model.FormFields != null && model.FormFields.Any())
+			{
+				var allField = await _formFieldRepository.GetQueryableAsync();
+				var lstOldField = allField.Where(a => a.FormId == id).ToList();
+				if (lstOldField.Any())
+				{
+					foreach (var item in lstOldField)
 					{
-						var allField = await _formFieldRepository.GetQueryableAsync();
-						var lstOldField = allField.Where(a => a.FormId == id).ToList();
-						if (lstOldField.Any())
-						{
-							foreach(var item in lstOldField)
-							{
-								await _formFieldRepository.HardDeleteAsync(item);
-							}
-						}
-						var lstField = model.FormFields
-						.Select(a => new FormField
-						{
-							Title = a.Title,
-							Code = a.Code,
-							Type = a.Type,
-							Config = a.Config,
-							FormId = id
-						})
-						.ToList();
-						if (lstField.Any())
-						{
-							await _formFieldRepository.InsertManyAsync(lstField);
-						}
+						await _formFieldRepository.HardDeleteAsync(item);
 					}
-
-
-					return new MessageDto
-					{
-						Status = true,
-						Messages = "Thêm mới form thành công"
-					};
 				}
-				else
+				var lstField = model.FormFields
+				.Select(a => new FormField
 				{
-					return new MessageDto
-					{
-						Status = false,
-						Messages = "Không tìm thấy form này"
-					};
-				}
+					Title = a.Title,
+					Code = a.Code,
+					Type = a.Type,
+					Config = a.Config,
+					Options = a.Options,
+					DisplayOrder = a.DisplayOrder,
+					FormId = id
+				})
+				.ToList();
+				await _formFieldRepository.InsertManyAsync(lstField);
+			}
 
-			}
-			catch (Exception ex)
+			return new MessageDto
 			{
-				return await MessagesErr(ex.Message);
-			}
+				Status = true,
+				Messages = "Cập nhật form thành công"
+			};
 		}
 
 		// Xóa form theo id
 		public async Task<MessageDto> DeleteAsync(Guid id)
 		{
-			try
+			var query = await _repository.FindAsync(id);
+			if (query == null)
 			{
-				var allField = await _formFieldRepository.GetQueryableAsync();
-				var fieldByForm = allField.Where(a => a.FormId == id).ToList();
-				if (fieldByForm.Any())
-				{
-					await _formFieldRepository.DeleteManyAsync(fieldByForm);
-				}
+				throw new UserFriendlyException("Không tìm thấy form này");
+			}
 
-				var query = await _repository.FindAsync(id);
-				if (query != null)
-				{
-					await _repository.DeleteAsync(query);
-					return new MessageDto
-					{
-						Status = true,
-						Messages = "Xóa form thành công"
-					};
-				}
-				return new MessageDto
-				{
-					Status = false,
-					Messages = "Không tìm thấy form này"
-				};
-			}
-			catch (Exception ex)
+			var allField = await _formFieldRepository.GetQueryableAsync();
+			var fieldByForm = allField.Where(a => a.FormId == id).ToList();
+			if (fieldByForm.Any())
 			{
-				return await MessagesErr(ex.Message);
+				await _formFieldRepository.DeleteManyAsync(fieldByForm);
 			}
+
+			await _repository.DeleteAsync(query);
+			return new MessageDto
+			{
+				Status = true,
+				Messages = "Xóa form thành công"
+			};
 		}
 
 		// Get toàn bộ form

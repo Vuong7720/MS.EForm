@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
 import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
+import type { CreateUpdateFormRecordDto, FormRecordDto, FormRecordPagingFilterDto } from '../form-models/form-records/models';
 import type { CreateUpdateForm, FormDto, FormPagingFilterDto } from '../form-models/forms/models';
 
 @Injectable({
@@ -189,6 +190,52 @@ export class EFormService {
       url: '/api/eform/edit-form-field',
       params: { id },
       body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  submitFormRecord = (model: CreateUpdateFormRecordDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/submit-form-record',
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  updateFormRecordByIdAndModel = (id: string, model: CreateUpdateFormRecordDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'PUT',
+      url: '/api/eform/edit-form-record',
+      params: { id },
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  deleteFormRecordById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'DELETE',
+      url: '/api/eform/delete-form-record',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getFormRecordByIdById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, FormRecordDto>({
+      method: 'GET',
+      url: '/api/eform/get-form-record-by-id',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getPagingFormRecord = (page: FormRecordPagingFilterDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PagedResultDto<FormRecordDto>>({
+      method: 'GET',
+      url: '/api/eform/get-paging-form-record',
+      params: { formId: page.formId, title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
     },
     { apiName: this.apiName,...config });
 
