@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using EForm;
 using EForm.Entities;
 using EForm.FormModels;
@@ -7,6 +8,7 @@ using MS.EForm.Enums;
 using MS.EForm.FormModels.FormRecords;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -297,6 +299,97 @@ namespace MS.EForm.FormServices
 				totalCount,  // Tổng số bản ghi
 				items        // Danh sách sau khi phân trang
 			);
+		}
+
+		// xuất kết quả nộp form ra Excel
+		public async Task<byte[]> ExportExcelAsync(Guid formId)
+		{
+			var form = await _formRepository.FindAsync(formId);
+			if (form == null)
+			{
+				throw new UserFriendlyException("Không tồn tại form này");
+			}
+
+			var allFields = await _formFieldRepository.GetQueryableAsync();
+			var fields = allFields.Where(a => a.FormId == formId).OrderBy(a => a.DisplayOrder).ToList();
+
+			var allRecords = await _repository.GetQueryableAsync();
+			var records = allRecords.Where(a => a.FormId == formId).OrderByDescending(a => a.CreationTime).ToList();
+
+			using var workbook = new XLWorkbook();
+			var worksheet = workbook.Worksheets.Add("Ket qua");
+
+			worksheet.Cell(1, 1).Value = "Tiêu đề bản ghi";
+			for (var i = 0; i < fields.Count; i++)
+			{
+				worksheet.Cell(1, i + 2).Value = fields[i].Title;
+			}
+			worksheet.Cell(1, fields.Count + 2).Value = "Thời gian nộp";
+			worksheet.Row(1).Style.Font.Bold = true;
+
+			for (var row = 0; row < records.Count; row++)
+			{
+				var record = records[row];
+				worksheet.Cell(row + 2, 1).Value = record.Title;
+
+				Dictionary<string, string> data;
+				try
+				{
+					data = JsonSerializer.Deserialize<Dictionary<string, string>>(record.Data) ?? new Dictionary<string, string>();
+				}
+				catch
+				{
+					data = new Dictionary<string, string>();
+				}
+
+				for (var i = 0; i < fields.Count; i++)
+				{
+					data.TryGetValue(fields[i].Code, out var value);
+					worksheet.Cell(row + 2, i + 2).Value = value ?? "";
+				}
+
+				worksheet.Cell(row + 2, fields.Count + 2).Value = record.CreationTime.ToString("dd/MM/yyyy HH:mm");
+			}
+
+			worksheet.Columns().AdjustToContents();
+
+			using var stream = new MemoryStream();
+			workbook.SaveAs(stream);
+			return stream.ToArray();
+		}
+
+		// thống kê tổng quan cho dashboard
+		public async Task<DashboardStatsDto> GetDashboardStatsAsync()
+		{
+			var forms = await _formRepository.GetQueryableAsync();
+			var records = await _repository.GetQueryableAsync();
+
+			var totalForms = forms.Count();
+			var totalRecords = records.Count();
+
+			var topFormCounts = records
+				.GroupBy(a => a.FormId)
+				.Select(g => new { FormId = g.Key, Count = g.Count() })
+				.OrderByDescending(g => g.Count)
+				.Take(5)
+				.ToList();
+
+			var topFormIds = topFormCounts.Select(t => t.FormId).ToList();
+			var formTitles = forms
+				.Where(f => topFormIds.Contains(f.Id))
+				.ToDictionary(f => f.Id, f => f.Title);
+
+			return new DashboardStatsDto
+			{
+				TotalForms = totalForms,
+				TotalRecords = totalRecords,
+				TopForms = topFormCounts.Select(t => new TopFormDto
+				{
+					FormId = t.FormId,
+					Title = formTitles.TryGetValue(t.FormId, out var title) ? title : "",
+					Count = t.Count
+				}).ToList()
+			};
 		}
 	}
 }

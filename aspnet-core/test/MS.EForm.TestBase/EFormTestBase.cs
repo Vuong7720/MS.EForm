@@ -23,6 +23,15 @@ public abstract class EFormTestBase<TStartupModule> : AbpIntegratedTest<TStartup
         return WithUnitOfWorkAsync(new AbpUnitOfWorkOptions(), func);
     }
 
+    // Các custom service trong dự án này không dùng ApplicationService nên InsertAsync mặc định
+    // không autoSave trong 1 UOW đang mở - gọi hàm này giữa bước tạo và bước đọc lại trong cùng
+    // 1 WithUnitOfWorkAsync để dữ liệu vừa tạo hiển thị ngay cho câu query tiếp theo.
+    protected virtual Task FlushChangesAsync()
+    {
+        var uowManager = ServiceProvider.GetRequiredService<IUnitOfWorkManager>();
+        return uowManager.Current?.SaveChangesAsync() ?? Task.CompletedTask;
+    }
+
     protected virtual async Task WithUnitOfWorkAsync(AbpUnitOfWorkOptions options, Func<Task> action)
     {
         using (var scope = ServiceProvider.CreateScope())

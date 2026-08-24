@@ -24,6 +24,7 @@ import { AccountLayoutModule } from '@abp/ng.theme.lepton-x/account';
 import { SharedModule } from './shared/shared.module';
 import { CurrencyPipe } from '@angular/common';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { NZ_I18N, vi_VN } from 'ng-zorro-antd/i18n';
 
 @NgModule({
   imports: [
@@ -44,6 +45,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
   providers: [
     [CurrencyPipe],
     [NzModalService],
+    { provide: NZ_I18N, useValue: vi_VN },
     APP_ROUTE_PROVIDER,
     provideAbpCore(
       withOptions({

@@ -2,6 +2,9 @@
 	<nz-page-header-title>Kết quả nộp form</nz-page-header-title>
 	<nz-page-header-extra *ngIf="page.formId">
 		<nz-space>
+			<button *nzSpaceItem nz-button nzType="primary" (click)="exportExcel()">
+				<i class="bi bi-file-earmark-excel"></i> Xuất Excel
+			</button>
 			<button *nzSpaceItem nz-button nzType="default" (click)="clearFilter()">Bỏ lọc theo form</button>
 		</nz-space>
 	</nz-page-header-extra>

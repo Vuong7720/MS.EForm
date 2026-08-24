@@ -9,8 +9,8 @@
   }
 }
 :root {
-  --lpx-logo: url('/assets/images/logo/logo-light.png');
-  --lpx-logo-icon: url('/assets/images/logo/logo-light-thumbnail.png');
+  --lpx-logo: url('/assets/images/logo/logo-full.svg');
+  --lpx-logo-icon: url('/assets/images/logo/logo-icon.svg');
 }
 .donut {
   display: inline-block;
@@ -55,4 +55,249 @@
   width: 20px;
   height: 20px;
   background-image: url('/assets/images/getting-started/x.svg');
+}
+
+/* ==========================================================================
+   Modern theme overrides — nâng cấp giao diện mặc định LeptonX Lite + ng-zorro
+   ========================================================================== */
+
+:root {
+  --brand-50: #eef2ff;
+  --brand-100: #e0e7ff;
+  --brand-400: #818cf8;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed;
+
+  --surface-bg: #f4f5fb;
+  --surface-card: #ffffff;
+  --surface-border: #e9eaf2;
+  --surface-border-strong: #dfe1ec;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.06), 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-md: 0 8px 20px rgba(17, 24, 39, 0.08);
+  --shadow-brand: 0 6px 16px rgba(79, 70, 229, 0.28);
+}
+
+html,
+body {
+  background: var(--surface-bg) !important;
+}
+
+body,
+.ant-typography,
+button,
+input,
+select,
+textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* ---- Content area ---- */
+.lpx-content-container,
+.lpx-content {
+  background: var(--surface-bg) !important;
+}
+
+.lpx-content-container {
+  padding: 20px 24px !important;
+}
+
+/* ---- Breadcrumb ---- */
+.lpx-breadcrumb-container {
+  padding: 0 0 16px 0 !important;
+}
+
+.lpx-breadcrumb-item-text {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ---- Page header ---- */
+.ant-page-header {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px !important;
+  padding: 18px 24px !important;
+}
+
+.ant-page-header-heading-title {
+  font-weight: 700 !important;
+  font-size: 19px !important;
+  color: var(--text-primary) !important;
+}
+
+/* ---- Buttons ---- */
+.ant-btn {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 500 !important;
+  box-shadow: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.ant-btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, var(--brand-500), var(--accent-500)) !important;
+  border: none !important;
+  box-shadow: var(--shadow-brand);
+}
+
+.ant-btn-primary:not(:disabled):hover {
+  transform: translateY(-1px);
+  opacity: 0.94;
+}
+
+.ant-btn-dangerous {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ---- Cards / Statistic ---- */
+.ant-card {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--surface-border) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.ant-statistic-title {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.ant-statistic-content {
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+}
+
+/* ---- Table ---- */
+.ant-table-container {
+  border-radius: var(--radius-md) !important;
+}
+
+.ant-table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background: #f7f7fc !important;
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid var(--surface-border-strong) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--surface-border) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--brand-50) !important;
+}
+
+.ant-table-pagination {
+  margin: 16px 8px !important;
+}
+
+/* ---- Inputs ---- */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker,
+.ant-input-number {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ---- Modal ---- */
+.ant-modal-content {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+/* ---- Dropdown menu ---- */
+.ant-dropdown-menu {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: 6px !important;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: 6px !important;
+}
+
+/* ---- Sidebar (LeptonX) ---- */
+.lpx-sidebar {
+  background: linear-gradient(180deg, #191733 0%, #100e24 100%) !important;
+  border-right: none !important;
+}
+
+.lpx-menu-item-link {
+  border-radius: var(--radius-sm);
+  margin: 2px 10px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.lpx-menu-item-link:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Item menu đang chọn: pill nền tím nhạt + thanh chỉ báo bên trái, thay cho màu hồng-magenta mặc định */
+.lpx-menu-item-link.selected,
+.lpx-menu-item-link.expanded,
+.lpx-menu-item.selected > .lpx-menu-item-link {
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.24), rgba(139, 92, 246, 0.05)) !important;
+  border-left: 3px solid var(--brand-400) !important;
+  color: #ffffff !important;
+}
+
+.lpx-menu-item-link.selected .lpx-menu-item-icon,
+.lpx-menu-item-link.selected .lpx-menu-item-text,
+.lpx-menu-item-link.expanded .lpx-menu-item-icon,
+.lpx-menu-item-link.expanded .lpx-menu-item-text {
+  color: #ffffff !important;
+}
+
+.lpx-brand-logo,
+.lpx-brand-name {
+  filter: none;
+}
+
+/* ---- Topbar ---- */
+.lpx-topbar {
+  background: var(--surface-card) !important;
+  border-bottom: 1px solid var(--surface-border) !important;
+  box-shadow: var(--shadow-xs);
+}
+
+.user-full-name {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+  background: var(--brand-50);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.lpx-topbar-content lpx-icon {
+  color: var(--text-secondary);
 }

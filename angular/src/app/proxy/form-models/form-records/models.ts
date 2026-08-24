@@ -18,3 +18,15 @@ export interface FormRecordPagingFilterDto {
   pageSize: number;
   pageIndex: number;
 }
+
+export interface TopFormDto {
+  formId: string;
+  title: string;
+  count: number;
+}
+
+export interface DashboardStatsDto {
+  totalForms: number;
+  totalRecords: number;
+  topForms: TopFormDto[];
+}

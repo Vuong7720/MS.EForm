@@ -1,9 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToasterService } from '@abp/ng.theme.shared';
 import { EFormService } from '@proxy/controllers';
 import { FormFieldDto } from '@proxy/form-models/form-fields';
 import { FormRecordDto } from '@proxy/form-models/form-records';
 import { FormRendererService } from '../../shared/services/form-renderer.service';
+import { getApiErrorMessage } from '../../shared/services/http-error.util';
 
 @Component({
   standalone: false,
@@ -19,12 +21,15 @@ export class FormRecordDetailComponent implements OnInit {
   formContent = '';
   loading = true;
   notFound = false;
+  editing = false;
+  saving = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private service: EFormService,
-    private renderer: FormRendererService
+    private renderer: FormRendererService,
+    private toasterService: ToasterService
   ) {}
 
   ngOnInit(): void {
@@ -38,6 +43,9 @@ export class FormRecordDetailComponent implements OnInit {
   }
 
   private load(id: string): void {
+    this.loading = true;
+    this.editing = false;
+
     this.service.getFormRecordByIdById(id).subscribe(record => {
       if (!record || !record.id) {
         this.notFound = true;
@@ -67,16 +75,66 @@ export class FormRecordDetailComponent implements OnInit {
     this.renderContainer.nativeElement.innerHTML = '';
     this.renderContainer.nativeElement.appendChild(rendered);
 
-    let data: Record<string, string> = {};
+    this.renderer.fillFormData(this.renderContainer.nativeElement, this.parseData(), true);
+  }
+
+  private parseData(): Record<string, string> {
     try {
-      data = JSON.parse(this.recordDto.data || '{}');
+      return JSON.parse(this.recordDto?.data || '{}');
     } catch {
-      data = {};
+      return {};
     }
-    this.renderer.fillFormData(this.renderContainer.nativeElement, data, true);
+  }
+
+  startEdit(): void {
+    if (!this.renderContainer) return;
+    this.editing = true;
+    this.renderer.setEnabled(this.renderContainer.nativeElement, true);
+  }
+
+  cancelEdit(): void {
+    this.editing = false;
+    // render lại từ dữ liệu gốc để bỏ mọi thay đổi chưa lưu
+    this.renderReadonly();
+  }
+
+  save(): void {
+    if (!this.renderContainer || !this.recordDto) return;
+    if (!this.renderer.checkClientValidity(this.renderContainer.nativeElement)) return;
+
+    const data = this.renderer.collectFormData(this.renderContainer.nativeElement);
+    this.saving = true;
+
+    this.service
+      .updateFormRecordByIdAndModel(
+        this.recordDto.id,
+        {
+          title: this.recordDto.title,
+          formId: this.recordDto.formId,
+          data: JSON.stringify(data),
+        },
+        { skipHandleError: true }
+      )
+      .subscribe({
+        next: res => {
+          this.saving = false;
+          this.toasterService.success(res.messages);
+          this.load(this.recordDto!.id);
+        },
+        error: err => {
+          this.saving = false;
+          this.toasterService.error(getApiErrorMessage(err));
+        },
+      });
   }
 
   back(): void {
-    this.router.navigate(['/form-records'], { queryParams: { formId: this.recordDto?.formId } });
+    this.router.navigate(['/form-records'], {
+      queryParams: {
+        formId: this.recordDto?.formId,
+        pageIndex: this.route.snapshot.queryParamMap.get('pageIndex'),
+        pageSize: this.route.snapshot.queryParamMap.get('pageSize'),
+      },
+    });
   }
 }

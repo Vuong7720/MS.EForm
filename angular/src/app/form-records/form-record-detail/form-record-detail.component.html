@@ -1,5 +1,24 @@
 <nz-page-header [nzGhost]="false" nzBackIcon (nzBack)="back()">
 	<nz-page-header-title>Chi tiết bản ghi</nz-page-header-title>
+	<nz-page-header-extra *ngIf="!loading && !notFound">
+		<nz-space>
+			<ng-container *ngIf="!editing">
+				<ng-container *nzSpaceItem>
+					<button *abpPermission="'EForm.FormRecords.Edit'" nz-button nzType="primary" (click)="startEdit()">
+						<i class="bi bi-pencil"></i> Sửa
+					</button>
+				</ng-container>
+			</ng-container>
+			<ng-container *ngIf="editing">
+				<ng-container *nzSpaceItem>
+					<button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">Lưu</button>
+				</ng-container>
+				<ng-container *nzSpaceItem>
+					<button nz-button nzType="default" [disabled]="saving" (click)="cancelEdit()">Hủy</button>
+				</ng-container>
+			</ng-container>
+		</nz-space>
+	</nz-page-header-extra>
 </nz-page-header>
 
 <div *ngIf="loading" class="text-center p-5">

@@ -9,9 +9,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Net;
+using System.Threading.RateLimiting;
 using MS.EForm.EntityFrameworkCore;
 using MS.EForm.MultiTenancy;
 using StackExchange.Redis;
@@ -61,6 +64,27 @@ public class EFormHttpApiHostModule : AbpModule
         ConfigureDistributedLocking(context, configuration);
         ConfigureCors(context, configuration);
         ConfigureSwaggerServices(context, configuration);
+        ConfigureRateLimiting(context);
+    }
+
+    // Giới hạn số lần gọi endpoint nộp form public (submit-form-record) theo từng IP,
+    // vì endpoint này cố tình không yêu cầu đăng nhập nên dễ bị spam nếu không giới hạn.
+    private void ConfigureRateLimiting(ServiceConfigurationContext context)
+    {
+        context.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
+            options.AddPolicy("submit-form", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                    }));
+        });
     }
 
     private void ConfigureCache(IConfiguration configuration)
@@ -214,6 +238,7 @@ public class EFormHttpApiHostModule : AbpModule
 
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
+        app.UseRateLimiter();
         app.UseConfiguredEndpoints();
     }
 }

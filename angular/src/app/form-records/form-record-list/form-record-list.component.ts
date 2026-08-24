@@ -35,6 +35,10 @@ export class FormRecordListComponent implements OnInit {
 
   ngOnInit(): void {
     this.page.formId = this.route.snapshot.queryParamMap.get('formId') || undefined;
+    const pageIndex = Number(this.route.snapshot.queryParamMap.get('pageIndex'));
+    const pageSize = Number(this.route.snapshot.queryParamMap.get('pageSize'));
+    if (pageIndex > 0) this.page.pageIndex = pageIndex;
+    if (pageSize > 0) this.page.pageSize = pageSize;
     this.getPaging(this.page);
   }
 
@@ -55,7 +59,9 @@ export class FormRecordListComponent implements OnInit {
   }
 
   view(id: string) {
-    this.router.navigate(['/form-records/view', id]);
+    this.router.navigate(['/form-records/view', id], {
+      queryParams: { formId: this.page.formId, pageIndex: this.page.pageIndex, pageSize: this.page.pageSize },
+    });
   }
 
   delete(id: string) {
@@ -80,5 +86,21 @@ export class FormRecordListComponent implements OnInit {
     this.page.formId = undefined;
     this.router.navigate(['/form-records']);
     this.getPaging(this.page);
+  }
+
+  exportExcel() {
+    if (!this.page.formId) return;
+
+    this.service.exportExcelFormRecord(this.page.formId, { skipHandleError: true }).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ket-qua-nop-form.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: err => this.toasterService.error(getApiErrorMessage(err)),
+    });
   }
 }

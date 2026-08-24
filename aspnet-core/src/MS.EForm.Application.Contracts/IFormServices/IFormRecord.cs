@@ -13,5 +13,7 @@ namespace EForm.IFormServices
 		Task<MessageDto> DeleteAsync(Guid id);
 		Task<FormRecordDto> GetAsync(Guid id);
 		Task<PagedResultDto<FormRecordDto>> GetListAsync(FormRecordPagingFilterDto page);
+		Task<byte[]> ExportExcelAsync(Guid formId);
+		Task<DashboardStatsDto> GetDashboardStatsAsync();
 	}
 }

@@ -1,8 +1,56 @@
-<div class="container">
-	<app-editor
-              id="editorSEOContent"
-              [readonly]="false"
-              #editorSEOContent
-              [disableTwoWayDataBinding]="true"
-            ></app-editor>
+<div class="dashboard">
+	<div class="stat-grid">
+		<div class="stat-card">
+			<div class="stat-card__icon stat-card__icon--indigo"><i class="bi bi-clipboard2-data"></i></div>
+			<div class="stat-card__info">
+				<span class="stat-card__label">Tổng số biểu mẫu</span>
+				<span class="stat-card__value">{{ stats?.totalForms ?? 0 }}</span>
+			</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-card__icon stat-card__icon--violet"><i class="bi bi-send-check"></i></div>
+			<div class="stat-card__info">
+				<span class="stat-card__label">Tổng số lượt nộp</span>
+				<span class="stat-card__value">{{ stats?.totalRecords ?? 0 }}</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="panel">
+		<div class="panel__header">
+			<i class="bi bi-trophy-fill"></i>
+			<h3>Top 5 biểu mẫu nhiều lượt nộp nhất</h3>
+		</div>
+		<div class="panel__body">
+			<div *ngIf="loading" class="loading-state">
+				<i class="fa fa-spinner fa-spin"></i> Đang tải...
+			</div>
+			<nz-table
+				*ngIf="!loading"
+				#topTable
+				[nzData]="stats?.topForms || []"
+				[nzShowPagination]="false"
+				nzSize="middle"
+			>
+				<thead>
+					<tr>
+						<th style="width: 10%;">#</th>
+						<th>Tên biểu mẫu</th>
+						<th style="width: 20%; text-align: right;">Lượt nộp</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						*ngFor="let item of topTable.data; let i = index"
+						class="rank-row"
+						(click)="viewFormRecords(item.formId)"
+					>
+						<td><span class="rank-badge" [ngClass]="'rank-badge--' + (i + 1)">{{ i + 1 }}</span></td>
+						<td class="form-title">{{ item.title }}</td>
+						<td style="text-align: right;"><span class="count-pill">{{ item.count }}</span></td>
+					</tr>
+				</tbody>
+			</nz-table>
+		</div>
+	</div>
 </div>

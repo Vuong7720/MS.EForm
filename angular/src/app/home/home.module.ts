@@ -7,17 +7,23 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzStatisticModule } from 'ng-zorro-antd/statistic';
+import { NzGridModule } from 'ng-zorro-antd/grid';
 import { CmsEditorModule } from '../shared/components/cmsEditor/cms-editor.module';
 
 @NgModule({
   declarations: [HomeComponent],
   imports: [
-    SharedModule, 
+    SharedModule,
     HomeRoutingModule,
     NzButtonModule,
     NzTableModule,
     NzInputModule,
     NzFormModule,
+    NzCardModule,
+    NzStatisticModule,
+    NzGridModule,
     CmsEditorModule
   ],
 })

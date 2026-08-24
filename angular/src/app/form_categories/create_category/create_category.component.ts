@@ -30,7 +30,6 @@ export class CreateCategoryComponent implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     if(this.Id){
-      console.log(this.Id)
       this.getCategoryById(this.Id);
     }
   }

@@ -149,6 +149,14 @@ export class FormRendererService {
     });
   }
 
+  // Bật/tắt chỉnh sửa cho toàn bộ input trong container, dùng để chuyển trang xem kết quả
+  // từ chế độ readonly sang chế độ sửa và ngược lại mà không cần render lại DOM.
+  setEnabled(container: HTMLElement, enabled: boolean): void {
+    container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('[name]').forEach(el => {
+      el.disabled = !enabled;
+    });
+  }
+
   // Áp thuộc tính ràng buộc HTML5 (required/minlength/maxlength/pattern/min/max) từ FieldConfig
   // để trình duyệt tự validate trước khi submit, song song với validate ở backend.
   private applyConfigConstraints(el: HTMLElement, fieldType: number, config: ReturnType<typeof parseFieldConfig>): void {

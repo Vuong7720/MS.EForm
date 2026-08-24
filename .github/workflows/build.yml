@@ -1,0 +1,59 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aspnet-core
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore MS.EForm.sln
+
+      - name: Build
+        run: dotnet build MS.EForm.sln -c Release --no-restore
+
+      # Test project chạy trên SQLite in-memory, không cần SQL Server/Redis thật.
+      # MS.EForm.EntityFrameworkCore.Tests là project chứa các lớp test cụ thể (có thể chạy được);
+      # MS.EForm.Application.Tests/MS.EForm.Domain.Tests chỉ chứa lớp abstract nên không cần chạy riêng.
+      - name: Test
+        run: dotnet test test/MS.EForm.EntityFrameworkCore.Tests/MS.EForm.EntityFrameworkCore.Tests.csproj -c Release
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: angular
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: angular/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # `ng test` chưa được đưa vào CI: 11/26 file spec.ts có từ trước dự án đã hỏng
+      # (thiếu provider NgbActiveModal/NzModalService, gọi thẳng EFormService thật...),
+      # đưa vào ngay bây giờ sẽ làm CI đỏ liên tục. Chạy `npm test` cục bộ để xem các test mới
+      # (FormRendererService, FormRecordListComponent) vẫn pass bình thường.

@@ -2,6 +2,7 @@
 using EForm;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MS.EForm.Localization;
 using MS.EForm.Permissions;
 using System.Threading.Tasks;
@@ -194,7 +195,9 @@ public class EFormController : AbpControllerBase
 	#region FormRecord
 
 	// Cố tình để public, không Authorize: đây là endpoint nộp form cho người ngoài hệ thống điền qua /submit-form/:formId
-	// TODO: cân nhắc thêm captcha/rate-limit trước khi public thật ra internet
+	// Giới hạn 10 request/phút/IP (policy "submit-form", cấu hình ở EFormHttpApiHostModule) để giảm rủi ro spam.
+	// TODO: cân nhắc thêm captcha nếu spam vẫn xảy ra qua nhiều IP khác nhau (rate-limit theo IP không chặn được).
+	[EnableRateLimiting("submit-form")]
 	[HttpPost("submit-form-record")]
 	public async Task<MessageDto> SubmitFormRecord(CreateUpdateFormRecordDto model)
 	{
@@ -227,6 +230,21 @@ public class EFormController : AbpControllerBase
 	public async Task<PagedResultDto<FormRecordDto>> GetPagingFormRecord(FormRecordPagingFilterDto page)
 	{
 		return await _formRecord.GetListAsync(page);
+	}
+
+	[Authorize(EFormPermissions.FormRecords.Default)]
+	[HttpGet("export-excel-form-record")]
+	public async Task<IActionResult> ExportExcelFormRecord(Guid formId)
+	{
+		var bytes = await _formRecord.ExportExcelAsync(formId);
+		return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ket-qua-{formId}.xlsx");
+	}
+
+	[Authorize]
+	[HttpGet("get-dashboard-stats")]
+	public async Task<DashboardStatsDto> GetDashboardStats()
+	{
+		return await _formRecord.GetDashboardStatsAsync();
 	}
 
 	#endregion

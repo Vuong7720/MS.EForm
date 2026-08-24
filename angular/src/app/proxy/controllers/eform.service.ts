@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
 import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
-import type { CreateUpdateFormRecordDto, FormRecordDto, FormRecordPagingFilterDto } from '../form-models/form-records/models';
+import type { CreateUpdateFormRecordDto, DashboardStatsDto, FormRecordDto, FormRecordPagingFilterDto } from '../form-models/form-records/models';
 import type { CreateUpdateForm, FormDto, FormPagingFilterDto } from '../form-models/forms/models';
 
 @Injectable({
@@ -236,6 +236,24 @@ export class EFormService {
       method: 'GET',
       url: '/api/eform/get-paging-form-record',
       params: { formId: page.formId, title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
+    },
+    { apiName: this.apiName,...config });
+
+
+  exportExcelFormRecord = (formId: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, Blob>({
+      method: 'GET',
+      url: '/api/eform/export-excel-form-record',
+      params: { formId },
+      responseType: 'blob',
+    } as any,
+    { apiName: this.apiName,...config });
+
+
+  getDashboardStats = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, DashboardStatsDto>({
+      method: 'GET',
+      url: '/api/eform/get-dashboard-stats',
     },
     { apiName: this.apiName,...config });
 

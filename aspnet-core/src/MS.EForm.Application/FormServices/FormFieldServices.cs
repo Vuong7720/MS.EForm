@@ -35,22 +35,22 @@ namespace MS.EForm.FormServices
 
 		#region Check
 
-		// check trùng tên thuộc tính
-		private async Task CheckTitleMach(string title, Guid? id)
+		// check trùng tên thuộc tính trong cùng 1 form (2 form khác nhau được phép trùng tên field)
+		private async Task CheckTitleMach(string title, Guid formId, Guid? id)
 		{
-			var result = await _repository.FirstOrDefaultAsync(a => a.Title == title && a.Id != id);
+			var result = await _repository.FirstOrDefaultAsync(a => a.Title == title && a.FormId == formId && a.Id != id);
 			if (result != null)
 			{
-				throw new UserFriendlyException("Tên thuộc tính đã có, vui lòng nhập tên khác!");
+				throw new UserFriendlyException("Tên thuộc tính đã có trong form này, vui lòng nhập tên khác!");
 			}
 		}
-		// check trùng mã code
-		private async Task CheckCodeMach(string code, Guid? id)
+		// check trùng mã code trong cùng 1 form
+		private async Task CheckCodeMach(string code, Guid formId, Guid? id)
 		{
-			var result = await _repository.FirstOrDefaultAsync(a => a.Code == code && a.Id != id);
+			var result = await _repository.FirstOrDefaultAsync(a => a.Code == code && a.FormId == formId && a.Id != id);
 			if (result != null)
 			{
-				throw new UserFriendlyException("Mã code đã tồn tại, vui lòng nhập mã khác!");
+				throw new UserFriendlyException("Mã code đã tồn tại trong form này, vui lòng nhập mã khác!");
 			}
 		}
 		// check tồn tại form
@@ -80,13 +80,13 @@ namespace MS.EForm.FormServices
 			{
 				throw new UserFriendlyException("Vui lòng chọn form cho thuộc tính này");
 			}
-			if (!string.IsNullOrEmpty(model.Title)) // ----> check trùng title
+			if (!string.IsNullOrEmpty(model.Title)) // ----> check trùng title trong cùng form
 			{
-				await CheckTitleMach(model.Title, null);
+				await CheckTitleMach(model.Title, model.FormId.Value, null);
 			}
-			if (!string.IsNullOrEmpty(model.Code)) // ----> check trùng code
+			if (!string.IsNullOrEmpty(model.Code)) // ----> check trùng code trong cùng form
 			{
-				await CheckCodeMach(model.Code, null);
+				await CheckCodeMach(model.Code, model.FormId.Value, null);
 			}
 			await CheckFormMach(model.FormId.Value); // ----> check có tồn tại form
 
@@ -117,23 +117,25 @@ namespace MS.EForm.FormServices
 				throw new UserFriendlyException("Không có dữ liệu truyền vào");
 			}
 
-			if (!string.IsNullOrEmpty(model.Title)) // ----> check trùng title
-			{
-				await CheckTitleMach(model.Title, id);
-			}
-			if (!string.IsNullOrEmpty(model.Code)) // ----> check trùng code
-			{
-				await CheckCodeMach(model.Code, id);
-			}
-			if (model.FormId != null) // ----> check có tồn tại form
-			{
-				await CheckFormMach(model.FormId);
-			}
-
 			var field = await _repository.FirstOrDefaultAsync(a => a.Id == id);
 			if (field == null)
 			{
 				throw new UserFriendlyException("Không có thuộc tính này");
+			}
+
+			var formId = model.FormId ?? field.FormId; // giữ nguyên form hiện tại nếu model không gửi FormId
+
+			if (!string.IsNullOrEmpty(model.Title)) // ----> check trùng title trong cùng form
+			{
+				await CheckTitleMach(model.Title, formId, id);
+			}
+			if (!string.IsNullOrEmpty(model.Code)) // ----> check trùng code trong cùng form
+			{
+				await CheckCodeMach(model.Code, formId, id);
+			}
+			if (model.FormId != null) // ----> check có tồn tại form
+			{
+				await CheckFormMach(model.FormId);
 			}
 
 			field.Title = model.Title;

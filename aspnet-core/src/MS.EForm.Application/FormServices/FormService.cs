@@ -23,17 +23,20 @@ namespace MS.EForm.FormServices
 		IRepository<Form, Guid> _repository;
 		IRepository<FormField, Guid> _formFieldRepository;
 		IRepository<FormCategories, Guid> _formCategoryRepository;
+		IRepository<FormRecord, Guid> _formRecordRepository;
 		public FormService(
 			ICurrentUser currentUser,
 			IConfiguration staticConfiguration,
 			IRepository<Form, Guid> repository,
 			IRepository<FormField, Guid> formFieldRepository,
-			IRepository<FormCategories, Guid> formCategoryRepository
+			IRepository<FormCategories, Guid> formCategoryRepository,
+			IRepository<FormRecord, Guid> formRecordRepository
 			)
 		{
 			_repository = repository;
 			_formFieldRepository = formFieldRepository;
 			_formCategoryRepository = formCategoryRepository;
+			_formRecordRepository = formRecordRepository;
 		}
 
 		#region Check
@@ -175,6 +178,13 @@ namespace MS.EForm.FormServices
 			if (fieldByForm.Any())
 			{
 				await _formFieldRepository.DeleteManyAsync(fieldByForm);
+			}
+
+			var allRecords = await _formRecordRepository.GetQueryableAsync();
+			var recordsByForm = allRecords.Where(a => a.FormId == id).ToList();
+			if (recordsByForm.Any())
+			{
+				await _formRecordRepository.DeleteManyAsync(recordsByForm);
 			}
 
 			await _repository.DeleteAsync(query);
