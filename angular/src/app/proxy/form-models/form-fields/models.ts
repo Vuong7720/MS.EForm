@@ -29,4 +29,8 @@ export interface FieldConfig {
   min?: number | null;
   max?: number | null;
   pattern?: string | null;
+  // riêng cho field kiểu Upload file/ảnh (TypeField.File)
+  allowedExtensions?: string[] | null;
+  maxFileSizeMb?: number | null;
+  maxFileCount?: number | null;
 }

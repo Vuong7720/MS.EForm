@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
 import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
-import type { CreateUpdateFormRecordDto, DashboardStatsDto, FormRecordDto, FormRecordPagingFilterDto } from '../form-models/form-records/models';
+import type { CreateUpdateFormRecordDto, DashboardStatsDto, FormRecordDto, FormRecordPagingFilterDto, UploadAttachmentResultDto } from '../form-models/form-records/models';
 import type { CreateUpdateForm, FormDto, FormPagingFilterDto } from '../form-models/forms/models';
 
 @Injectable({
@@ -255,6 +255,29 @@ export class EFormService {
       method: 'GET',
       url: '/api/eform/get-dashboard-stats',
     },
+    { apiName: this.apiName,...config });
+
+  uploadFormAttachment = (formId: string, fieldCode: string, file: File, config?: Partial<Rest.Config>) => {
+    const formData = new FormData();
+    formData.append('formId', formId);
+    formData.append('fieldCode', fieldCode);
+    formData.append('file', file);
+    return this.restService.request<any, UploadAttachmentResultDto>({
+      method: 'POST',
+      url: '/api/eform/upload-form-attachment',
+      body: formData,
+    } as any,
+    { apiName: this.apiName,...config });
+  };
+
+
+  downloadFormAttachment = (blobName: string, fileName: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, Blob>({
+      method: 'GET',
+      url: '/api/eform/download-form-attachment',
+      params: { blobName, fileName },
+      responseType: 'blob',
+    } as any,
     { apiName: this.apiName,...config });
 
   constructor(private restService: RestService) {}

@@ -30,3 +30,10 @@ export interface DashboardStatsDto {
   totalRecords: number;
   topForms: TopFormDto[];
 }
+
+// kết quả upload 1 file đính kèm (field kiểu Upload file/ảnh) - xem UploadAttachmentResultDto ở backend
+export interface UploadAttachmentResultDto {
+  blob: string;
+  name: string;
+  size: number;
+}

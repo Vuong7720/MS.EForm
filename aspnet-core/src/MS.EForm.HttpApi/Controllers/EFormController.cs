@@ -1,6 +1,7 @@
 ﻿using EForm.IFormServices;
 using EForm;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MS.EForm.Localization;
@@ -245,6 +246,31 @@ public class EFormController : AbpControllerBase
 	public async Task<DashboardStatsDto> GetDashboardStats()
 	{
 		return await _formRecord.GetDashboardStatsAsync();
+	}
+
+	// Cố tình để public, không Authorize: field kiểu "Upload file/ảnh" cần upload được ngay trên trang
+	// nộp form public, trước khi submit-form-record. Dùng chung policy rate-limit với submit-form-record.
+	[EnableRateLimiting("submit-form")]
+	[RequestSizeLimit(20 * 1024 * 1024)]
+	[HttpPost("upload-form-attachment")]
+	public async Task<UploadAttachmentResultDto> UploadFormAttachment([FromForm] Guid formId, [FromForm] string fieldCode, IFormFile file)
+	{
+		if (file == null || file.Length == 0)
+		{
+			throw new UserFriendlyException("Không có file được tải lên");
+		}
+
+		await using var stream = file.OpenReadStream();
+		return await _formRecord.UploadAttachmentAsync(formId, fieldCode, file.FileName, file.Length, stream);
+	}
+
+	// Tải file đính kèm về xem/kiểm tra kết quả nộp form - chỉ người có quyền xem kết quả mới tải được
+	[Authorize(EFormPermissions.FormRecords.Default)]
+	[HttpGet("download-form-attachment")]
+	public async Task<IActionResult> DownloadFormAttachment(string blobName, string fileName)
+	{
+		var stream = await _formRecord.DownloadAttachmentAsync(blobName);
+		return File(stream, "application/octet-stream", fileName);
 	}
 
 	#endregion

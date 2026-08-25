@@ -287,7 +287,7 @@ export class CreateFormComponent implements OnInit {
         icon: 'preview',
         onAction: () => {
           const originalContent = editor.getContent();
-          const temp = this.formRenderer.renderFieldsToElements(originalContent, this.lstAttribuite);
+          const temp = this.formRenderer.renderFieldsToElements(originalContent, this.lstAttribuite, this.formId);
 
           // Hiển thị bản xem trước trong popup
           const previewWindow = window.open('', 'previewWindow', 'width=800,height=600');

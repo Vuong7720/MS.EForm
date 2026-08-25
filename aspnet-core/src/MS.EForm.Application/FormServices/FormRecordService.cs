@@ -5,6 +5,7 @@ using EForm.FormModels;
 using EForm.IFormServices;
 using Microsoft.Extensions.Configuration;
 using MS.EForm.Enums;
+using MS.EForm;
 using MS.EForm.FormModels.FormRecords;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
@@ -25,18 +27,21 @@ namespace MS.EForm.FormServices
 		IRepository<FormRecord, Guid> _repository;
 		IRepository<FormField, Guid> _formFieldRepository;
 		IRepository<Form, Guid> _formRepository;
+		IBlobContainer<FormAttachmentContainer> _attachmentContainer;
 
 		public FormRecordService(
 			ICurrentUser currentUser,
 			IConfiguration staticConfiguration,
 			IRepository<FormRecord, Guid> repository,
 			IRepository<FormField, Guid> formFieldRepository,
-			IRepository<Form, Guid> formRepository
+			IRepository<Form, Guid> formRepository,
+			IBlobContainer<FormAttachmentContainer> attachmentContainer
 			)
 		{
 			_repository = repository;
 			_formFieldRepository = formFieldRepository;
 			_formRepository = formRepository;
+			_attachmentContainer = attachmentContainer;
 		}
 
 		#region Check
@@ -77,6 +82,30 @@ namespace MS.EForm.FormServices
 			public decimal? Min { get; set; }
 			public decimal? Max { get; set; }
 			public string? Pattern { get; set; }
+			public List<string>? AllowedExtensions { get; set; }
+			public decimal? MaxFileSizeMb { get; set; }
+			public int? MaxFileCount { get; set; }
+		}
+
+		// một file đính kèm đã upload, lưu bên trong FormRecord.Data[code] dạng chuỗi JSON mảng
+		private class AttachmentEntry
+		{
+			public string? Name { get; set; }
+			public string? Blob { get; set; }
+			public long Size { get; set; }
+		}
+
+		private List<AttachmentEntry> ParseAttachments(string? value)
+		{
+			if (string.IsNullOrWhiteSpace(value)) return new List<AttachmentEntry>();
+			try
+			{
+				return JsonSerializer.Deserialize<List<AttachmentEntry>>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<AttachmentEntry>();
+			}
+			catch
+			{
+				return new List<AttachmentEntry>();
+			}
 		}
 
 		private List<string> ParseOptions(string? options)
@@ -166,6 +195,91 @@ namespace MS.EForm.FormServices
 						throw new UserFriendlyException($"Trường \"{field.Title}\" phải nhỏ hơn hoặc bằng {config.Max.Value}");
 					}
 				}
+
+				if (field.Type == TypeField.File || field.Type == TypeField.Signature)
+				{
+					var attachments = ParseAttachments(value);
+
+					// "rỗng" với field File/Signature là mảng JSON "[]", không phải whitespace nên
+					// check required chung ở đầu hàm (dòng ~145) không bắt được - bắt riêng ở đây.
+					if (config.Required && attachments.Count == 0)
+					{
+						throw new UserFriendlyException($"Trường \"{field.Title}\" là bắt buộc");
+					}
+
+					if (config.MaxFileCount.HasValue && attachments.Count > config.MaxFileCount.Value)
+					{
+						throw new UserFriendlyException($"Trường \"{field.Title}\" chỉ được đính kèm tối đa {config.MaxFileCount.Value} file");
+					}
+
+					foreach (var attachment in attachments)
+					{
+						// file phải đã được upload thật (qua endpoint upload-form-attachment) trước khi nộp form,
+						// tránh trường hợp record trỏ tới blob giả mạo/không tồn tại
+						if (string.IsNullOrWhiteSpace(attachment.Blob) || !await _attachmentContainer.ExistsAsync(attachment.Blob))
+						{
+							throw new UserFriendlyException($"File đính kèm cho trường \"{field.Title}\" không hợp lệ hoặc đã bị xoá, vui lòng tải lên lại");
+						}
+					}
+				}
+			}
+		}
+
+		// tìm mã (code) của các field có đính kèm blob (Upload file/ảnh hoặc Chữ ký điện tử) thuộc một form
+		private async Task<HashSet<string>> GetAttachmentFieldCodesAsync(Guid formId)
+		{
+			var allFields = await _formFieldRepository.GetQueryableAsync();
+			return allFields.Where(f => f.FormId == formId && (f.Type == TypeField.File || f.Type == TypeField.Signature))
+				.Select(f => f.Code)
+				.ToHashSet();
+		}
+
+		// gom tên blob của mọi file đính kèm (theo các field kiểu File/Signature) có trong một bản Data đã nộp
+		private HashSet<string> ExtractBlobNames(string? data, HashSet<string> fileFieldCodes)
+		{
+			var blobs = new HashSet<string>();
+			if (fileFieldCodes.Count == 0 || string.IsNullOrWhiteSpace(data)) return blobs;
+
+			Dictionary<string, string> submitted;
+			try
+			{
+				submitted = JsonSerializer.Deserialize<Dictionary<string, string>>(data) ?? new Dictionary<string, string>();
+			}
+			catch
+			{
+				return blobs;
+			}
+
+			foreach (var code in fileFieldCodes)
+			{
+				if (!submitted.TryGetValue(code, out var value)) continue;
+				foreach (var attachment in ParseAttachments(value))
+				{
+					if (!string.IsNullOrWhiteSpace(attachment.Blob))
+					{
+						blobs.Add(attachment.Blob!);
+					}
+				}
+			}
+
+			return blobs;
+		}
+
+		// xoá file vật lý của các đính kèm không còn được tham chiếu nữa (record bị xoá, hoặc file bị gỡ khi sửa)
+		private async Task DeleteOrphanedAttachmentsAsync(Guid formId, string? oldData, string? newData = null)
+		{
+			var fileFieldCodes = await GetAttachmentFieldCodesAsync(formId);
+			if (fileFieldCodes.Count == 0) return;
+
+			var oldBlobs = ExtractBlobNames(oldData, fileFieldCodes);
+			var keepBlobs = newData != null ? ExtractBlobNames(newData, fileFieldCodes) : new HashSet<string>();
+
+			foreach (var blob in oldBlobs)
+			{
+				if (!keepBlobs.Contains(blob))
+				{
+					await _attachmentContainer.DeleteAsync(blob);
+				}
 			}
 		}
 
@@ -219,6 +333,9 @@ namespace MS.EForm.FormServices
 
 			await ValidateData(model.FormId, model.Data);
 
+			// xoá file đính kèm đã bị gỡ khỏi bản ghi (so với dữ liệu cũ) để không tồn rác trên đĩa
+			await DeleteOrphanedAttachmentsAsync(result.FormId, result.Data, model.Data);
+
 			result.Title = model.Title;
 			result.Data = model.Data;
 			result.FormId = model.FormId;
@@ -239,6 +356,7 @@ namespace MS.EForm.FormServices
 			{
 				throw new UserFriendlyException("Không tìm thấy bản ghi này");
 			}
+			await DeleteOrphanedAttachmentsAsync(query.FormId, query.Data);
 			await _repository.DeleteAsync(query);
 			return new MessageDto
 			{
@@ -345,7 +463,20 @@ namespace MS.EForm.FormServices
 				for (var i = 0; i < fields.Count; i++)
 				{
 					data.TryGetValue(fields[i].Code, out var value);
-					worksheet.Cell(row + 2, i + 2).Value = value ?? "";
+
+					if (fields[i].Type == TypeField.File)
+					{
+						var names = ParseAttachments(value).Select(a => a.Name).Where(n => !string.IsNullOrWhiteSpace(n));
+						worksheet.Cell(row + 2, i + 2).Value = string.Join("; ", names);
+					}
+					else if (fields[i].Type == TypeField.Signature)
+					{
+						worksheet.Cell(row + 2, i + 2).Value = ParseAttachments(value).Any() ? "Có chữ ký" : "";
+					}
+					else
+					{
+						worksheet.Cell(row + 2, i + 2).Value = value ?? "";
+					}
 				}
 
 				worksheet.Cell(row + 2, fields.Count + 2).Value = record.CreationTime.ToString("dd/MM/yyyy HH:mm");
@@ -356,6 +487,75 @@ namespace MS.EForm.FormServices
 			using var stream = new MemoryStream();
 			workbook.SaveAs(stream);
 			return stream.ToArray();
+		}
+
+		// định dạng bị chặn tuyệt đối bất kể field cấu hình cho phép gì (phòng vệ chiều sâu)
+		private static readonly HashSet<string> DangerousExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+		{
+			".exe", ".dll", ".bat", ".cmd", ".sh", ".js", ".vbs", ".ps1", ".php", ".asp", ".aspx", ".jar", ".msi", ".com", ".scr", ".htm", ".html"
+		};
+
+		// trần cứng cho mọi field kiểu File, độc lập với maxFileSizeMb cấu hình riêng của từng field
+		private const long GlobalMaxFileSizeBytes = 20 * 1024 * 1024;
+
+		// upload 1 file đính kèm cho field kiểu "Upload file/ảnh"; kiểm tra theo cấu hình riêng của field
+		// (allowedExtensions/maxFileSizeMb) cộng với danh sách chặn cứng + trần dung lượng toàn cục
+		public async Task<UploadAttachmentResultDto> UploadAttachmentAsync(Guid formId, string fieldCode, string fileName, long fileSize, Stream fileStream)
+		{
+			if (string.IsNullOrWhiteSpace(fileName))
+			{
+				throw new UserFriendlyException("Thiếu tên file");
+			}
+
+			var extension = Path.GetExtension(fileName);
+			if (string.IsNullOrWhiteSpace(extension) || DangerousExtensions.Contains(extension))
+			{
+				throw new UserFriendlyException($"Định dạng file \"{extension}\" không được phép");
+			}
+
+			if (fileSize <= 0 || fileSize > GlobalMaxFileSizeBytes)
+			{
+				throw new UserFriendlyException($"Dung lượng file vượt quá giới hạn cho phép ({GlobalMaxFileSizeBytes / 1024 / 1024}MB)");
+			}
+
+			var allFields = await _formFieldRepository.GetQueryableAsync();
+			var field = allFields.FirstOrDefault(f => f.FormId == formId && f.Code == fieldCode && (f.Type == TypeField.File || f.Type == TypeField.Signature));
+			if (field == null)
+			{
+				throw new UserFriendlyException("Không tìm thấy thuộc tính đính kèm tương ứng");
+			}
+
+			var config = ParseConfig(field.Config);
+			if (config.AllowedExtensions != null && config.AllowedExtensions.Count > 0
+				&& !config.AllowedExtensions.Any(e => e.Trim().TrimStart('.').Equals(extension.TrimStart('.'), StringComparison.OrdinalIgnoreCase)))
+			{
+				throw new UserFriendlyException($"Trường \"{field.Title}\" chỉ chấp nhận định dạng: {string.Join(", ", config.AllowedExtensions)}");
+			}
+
+			if (config.MaxFileSizeMb.HasValue && fileSize > (long)(config.MaxFileSizeMb.Value * 1024 * 1024))
+			{
+				throw new UserFriendlyException($"Trường \"{field.Title}\" chỉ cho phép file tối đa {config.MaxFileSizeMb.Value}MB");
+			}
+
+			// tên blob do server sinh (không dùng tên client gửi lên) để tránh path traversal / đoán tên file
+			var blobName = $"{Guid.NewGuid():N}{extension}";
+			await _attachmentContainer.SaveAsync(blobName, fileStream);
+
+			return new UploadAttachmentResultDto
+			{
+				Blob = blobName,
+				Name = fileName,
+				Size = fileSize
+			};
+		}
+
+		public async Task<Stream> DownloadAttachmentAsync(string blobName)
+		{
+			if (string.IsNullOrWhiteSpace(blobName) || !await _attachmentContainer.ExistsAsync(blobName))
+			{
+				throw new UserFriendlyException("Không tìm thấy file đính kèm");
+			}
+			return await _attachmentContainer.GetAsync(blobName);
 		}
 
 		// thống kê tổng quan cho dashboard

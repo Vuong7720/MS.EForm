@@ -31,6 +31,8 @@ export class CreateAttributeComponent implements OnInit {
   typesWithPattern = [1];
   // kiểu Number hỗ trợ giới hạn giá trị min/max
   typesWithMinMax = [7];
+  // kiểu Upload file/ảnh hỗ trợ giới hạn định dạng/dung lượng/số lượng file
+  typesWithFileUpload = [9];
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -79,6 +81,9 @@ export class CreateAttributeComponent implements OnInit {
       min: [fieldConfig.min ?? null],
       max: [fieldConfig.max ?? null],
       pattern: [fieldConfig.pattern ?? null],
+      allowedExtensions: [(fieldConfig.allowedExtensions || []).join(', ') || null],
+      maxFileSizeMb: [fieldConfig.maxFileSizeMb ?? null],
+      maxFileCount: [fieldConfig.maxFileCount ?? 1],
       config: [null],
       options: [this.optionsText || null],
     });
@@ -94,6 +99,11 @@ export class CreateAttributeComponent implements OnInit {
     const value = this.form.value;
     const type = value.type;
 
+    const allowedExtensions = (value.allowedExtensions || '')
+      .split(',')
+      .map((e: string) => e.trim().replace(/^\./, ''))
+      .filter((e: string) => !!e);
+
     const fieldConfig = {
       required: !!value.required,
       minLength: this.typesWithLength.includes(type) ? value.minLength : null,
@@ -101,6 +111,9 @@ export class CreateAttributeComponent implements OnInit {
       min: this.typesWithMinMax.includes(type) ? value.min : null,
       max: this.typesWithMinMax.includes(type) ? value.max : null,
       pattern: this.typesWithPattern.includes(type) ? value.pattern || null : null,
+      allowedExtensions: this.typesWithFileUpload.includes(type) && allowedExtensions.length ? allowedExtensions : null,
+      maxFileSizeMb: this.typesWithFileUpload.includes(type) ? value.maxFileSizeMb || null : null,
+      maxFileCount: this.typesWithFileUpload.includes(type) ? value.maxFileCount || 1 : null,
     };
     this.form.get('config')?.setValue(serializeFieldConfig(fieldConfig));
 
@@ -178,6 +191,8 @@ export class CreateAttributeComponent implements OnInit {
     { title: 'DateTime', value: 6 },
     { title: 'Number', value: 7 },
     { title: 'Boolean', value: 8 },
+    { title: 'Upload file/ảnh', value: 9 },
+    { title: 'Chữ ký điện tử', value: 10 },
   ];
 }
 

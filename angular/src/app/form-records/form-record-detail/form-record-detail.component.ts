@@ -71,7 +71,7 @@ export class FormRecordDetailComponent implements OnInit {
     if (!this.renderContainer || !this.recordDto) {
       return;
     }
-    const rendered = this.renderer.renderFieldsToElements(this.formContent, this.lstAttribute);
+    const rendered = this.renderer.renderFieldsToElements(this.formContent, this.lstAttribute, this.recordDto.formId || '');
     this.renderContainer.nativeElement.innerHTML = '';
     this.renderContainer.nativeElement.appendChild(rendered);
 

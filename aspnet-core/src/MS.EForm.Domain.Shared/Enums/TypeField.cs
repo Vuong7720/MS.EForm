@@ -15,6 +15,8 @@ namespace MS.EForm.Enums
 		Radio = 5,
 		DateTime = 6,
 		Number = 7,
-		Boolean = 8
+		Boolean = 8,
+		File = 9,
+		Signature = 10
 	}
 }

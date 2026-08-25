@@ -75,6 +75,22 @@
 			<input nz-input type="number" formControlName="max" placeholder="Không giới hạn">
 		</div>
 	</div>
+	<div *ngIf="typesWithFileUpload.includes(form.get('type')?.value)">
+		<div class="mt-1">
+			<label class="form-label fw-bold">Định dạng cho phép (cách nhau bởi dấu phẩy)</label>
+			<input nz-input formControlName="allowedExtensions" placeholder="Vd: pdf, jpg, png (để trống = không giới hạn)">
+		</div>
+		<div class="row">
+			<div class="mt-1 col-6">
+				<label class="form-label fw-bold">Dung lượng tối đa mỗi file (MB)</label>
+				<input nz-input type="number" formControlName="maxFileSizeMb" placeholder="Vd: 5">
+			</div>
+			<div class="mt-1 col-6">
+				<label class="form-label fw-bold">Số file tối đa</label>
+				<input nz-input type="number" min="1" formControlName="maxFileCount">
+			</div>
+		</div>
+	</div>
 </form>
 
 

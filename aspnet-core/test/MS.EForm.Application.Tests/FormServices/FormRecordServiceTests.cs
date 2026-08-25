@@ -199,4 +199,109 @@ public abstract class FormRecordServiceTests<TStartupModule> : EFormApplicationT
             await _formRecord.DeleteAsync(Guid.NewGuid());
         }));
     }
+
+    [Fact]
+    public async Task Should_Not_Submit_When_Required_File_Field_Missing()
+    {
+        UserFriendlyException? ex = null;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Minh chứng",
+                Code = "MINHCHUNG",
+                Type = TypeField.File,
+                Config = "{\"required\":true}"
+            });
+
+            ex = await Should.ThrowAsync<UserFriendlyException>(async () =>
+            {
+                await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+                {
+                    Title = "Bản ghi test",
+                    FormId = formId,
+                    Data = "{}"
+                });
+            });
+        });
+        ex!.Message.ShouldContain("bắt buộc");
+    }
+
+    [Fact]
+    public async Task Should_Not_Submit_File_Field_With_Nonexisting_Blob()
+    {
+        await Should.ThrowAsync<UserFriendlyException>(() => WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Minh chứng",
+                Code = "MINHCHUNG",
+                Type = TypeField.File
+            });
+
+            // blob "khong-ton-tai.pdf" chưa từng được upload -> ValidateData phải chặn lại
+            await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+            {
+                Title = "Bản ghi test",
+                FormId = formId,
+                Data = "{\"MINHCHUNG\":\"[{\\\"name\\\":\\\"cv.pdf\\\",\\\"blob\\\":\\\"khong-ton-tai.pdf\\\",\\\"size\\\":100}]\"}"
+            });
+        }));
+    }
+
+    [Fact]
+    public async Task Should_Not_Submit_When_Required_Signature_Field_Missing()
+    {
+        UserFriendlyException? ex = null;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Chữ ký",
+                Code = "CHUKY",
+                Type = TypeField.Signature,
+                Config = "{\"required\":true}"
+            });
+
+            ex = await Should.ThrowAsync<UserFriendlyException>(async () =>
+            {
+                await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+                {
+                    Title = "Bản ghi test",
+                    FormId = formId,
+                    Data = "{}"
+                });
+            });
+        });
+        ex!.Message.ShouldContain("bắt buộc");
+    }
+
+    [Fact]
+    public async Task Should_Not_Submit_When_Required_File_Field_Has_Empty_Attachment_Array()
+    {
+        // "Data" = "[]" không phải whitespace nên required-check chung ở đầu ValidateData không bắt
+        // được - phải có check riêng trong nhánh File/Signature (đã vá cùng lúc thêm field Signature).
+        UserFriendlyException? ex = null;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Minh chứng",
+                Code = "MINHCHUNG",
+                Type = TypeField.File,
+                Config = "{\"required\":true}"
+            });
+
+            ex = await Should.ThrowAsync<UserFriendlyException>(async () =>
+            {
+                await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+                {
+                    Title = "Bản ghi test",
+                    FormId = formId,
+                    Data = "{\"MINHCHUNG\":\"[]\"}"
+                });
+            });
+        });
+        ex!.Message.ShouldContain("bắt buộc");
+    }
 }

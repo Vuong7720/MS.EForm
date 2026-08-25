@@ -62,7 +62,7 @@ export class FormSubmitComponent implements OnInit {
     if (!this.renderContainer || !this.formDto) {
       return;
     }
-    const rendered = this.renderer.renderFieldsToElements(this.formDto.content || '', this.lstAttribute);
+    const rendered = this.renderer.renderFieldsToElements(this.formDto.content || '', this.lstAttribute, this.formId);
     this.renderContainer.nativeElement.innerHTML = '';
     this.renderContainer.nativeElement.appendChild(rendered);
   }
