@@ -86,6 +86,10 @@ export class FormRendererService {
           replacementEl = this.buildSignatureField(code, formId, fieldConfig);
           break;
         }
+        case 11: {
+          replacementEl = this.buildRatingField(code, fieldConfig);
+          break;
+        }
         default: {
           replacementEl = document.createElement('input');
           (replacementEl as HTMLInputElement).type = 'text';
@@ -93,7 +97,7 @@ export class FormRendererService {
         }
       }
 
-      if (fieldType !== 4 && fieldType !== 5 && fieldType !== 9 && fieldType !== 10) {
+      if (fieldType !== 4 && fieldType !== 5 && fieldType !== 9 && fieldType !== 10 && fieldType !== 11) {
         replacementEl.setAttribute('name', code);
         (replacementEl as HTMLInputElement | HTMLTextAreaElement).placeholder = placeholder;
       }
@@ -224,7 +228,7 @@ export class FormRendererService {
   // để trình duyệt tự validate trước khi submit, song song với validate ở backend.
   private applyConfigConstraints(el: HTMLElement, fieldType: number, config: ReturnType<typeof parseFieldConfig>): void {
     if (config.required) {
-      if (fieldType === 4 || fieldType === 5) {
+      if (fieldType === 4 || fieldType === 5 || fieldType === 11) {
         el.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
       } else if (fieldType !== 9 && fieldType !== 10) {
         // field kiểu File/Signature tự set required lên input hidden bên trong hàm dựng riêng của nó
@@ -261,6 +265,55 @@ export class FormRendererService {
       label.append(' ' + opt);
       wrapper.appendChild(label);
     });
+    return wrapper;
+  }
+
+  // Field kiểu "Đánh giá/Rating": dựng bằng các <input type=radio name={code}> ẩn (mỗi mức sao 1 radio)
+  // + <label for=...> hiển thị ★ - tái dùng nguyên vẹn collectFormData/fillFormData/checkClientValidity/
+  // setEnabled đã có sẵn cho Radio (đều xử lý qua el.type === 'radio' một cách chung).
+  //
+  // Trạng thái tô sao (đã chọn/hover) dùng THUẦN CSS (label[for] + input:checked ~ label), không dùng JS
+  // để "sơn" lại từng lần - vì fillFormData set el.checked bằng gán thuộc tính trực tiếp (không bắn sự
+  // kiện change), nên một cách vẽ lại bằng JS gắn theo sự kiện click/hover sẽ không đồng bộ được khi giá
+  // trị được điền lại từ dữ liệu đã nộp (vd ở trang xem kết quả). CSS :checked luôn phản ánh đúng state
+  // DOM hiện tại bất kể state đó được set bằng cách nào.
+  private buildRatingField(code: string, config: ReturnType<typeof parseFieldConfig>): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'form-renderer-rating-field';
+    // dựng theo thứ tự số sao giảm dần rồi lật ngược bằng row-reverse, để input:checked ~ label
+    // (chọn các sibling ĐỨNG SAU trong DOM) tương ứng đúng các sao đứng TRƯỚC về mặt hiển thị
+    wrapper.style.cssText = 'display:inline-flex; flex-direction:row-reverse; justify-content:flex-end;';
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .form-renderer-rating-field label { color:#ccc; cursor:pointer; font-size:24px; line-height:1; user-select:none; }
+      .form-renderer-rating-field input:checked ~ label,
+      .form-renderer-rating-field label:hover,
+      .form-renderer-rating-field label:hover ~ label {
+        color:#f5a623;
+      }
+    `;
+    wrapper.appendChild(style);
+
+    const max = config.maxRating && config.maxRating > 0 ? config.maxRating : 5;
+    for (let i = max; i >= 1; i--) {
+      const id = `rating-${code}-${i}-${Math.random().toString(36).slice(2, 8)}`;
+
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = code;
+      input.value = String(i);
+      input.id = id;
+      input.style.cssText = 'position:absolute; opacity:0; width:0; height:0;';
+
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.textContent = '★';
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(label);
+    }
+
     return wrapper;
   }
 

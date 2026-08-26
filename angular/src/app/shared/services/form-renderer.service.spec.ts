@@ -300,4 +300,69 @@ describe('FormRendererService', () => {
       expect(errorEl.style.display).toBe('block');
     });
   });
+
+  describe('field-type-11 (Đánh giá/Rating)', () => {
+    const html = `<span id="HAILONG" class="drag-field field-type-11">..........<i>Hài lòng</i>..........</span>`;
+
+    it('should render one hidden radio per star, matching maxRating from config', () => {
+      const container = service.renderFieldsToElements(
+        html,
+        [field({ code: 'HAILONG', type: 11 as any, config: JSON.stringify({ maxRating: 7 }) })],
+        'form-1'
+      );
+
+      const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"][name="HAILONG"]');
+      expect(radios.length).toBe(7);
+      // dựng theo thứ tự giảm dần trong DOM (lật lại bằng CSS row-reverse để hiển thị đúng chiều) -
+      // xem giải thích trong buildRatingField.
+      expect(Array.from(radios).map(r => r.value)).toEqual(['7', '6', '5', '4', '3', '2', '1']);
+    });
+
+    it('should default to 5 stars when maxRating is not configured', () => {
+      const container = service.renderFieldsToElements(html, [field({ code: 'HAILONG', type: 11 as any })]);
+      expect(container.querySelectorAll('input[type="radio"][name="HAILONG"]').length).toBe(5);
+    });
+
+    function labelFor(container: HTMLElement, value: string): HTMLLabelElement {
+      const input = container.querySelector<HTMLInputElement>(`input[type="radio"][name="HAILONG"][value="${value}"]`)!;
+      return container.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`)!;
+    }
+
+    it('should select a star by clicking its label (native label-for-input forwarding) and collect its value', () => {
+      const container = service.renderFieldsToElements(html, [field({ code: 'HAILONG', type: 11 as any })]);
+      document.body.appendChild(container);
+
+      labelFor(container, '4').click();
+
+      const data = service.collectFormData(container);
+      expect(data['HAILONG']).toBe('4');
+
+      document.body.removeChild(container);
+    });
+
+    it('should visually mark a star as checked via CSS, not textContent, so fillFormData syncs correctly', () => {
+      // fillFormData gán el.checked bằng property trực tiếp (không bắn sự kiện) - việc tô sao phải là
+      // thuần CSS (input:checked ~ label) để tự động đồng bộ đúng, không phụ thuộc JS lắng nghe sự kiện.
+      const container = service.renderFieldsToElements(html, [field({ code: 'HAILONG', type: 11 as any })]);
+
+      service.fillFormData(container, { HAILONG: '3' }, true);
+
+      const radio3 = container.querySelector<HTMLInputElement>('input[type="radio"][name="HAILONG"][value="3"]')!;
+      expect(radio3.checked).toBeTrue();
+      expect(radio3.disabled).toBeTrue();
+      // mọi radio khác phải KHÔNG checked
+      container.querySelectorAll<HTMLInputElement>('input[type="radio"][name="HAILONG"]').forEach(r => {
+        if (r.value !== '3') expect(r.checked).toBeFalse();
+      });
+    });
+
+    it('should fail checkClientValidity when required and no star was selected', () => {
+      const container = service.renderFieldsToElements(
+        html,
+        [field({ code: 'HAILONG', type: 11 as any, config: JSON.stringify({ required: true }) })]
+      );
+
+      expect(service.checkClientValidity(container)).toBeFalse();
+    });
+  });
 });

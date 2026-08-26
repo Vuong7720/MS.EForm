@@ -33,4 +33,6 @@ export interface FieldConfig {
   allowedExtensions?: string[] | null;
   maxFileSizeMb?: number | null;
   maxFileCount?: number | null;
+  // riêng cho field kiểu Đánh giá/Rating (TypeField.Rating)
+  maxRating?: number | null;
 }

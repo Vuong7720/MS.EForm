@@ -85,6 +85,7 @@ namespace MS.EForm.FormServices
 			public List<string>? AllowedExtensions { get; set; }
 			public decimal? MaxFileSizeMb { get; set; }
 			public int? MaxFileCount { get; set; }
+			public int? MaxRating { get; set; }
 		}
 
 		// một file đính kèm đã upload, lưu bên trong FormRecord.Data[code] dạng chuỗi JSON mảng
@@ -193,6 +194,15 @@ namespace MS.EForm.FormServices
 					if (config.Max.HasValue && numberValue > config.Max.Value)
 					{
 						throw new UserFriendlyException($"Trường \"{field.Title}\" phải nhỏ hơn hoặc bằng {config.Max.Value}");
+					}
+				}
+
+				if (field.Type == TypeField.Rating && decimal.TryParse(value, out var ratingValue))
+				{
+					var max = config.MaxRating ?? 5;
+					if (ratingValue < 1 || ratingValue > max)
+					{
+						throw new UserFriendlyException($"Trường \"{field.Title}\" phải có giá trị từ 1 đến {max}");
 					}
 				}
 

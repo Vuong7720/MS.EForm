@@ -304,4 +304,50 @@ public abstract class FormRecordServiceTests<TStartupModule> : EFormApplicationT
         });
         ex!.Message.ShouldContain("bắt buộc");
     }
+
+    [Fact]
+    public async Task Should_Submit_Rating_Within_Range_Successfully()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Mức độ hài lòng",
+                Code = "HAILONG",
+                Type = TypeField.Rating,
+                Config = "{\"maxRating\":5}"
+            });
+
+            var result = await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+            {
+                Title = "Bản ghi test",
+                FormId = formId,
+                Data = "{\"HAILONG\":\"4\"}"
+            });
+
+            result.Status.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task Should_Not_Submit_Rating_Outside_Configured_Range()
+    {
+        await Should.ThrowAsync<UserFriendlyException>(() => WithUnitOfWorkAsync(async () =>
+        {
+            var formId = await CreateFormWithFieldAsync(new CreateUpdateFormField
+            {
+                Title = "Mức độ hài lòng",
+                Code = "HAILONG",
+                Type = TypeField.Rating,
+                Config = "{\"maxRating\":5}"
+            });
+
+            await _formRecord.SubmitAsync(new CreateUpdateFormRecordDto
+            {
+                Title = "Bản ghi test",
+                FormId = formId,
+                Data = "{\"HAILONG\":\"7\"}"
+            });
+        }));
+    }
 }

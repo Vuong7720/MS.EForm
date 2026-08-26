@@ -91,6 +91,10 @@
 			</div>
 		</div>
 	</div>
+	<div class="mt-1" *ngIf="typesWithRating.includes(form.get('type')?.value)">
+		<label class="form-label fw-bold">Số sao tối đa</label>
+		<input nz-input type="number" min="2" formControlName="maxRating">
+	</div>
 </form>
 
 

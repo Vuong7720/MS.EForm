@@ -33,6 +33,8 @@ export class CreateAttributeComponent implements OnInit {
   typesWithMinMax = [7];
   // kiểu Upload file/ảnh hỗ trợ giới hạn định dạng/dung lượng/số lượng file
   typesWithFileUpload = [9];
+  // kiểu Đánh giá/Rating hỗ trợ cấu hình số sao tối đa
+  typesWithRating = [11];
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -84,6 +86,7 @@ export class CreateAttributeComponent implements OnInit {
       allowedExtensions: [(fieldConfig.allowedExtensions || []).join(', ') || null],
       maxFileSizeMb: [fieldConfig.maxFileSizeMb ?? null],
       maxFileCount: [fieldConfig.maxFileCount ?? 1],
+      maxRating: [fieldConfig.maxRating ?? 5],
       config: [null],
       options: [this.optionsText || null],
     });
@@ -114,6 +117,7 @@ export class CreateAttributeComponent implements OnInit {
       allowedExtensions: this.typesWithFileUpload.includes(type) && allowedExtensions.length ? allowedExtensions : null,
       maxFileSizeMb: this.typesWithFileUpload.includes(type) ? value.maxFileSizeMb || null : null,
       maxFileCount: this.typesWithFileUpload.includes(type) ? value.maxFileCount || 1 : null,
+      maxRating: this.typesWithRating.includes(type) ? value.maxRating || 5 : null,
     };
     this.form.get('config')?.setValue(serializeFieldConfig(fieldConfig));
 
@@ -193,6 +197,7 @@ export class CreateAttributeComponent implements OnInit {
     { title: 'Boolean', value: 8 },
     { title: 'Upload file/ảnh', value: 9 },
     { title: 'Chữ ký điện tử', value: 10 },
+    { title: 'Đánh giá (Rating)', value: 11 },
   ];
 }
 

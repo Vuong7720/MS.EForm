@@ -17,6 +17,7 @@ namespace MS.EForm.Enums
 		Number = 7,
 		Boolean = 8,
 		File = 9,
-		Signature = 10
+		Signature = 10,
+		Rating = 11
 	}
 }
