@@ -6,6 +6,8 @@ export interface CreateUpdateFormRecordDto {
   title?: string;
   formId: string;
   data?: string;
+  // chỉ dùng khi nộp mới (submitFormRecord) - không cần khi sửa bản ghi đã có (đã đăng nhập, có quyền Edit)
+  captchaToken?: string;
 }
 
 // 1 field trong snapshot đóng băng của FormRecord - cùng cấu trúc FormFieldDto (thiếu id/formId vì không cần)

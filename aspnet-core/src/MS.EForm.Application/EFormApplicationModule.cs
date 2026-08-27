@@ -48,6 +48,7 @@ public class EFormApplicationModule : AbpModule
 		services.AddTransient<IFormField, FormFieldServices>();
 		services.AddTransient<IFormService, FormService>();
 		services.AddTransient<IFormRecord, FormRecordService>();
+		services.AddHttpClient(); // dùng cho TurnstileCaptchaVerifier gọi API xác thực captcha
 
 		ConfigureFormAttachmentStorage(context, configuration);
 	}

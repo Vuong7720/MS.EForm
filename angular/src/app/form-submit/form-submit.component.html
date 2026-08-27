@@ -17,8 +17,10 @@
 
 		<div #renderContainer class="form-submit-render"></div>
 
+		<div #captchaContainer class="mt-3"></div>
+
 		<div class="mt-3">
-			<button class="btn btn-success" (click)="submit()">
+			<button class="btn btn-success" [disabled]="!captchaToken" (click)="submit()">
 				<i class="fa fa-paper-plane" aria-hidden="true"></i> Nộp form
 			</button>
 		</div>

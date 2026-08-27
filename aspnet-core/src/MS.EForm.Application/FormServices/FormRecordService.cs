@@ -32,6 +32,7 @@ namespace MS.EForm.FormServices
 		IBlobContainer<FormAttachmentContainer> _attachmentContainer;
 		ICurrentUser _currentUser;
 		IBackgroundJobManager _backgroundJobManager;
+		ICaptchaVerifier _captchaVerifier;
 
 		public FormRecordService(
 			ICurrentUser currentUser,
@@ -40,7 +41,8 @@ namespace MS.EForm.FormServices
 			IRepository<FormField, Guid> formFieldRepository,
 			IRepository<Form, Guid> formRepository,
 			IBlobContainer<FormAttachmentContainer> attachmentContainer,
-			IBackgroundJobManager backgroundJobManager
+			IBackgroundJobManager backgroundJobManager,
+			ICaptchaVerifier captchaVerifier
 			)
 		{
 			_currentUser = currentUser;
@@ -49,6 +51,7 @@ namespace MS.EForm.FormServices
 			_formRepository = formRepository;
 			_attachmentContainer = attachmentContainer;
 			_backgroundJobManager = backgroundJobManager;
+			_captchaVerifier = captchaVerifier;
 		}
 
 		#region Check
@@ -407,6 +410,12 @@ namespace MS.EForm.FormServices
 			if (model == null) // ----> check dữ liệu đầu vào
 			{
 				throw new UserFriendlyException("Không có dữ liệu đầu vào");
+			}
+
+			// chống spam - check trước tiên, trước khi tốn công query/validate gì cho request rác
+			if (!await _captchaVerifier.VerifyAsync(model.CaptchaToken))
+			{
+				throw new UserFriendlyException("Xác thực chống spam không hợp lệ, vui lòng thử lại");
 			}
 
 			var form = await _formRepository.FindAsync(model.FormId); // ----> check tồn tại form

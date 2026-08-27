@@ -24,3 +24,7 @@ export const environment = {
     },
   },
 } as Environment;
+
+// Cloudflare Turnstile site key (public, không phải bí mật) cho widget chống spam ở trang nộp form.
+// Đây là site key TEST do Cloudflare công bố (luôn pass) - đổi sang site key thật (dash.cloudflare.com) khi deploy production.
+export const captchaSiteKey = '1x00000000000000000000AA';

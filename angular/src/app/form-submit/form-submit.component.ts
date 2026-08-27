@@ -6,6 +6,9 @@ import { FormDto } from '@proxy/form-models/forms';
 import { FormFieldDto } from '@proxy/form-models/form-fields';
 import { FormRendererService } from '../shared/services/form-renderer.service';
 import { getApiErrorMessage } from '../shared/services/http-error.util';
+import { captchaSiteKey } from '../../environments/environment';
+
+declare const window: Window & { turnstile?: any };
 
 @Component({
   standalone: false,
@@ -15,6 +18,7 @@ import { getApiErrorMessage } from '../shared/services/http-error.util';
 })
 export class FormSubmitComponent implements OnInit {
   @ViewChild('renderContainer', { static: false }) renderContainer: ElementRef<HTMLDivElement>;
+  @ViewChild('captchaContainer', { static: false }) captchaContainer: ElementRef<HTMLDivElement>;
 
   formId: string;
   formDto: FormDto | null = null;
@@ -22,6 +26,7 @@ export class FormSubmitComponent implements OnInit {
   loading = true;
   submitted = false;
   notFound = false;
+  captchaToken: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -53,7 +58,10 @@ export class FormSubmitComponent implements OnInit {
         this.lstAttribute = fields || [];
         this.loading = false;
 
-        setTimeout(() => this.renderFields());
+        setTimeout(() => {
+          this.renderFields();
+          this.renderCaptcha();
+        });
       });
     });
   }
@@ -68,11 +76,32 @@ export class FormSubmitComponent implements OnInit {
     this.renderer.applyConditionalVisibility(this.renderContainer.nativeElement);
   }
 
+  // dựng widget Cloudflare Turnstile (chống spam) - script tải async/defer (xem index.html) nên
+  // window.turnstile có thể chưa sẵn sàng ngay, thử lại vài lần trong ~5s thay vì render ngay lập tức.
+  private renderCaptcha(attemptsLeft = 25): void {
+    if (!this.captchaContainer) return;
+
+    if (window.turnstile) {
+      window.turnstile.render(this.captchaContainer.nativeElement, {
+        sitekey: captchaSiteKey,
+        callback: (token: string) => (this.captchaToken = token),
+      });
+      return;
+    }
+
+    if (attemptsLeft <= 0) return;
+    setTimeout(() => this.renderCaptcha(attemptsLeft - 1), 200);
+  }
+
   submit(): void {
     if (!this.renderContainer || !this.formDto) {
       return;
     }
     if (!this.renderer.checkClientValidity(this.renderContainer.nativeElement)) {
+      return;
+    }
+    if (!this.captchaToken) {
+      this.toasterService.error('Vui lòng chờ xác thực chống spam hoàn tất trước khi nộp');
       return;
     }
     const data = this.renderer.collectFormData(this.renderContainer.nativeElement);
@@ -83,6 +112,7 @@ export class FormSubmitComponent implements OnInit {
           title: this.formDto.title,
           formId: this.formId,
           data: JSON.stringify(data),
+          captchaToken: this.captchaToken,
         },
         { skipHandleError: true }
       )
