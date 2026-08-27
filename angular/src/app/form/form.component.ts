@@ -23,7 +23,8 @@ export class FormComponent implements OnInit {
   dataResultPaging: PagedResultDto<FormDto> = new PagedResultDto<FormDto>;
   pageCate = {
     pageIndex: 1,
-    pageSize: 10
+    pageSize: 10,
+    isTemplate: false
   }as FormPagingFilterDto;
   searchTitle:string = "";
   loading = false;

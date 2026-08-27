@@ -159,10 +159,10 @@ export class EFormService {
     this.restService.request<any, PagedResultDto<FormDto>>({
       method: 'GET',
       url: '/api/eform/get-paging-form',
-      params: { title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
+      params: { title: page.title, isTemplate: page.isTemplate, pageSize: page.pageSize, pageIndex: page.pageIndex },
     },
     { apiName: this.apiName,...config });
-  
+
 
   update = (id: string, model: CreateUpdateForm, config?: Partial<Rest.Config>) =>
     this.restService.request<any, MessageDto>({
@@ -235,7 +235,25 @@ export class EFormService {
     this.restService.request<any, PagedResultDto<FormRecordDto>>({
       method: 'GET',
       url: '/api/eform/get-paging-form-record',
-      params: { formId: page.formId, title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
+      params: { formId: page.formId, title: page.title, approvalStatus: page.approvalStatus, pageSize: page.pageSize, pageIndex: page.pageIndex },
+    },
+    { apiName: this.apiName,...config });
+
+
+  approveFormRecord = (id: string, note: string | null, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/approve-form-record',
+      params: { id, note },
+    },
+    { apiName: this.apiName,...config });
+
+
+  rejectFormRecord = (id: string, note: string | null, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/reject-form-record',
+      params: { id, note },
     },
     { apiName: this.apiName,...config });
 

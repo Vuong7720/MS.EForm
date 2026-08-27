@@ -35,4 +35,14 @@ export interface FieldConfig {
   maxFileCount?: number | null;
   // riêng cho field kiểu Đánh giá/Rating (TypeField.Rating)
   maxRating?: number | null;
+  // chỉ hiện/bắt buộc field này khi field có code = dependsOnCode thỏa operator so với value
+  conditional?: ConditionalRule | null;
+}
+
+export type ConditionalOperator = 'equals' | 'notEquals' | 'contains' | 'isEmpty' | 'isNotEmpty';
+
+export interface ConditionalRule {
+  dependsOnCode?: string;
+  operator?: ConditionalOperator;
+  value?: string;
 }

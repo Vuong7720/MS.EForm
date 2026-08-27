@@ -6,6 +6,9 @@ export interface CreateUpdateForm {
   content?: string;
   categoryId?: string;
   description?: string;
+  isTemplate?: boolean;
+  requireApproval?: boolean;
+  notifyOnSubmit?: boolean;
   formFields?: CreateUpdateFormField[];
 }
 
@@ -14,10 +17,15 @@ export interface FormDto extends FullAuditedEntityDto<string> {
   content?: string;
   categoryId?: string;
   description?: string;
+  isTemplate?: boolean;
+  sourceTemplateId?: string;
+  requireApproval?: boolean;
+  notifyOnSubmit?: boolean;
 }
 
 export interface FormPagingFilterDto {
   title?: string;
+  isTemplate?: boolean;
   pageSize: number;
   pageIndex: number;
 }

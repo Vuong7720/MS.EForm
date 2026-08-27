@@ -12,6 +12,8 @@ namespace EForm.IFormServices
 		Task<MessageDto> SubmitAsync(CreateUpdateFormRecordDto model);
 		Task<MessageDto> UpdateAsync(Guid id, CreateUpdateFormRecordDto model);
 		Task<MessageDto> DeleteAsync(Guid id);
+		Task<MessageDto> ApproveAsync(Guid id, string? note);
+		Task<MessageDto> RejectAsync(Guid id, string? note);
 		Task<FormRecordDto> GetAsync(Guid id);
 		Task<PagedResultDto<FormRecordDto>> GetListAsync(FormRecordPagingFilterDto page);
 		Task<byte[]> ExportExcelAsync(Guid formId);

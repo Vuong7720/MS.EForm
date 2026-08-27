@@ -95,6 +95,36 @@
 		<label class="form-label fw-bold">Số sao tối đa</label>
 		<input nz-input type="number" min="2" formControlName="maxRating">
 	</div>
+
+	<div class="mt-2 pt-2 border-top">
+		<label nz-checkbox formControlName="conditionalEnabled">Chỉ hiện field này khi field khác thỏa điều kiện</label>
+
+		<div class="row mt-1" *ngIf="form.get('conditionalEnabled')?.value">
+			<div class="mt-1 col-5">
+				<label class="form-label fw-bold">Phụ thuộc vào field</label>
+				<nz-select formControlName="conditionalDependsOn" nzPlaceHolder="Chọn field" style="width: 100%;">
+					<nz-option *ngFor="let item of dependsOnFieldChoices" [nzLabel]="item.title" [nzValue]="item.code"></nz-option>
+				</nz-select>
+			</div>
+			<div class="mt-1 col-3">
+				<label class="form-label fw-bold">Điều kiện</label>
+				<nz-select formControlName="conditionalOperator" style="width: 100%;">
+					<nz-option *ngFor="let item of operatorOptions" [nzLabel]="item.label" [nzValue]="item.value"></nz-option>
+				</nz-select>
+			</div>
+			<div class="mt-1 col-4"
+				*ngIf="form.get('conditionalOperator')?.value !== 'isEmpty' && form.get('conditionalOperator')?.value !== 'isNotEmpty'">
+				<label class="form-label fw-bold">Giá trị</label>
+				<nz-select *ngIf="dependsOnValueChoices as choices; else conditionalValueText" formControlName="conditionalValue"
+					nzPlaceHolder="Chọn giá trị" style="width: 100%;">
+					<nz-option *ngFor="let opt of choices" [nzLabel]="opt" [nzValue]="opt"></nz-option>
+				</nz-select>
+				<ng-template #conditionalValueText>
+					<input nz-input formControlName="conditionalValue" placeholder="Nhập giá trị">
+				</ng-template>
+			</div>
+		</div>
+	</div>
 </form>
 
 

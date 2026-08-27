@@ -4,6 +4,7 @@ using MS.EForm.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace MS.EForm.Migrations
 {
     [DbContext(typeof(EFormDbContext))]
-    partial class EFormDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260827064040_Add_FormRecord_Snapshot")]
+    partial class Add_FormRecord_Snapshot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,12 +85,6 @@ namespace MS.EForm.Migrations
                     b.Property<Guid?>("LastModifierId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
-
-                    b.Property<bool>("NotifyOnSubmit")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RequireApproval")
-                        .HasColumnType("bit");
 
                     b.Property<Guid?>("SourceTemplateId")
                         .HasColumnType("uniqueidentifier");
@@ -241,18 +238,6 @@ namespace MS.EForm.Migrations
             modelBuilder.Entity("EForm.Entities.FormRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ApprovalNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ApprovalStatus")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("ApprovedByUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")

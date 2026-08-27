@@ -219,6 +219,20 @@ public class EFormController : AbpControllerBase
 		return await _formRecord.DeleteAsync(id);
 	}
 
+	[Authorize(EFormPermissions.FormRecords.Approve)]
+	[HttpPost("approve-form-record")]
+	public async Task<MessageDto> ApproveFormRecord(Guid id, string? note)
+	{
+		return await _formRecord.ApproveAsync(id, note);
+	}
+
+	[Authorize(EFormPermissions.FormRecords.Approve)]
+	[HttpPost("reject-form-record")]
+	public async Task<MessageDto> RejectFormRecord(Guid id, string? note)
+	{
+		return await _formRecord.RejectAsync(id, note);
+	}
+
 	[Authorize(EFormPermissions.FormRecords.Default)]
 	[HttpGet("get-form-record-by-id")]
 	public async Task<FormRecordDto> GetFormRecordById(Guid id)

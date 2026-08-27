@@ -28,6 +28,7 @@ public class EFormPermissionDefinitionProvider : PermissionDefinitionProvider
         var formRecords = myGroup.AddPermission(EFormPermissions.FormRecords.Default, L("Permission:FormRecords"));
         formRecords.AddChild(EFormPermissions.FormRecords.Edit, L("Permission:Edit"));
         formRecords.AddChild(EFormPermissions.FormRecords.Delete, L("Permission:Delete"));
+        formRecords.AddChild(EFormPermissions.FormRecords.Approve, L("Permission:Approve"));
     }
 
     private static LocalizableString L(string name)

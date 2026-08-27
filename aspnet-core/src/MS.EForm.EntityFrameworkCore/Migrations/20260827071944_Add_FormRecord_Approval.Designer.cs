@@ -4,6 +4,7 @@ using MS.EForm.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace MS.EForm.Migrations
 {
     [DbContext(typeof(EFormDbContext))]
-    partial class EFormDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260827071944_Add_FormRecord_Approval")]
+    partial class Add_FormRecord_Approval
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,9 +85,6 @@ namespace MS.EForm.Migrations
                     b.Property<Guid?>("LastModifierId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
-
-                    b.Property<bool>("NotifyOnSubmit")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("RequireApproval")
                         .HasColumnType("bit");

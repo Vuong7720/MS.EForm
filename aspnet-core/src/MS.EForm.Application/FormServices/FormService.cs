@@ -81,7 +81,10 @@ namespace MS.EForm.FormServices
 				Title = model.Title,
 				Content = model.Content,
 				CategoryId = model.CategoryId,
-				Description = model.Description
+				Description = model.Description,
+				IsTemplate = model.IsTemplate,
+				RequireApproval = model.RequireApproval,
+				NotifyOnSubmit = model.NotifyOnSubmit
 			};
 
 			var insert = await _repository.InsertAsync(result);
@@ -129,6 +132,9 @@ namespace MS.EForm.FormServices
 			result.Content = model.Content;
 			result.CategoryId = model.CategoryId;
 			result.Description = model.Description;
+			result.IsTemplate = model.IsTemplate;
+			result.RequireApproval = model.RequireApproval;
+			result.NotifyOnSubmit = model.NotifyOnSubmit;
 			await _repository.UpdateAsync(result);
 
 			if (model.FormFields != null && model.FormFields.Any())
@@ -209,6 +215,10 @@ namespace MS.EForm.FormServices
 					Id = a.Id,
 					Description = a.Description,
 					CategoryId = a.CategoryId,
+					IsTemplate = a.IsTemplate,
+					SourceTemplateId = a.SourceTemplateId,
+					RequireApproval = a.RequireApproval,
+					NotifyOnSubmit = a.NotifyOnSubmit,
 				}).ToList();
 			}
 			return result;
@@ -228,6 +238,10 @@ namespace MS.EForm.FormServices
 					Id = query.Id,
 					Description = query.Description,
 					CategoryId = query.CategoryId,
+					IsTemplate = query.IsTemplate,
+					SourceTemplateId = query.SourceTemplateId,
+					RequireApproval = query.RequireApproval,
+					NotifyOnSubmit = query.NotifyOnSubmit,
 				};
 			}
 			return result;
@@ -242,6 +256,10 @@ namespace MS.EForm.FormServices
 			{
 				query = query.Where(a => a.Title.ToLower().Contains(page.Title.ToLower()));
 			}
+			if (page.IsTemplate.HasValue)
+			{
+				query = query.Where(a => a.IsTemplate == page.IsTemplate.Value);
+			}
 			var totalCount = query.Count(); // Tổng số bản ghi
 			var items = query
 				.OrderByDescending(c => c.CreationTime)
@@ -251,9 +269,13 @@ namespace MS.EForm.FormServices
 				{
 					Title = a.Title,
 					Content = a.Content,
-					CategoryId = a.CategoryId,	
+					CategoryId = a.CategoryId,
 					Description=a.Description,
-					Id = a.Id
+					Id = a.Id,
+					IsTemplate = a.IsTemplate,
+					SourceTemplateId = a.SourceTemplateId,
+					RequireApproval = a.RequireApproval,
+					NotifyOnSubmit = a.NotifyOnSubmit,
 				})
 				.ToList();
 
@@ -262,7 +284,6 @@ namespace MS.EForm.FormServices
 				items        // Danh sách sau khi phân trang
 			);
 		}
-
 
 	}
 }

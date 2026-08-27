@@ -30,6 +30,37 @@
 </div>
 
 <div *ngIf="!loading && !notFound" class="p-3">
-	<h5 class="fw-bold mb-3">{{ recordDto?.title }}</h5>
+	<h5 class="fw-bold mb-3">
+		{{ recordDto?.title }}
+		<ng-container *ngIf="formRequireApproval">
+			<nz-tag *ngIf="recordDto?.approvalStatus === ApprovalStatus.Pending" nzColor="warning">Chờ duyệt</nz-tag>
+			<nz-tag *ngIf="recordDto?.approvalStatus === ApprovalStatus.Approved" nzColor="success">Đã duyệt</nz-tag>
+			<nz-tag *ngIf="recordDto?.approvalStatus === ApprovalStatus.Rejected" nzColor="error">Từ chối</nz-tag>
+		</ng-container>
+	</h5>
 	<div #renderContainer class="form-record-render"></div>
+
+	<div *ngIf="formRequireApproval" class="mt-3 pt-3 border-top">
+		<ng-container *ngIf="recordDto?.approvalStatus === ApprovalStatus.Pending; else decidedBlock">
+			<div *abpPermission="'EForm.FormRecords.Approve'">
+				<label class="form-label fw-bold">Ghi chú (không bắt buộc)</label>
+				<textarea nz-input [(ngModel)]="approvalNote" rows="2" placeholder="Ghi chú cho quyết định duyệt/từ chối"></textarea>
+				<div class="mt-2">
+					<button nz-button nzType="primary" [nzLoading]="approving" [disabled]="rejecting" (click)="approve()">
+						<i class="bi bi-check-lg"></i> Duyệt
+					</button>
+					&nbsp;
+					<button nz-button nzDanger [nzLoading]="rejecting" [disabled]="approving" (click)="reject()">
+						<i class="bi bi-x-lg"></i> Từ chối
+					</button>
+				</div>
+			</div>
+		</ng-container>
+		<ng-template #decidedBlock>
+			<div *ngIf="recordDto?.approvalNote">
+				<label class="form-label fw-bold">Ghi chú:</label>
+				<div>{{ recordDto?.approvalNote }}</div>
+			</div>
+		</ng-template>
+	</div>
 </div>

@@ -1,12 +1,24 @@
 import { Injectable } from '@angular/core';
 import { EFormService } from '@proxy/controllers';
-import { FormFieldDto } from '@proxy/form-models/form-fields';
-import { parseFieldConfig } from './field-config.util';
+import { TypeField } from '@proxy/enums';
+import { EVALUATE_CONDITION_RULE_JS, evaluateConditionRule, parseFieldConfig } from './field-config.util';
 
 interface AttachmentEntry {
   name: string;
   blob: string;
   size: number;
+}
+
+// Thông tin field tối thiểu để render/validate 1 form - cả FormFieldDto (field hiện tại của form)
+// lẫn FormRecordSnapshotFieldDto (field đóng băng trong 1 bản ghi cũ) đều khớp cấu trúc này,
+// nên renderFieldsToElements/openPreviewPopup dùng được cho cả 2 nguồn mà không cần ép kiểu.
+export interface RenderableField {
+  code?: string;
+  title?: string;
+  type?: TypeField;
+  config?: string;
+  options?: string;
+  displayOrder: number;
 }
 
 interface AttachmentFieldHandle {
@@ -19,10 +31,105 @@ interface AttachmentFieldHandle {
 export class FormRendererService {
   constructor(private eformService: EFormService) {}
 
+  // mở popup xem trước biểu mẫu (render content + field thật, không cho nhập/lưu gì)
+  // dùng chung cho nút preview trong trình soạn thảo (create_form) và nút "Xem trước" trên thẻ mẫu (form-templates)
+  openPreviewPopup(contentHtml: string, fields: RenderableField[], formId: string = ''): void {
+    const temp = this.renderFieldsToElements(contentHtml, fields, formId);
+
+    const previewWindow = window.open('', 'previewWindow', 'width=800,height=600');
+    if (!previewWindow) {
+      alert('Trình duyệt đã chặn popup xem trước!');
+      return;
+    }
+
+    const resizeScript = `
+      <script>
+        function autoResizeInput(input) {
+          let ghostSpan = document.getElementById('ghostSpan');
+          if (!ghostSpan) {
+            ghostSpan = document.createElement('span');
+            ghostSpan.id = 'ghostSpan';
+            ghostSpan.style.visibility = 'hidden';
+            ghostSpan.style.position = 'absolute';
+            ghostSpan.style.whiteSpace = 'pre';
+            ghostSpan.style.fontSize = input.style.fontSize || '16px';
+            ghostSpan.style.fontFamily = input.style.fontFamily || 'inherit';
+            document.body.appendChild(ghostSpan);
+          }
+
+          ghostSpan.textContent = input.value || input.placeholder || '';
+          input.style.width = (ghostSpan.offsetWidth + 10) + 'px';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+          const inputs = document.querySelectorAll('input[type="text"]');
+          inputs.forEach(input => {
+            input.addEventListener('input', () => autoResizeInput(input));
+            autoResizeInput(input);
+          });
+        });
+      </script>
+    `;
+
+    // popup là 1 window/document riêng ngoài Angular (dựng bằng document.write) nên không gọi được
+    // applyConditionalVisibility() (TypeScript) trực tiếp - chèn bản JS thuần tương đương để field có
+    // điều kiện vẫn ẩn/hiện đúng trong preview. Chỉ ẩn/hiện hiển thị (không cần gỡ/gắn required vì
+    // popup chỉ để xem trước, không có nút submit thật).
+    const conditionalScript = `
+      <script>
+        ${EVALUATE_CONDITION_RULE_JS}
+        function collectDataSimple() {
+          var data = {};
+          document.querySelectorAll('[name]').forEach(function (el) {
+            var name = el.getAttribute('name');
+            if (!name) return;
+            if (el.type === 'checkbox') {
+              if (el.checked) data[name] = data[name] ? data[name] + ';' + el.value : el.value;
+            } else if (el.type === 'radio') {
+              if (el.checked) data[name] = el.value;
+            } else {
+              data[name] = el.value;
+            }
+          });
+          return data;
+        }
+        function evaluateConditionals() {
+          var data = collectDataSimple();
+          document.querySelectorAll('[data-conditional]').forEach(function (el) {
+            var rule;
+            try { rule = JSON.parse(el.getAttribute('data-conditional')); } catch (e) { return; }
+            if (!rule.dependsOnCode) return;
+            el.style.display = evaluateConditionRule(data[rule.dependsOnCode], rule.operator, rule.value) ? '' : 'none';
+          });
+        }
+        window.addEventListener('DOMContentLoaded', function () {
+          document.body.addEventListener('input', evaluateConditionals);
+          document.body.addEventListener('change', evaluateConditionals);
+          evaluateConditionals();
+        });
+      </script>
+    `;
+
+    previewWindow.document.write(`
+      <html>
+        <head>
+          <title>Xem trước biểu mẫu</title>
+          <style>body { font-family: 'Times New Roman'; padding: 20px; }</style>
+        </head>
+        <body>
+          ${temp.innerHTML}
+          ${resizeScript}
+          ${conditionalScript}
+        </body>
+      </html>
+    `);
+    previewWindow.document.close();
+  }
+
   // Chuyển content HTML (chứa các span.drag-field) thành DOM render input/select/... thật,
   // dùng chung cho preview (create_form) và trang nộp form/xem kết quả (form-submit, form-records).
   // formId cần cho field kiểu Upload file/ảnh để gọi API upload đúng thuộc tính của đúng form.
-  renderFieldsToElements(contentHtml: string, fields: FormFieldDto[], formId: string = ''): HTMLElement {
+  renderFieldsToElements(contentHtml: string, fields: RenderableField[], formId: string = ''): HTMLElement {
     const container = document.createElement('div');
     container.innerHTML = contentHtml || '';
 
@@ -116,11 +223,91 @@ export class FormRendererService {
       replacementEl.style.fontSize = 'inherit';
       replacementEl.style.background = 'transparent';
       replacementEl.classList.add('form-renderer-field');
+      // đánh dấu field nào nằm ở đâu trong DOM - cần cho pass 2 bên dưới (conditional) tìm khối cần ẩn/hiện
+      replacementEl.setAttribute('data-field-code', code);
 
       span.replaceWith(replacementEl);
     });
 
+    // pass 2: với field có điều kiện phụ thuộc field khác, gắn data-conditional lên khối cần ẩn/hiện
+    // (không phải lên chính input, vì nhãn field thường nằm ngoài input trong HTML tự do - xem findHideTarget)
+    fields.forEach(field => {
+      const conditional = parseFieldConfig(field.config).conditional;
+      if (!conditional?.dependsOnCode) return;
+
+      const fieldEl = container.querySelector<HTMLElement>(`[data-field-code="${field.code}"]`);
+      if (!fieldEl) return;
+
+      const hideTarget = this.findHideTarget(fieldEl, container);
+      hideTarget.setAttribute('data-conditional', JSON.stringify(conditional));
+    });
+
     return container;
+  }
+
+  // leo từ phần tử của 1 field lên tổ tiên gần nhất mà KHÔNG chứa field nào khác - để ẩn/hiện cả nhãn
+  // (thường đứng ngoài input trong HTML tự do soạn bởi CKEditor, VD <p><strong>Nhãn:</strong><span/></p>)
+  // cùng lúc với input, thay vì chỉ ẩn trơ input. Dừng lại ngay khi 1 khối chứa từ 2 field trở lên, để
+  // không lỡ ẩn nhầm field khác đứng chung khối (VD nhiều field trong cùng 1 ô bảng).
+  private findHideTarget(fieldEl: HTMLElement, container: HTMLElement): HTMLElement {
+    let current = fieldEl;
+    let parent = current.parentElement;
+    while (parent && parent !== container) {
+      if (parent.querySelectorAll('[data-field-code]').length > 1) break;
+      current = parent;
+      parent = parent.parentElement;
+    }
+    return current;
+  }
+
+  // Gắn listener để tự ẩn/hiện các field có điều kiện (đã đánh dấu data-conditional ở renderFieldsToElements)
+  // theo giá trị hiện tại của field chúng phụ thuộc, và tự gỡ/gắn lại required khi ẩn/hiện để trình duyệt
+  // không chặn submit oan với field đang bị ẩn. Gọi 1 lần ngay để có trạng thái đúng ngay khi render xong.
+  //
+  // Thứ tự gọi quan trọng: với bản ghi đã có dữ liệu (xem/sửa kết quả), phải gọi SAU fillFormData để
+  // tính đúng theo dữ liệu đã lưu, không phải theo form rỗng.
+  applyConditionalVisibility(container: HTMLElement): void {
+    const conditionalEls = Array.from(container.querySelectorAll<HTMLElement>('[data-conditional]'));
+    if (conditionalEls.length === 0) return;
+
+    const evaluate = () => {
+      const data = this.collectFormData(container);
+      conditionalEls.forEach(el => {
+        const raw = el.getAttribute('data-conditional');
+        if (!raw) return;
+        let rule: { dependsOnCode?: string; operator?: any; value?: string };
+        try {
+          rule = JSON.parse(raw);
+        } catch {
+          return;
+        }
+        if (!rule.dependsOnCode) return;
+
+        const visible = evaluateConditionRule(data[rule.dependsOnCode], rule.operator, rule.value);
+        el.style.display = visible ? '' : 'none';
+
+        // el chính là input/select (không có ancestor riêng để leo lên, VD input đứng trực tiếp trong
+        // container) hoặc là khối cha bọc ngoài input (trường hợp thường gặp) - querySelectorAll chỉ
+        // tìm MÔ TẢ, không tính chính el, nên phải gộp thêm el nếu bản thân nó cũng là 1 input.
+        const inputs = Array.from(el.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input, textarea, select'));
+        if (el.matches('input, textarea, select')) {
+          inputs.push(el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement);
+        }
+        inputs.forEach(input => {
+          if (!visible && input.hasAttribute('required')) {
+            input.setAttribute('data-was-required', 'true');
+            input.removeAttribute('required');
+          } else if (visible && input.hasAttribute('data-was-required')) {
+            input.setAttribute('required', 'required');
+            input.removeAttribute('data-was-required');
+          }
+        });
+      });
+    };
+
+    container.addEventListener('input', evaluate);
+    container.addEventListener('change', evaluate);
+    evaluate();
   }
 
   // Kích hoạt HTML5 constraint validation (required/minlength/pattern/...) trên từng input trong container,

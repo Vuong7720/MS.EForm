@@ -12,6 +12,7 @@
     "Permission:FormRecords": "Kết quả nộp form",
     "Permission:Create": "Tạo mới",
     "Permission:Edit": "Sửa",
-    "Permission:Delete": "Xóa"
+    "Permission:Delete": "Xóa",
+    "Permission:Approve": "Phê duyệt"
   }
 }

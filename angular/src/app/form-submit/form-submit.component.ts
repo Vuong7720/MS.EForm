@@ -65,6 +65,7 @@ export class FormSubmitComponent implements OnInit {
     const rendered = this.renderer.renderFieldsToElements(this.formDto.content || '', this.lstAttribute, this.formId);
     this.renderContainer.nativeElement.innerHTML = '';
     this.renderContainer.nativeElement.appendChild(rendered);
+    this.renderer.applyConditionalVisibility(this.renderContainer.nativeElement);
   }
 
   submit(): void {
@@ -87,7 +88,9 @@ export class FormSubmitComponent implements OnInit {
       )
       .subscribe({
         next: res => {
-          this.toasterService.success(res.messages);
+          this.toasterService.success(
+            this.formDto?.requireApproval ? 'Nộp form thành công, đang chờ phê duyệt' : res.messages
+          );
           this.submitted = true;
         },
         error: err => this.toasterService.error(getApiErrorMessage(err)),

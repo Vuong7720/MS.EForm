@@ -22,8 +22,9 @@ describe('FormRecordListComponent', () => {
   };
 
   function setup(queryFormId: string | null) {
-    serviceSpy = jasmine.createSpyObj('EFormService', ['getPagingFormRecord', 'deleteFormRecordById']);
+    serviceSpy = jasmine.createSpyObj('EFormService', ['getPagingFormRecord', 'deleteFormRecordById', 'get']);
     serviceSpy.getPagingFormRecord.and.returnValue(of(pagedResult as any));
+    serviceSpy.get.and.returnValue(of({ requireApproval: false } as any));
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     TestBed.configureTestingModule({

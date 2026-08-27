@@ -9,6 +9,7 @@ namespace MS.EForm.FormModels.Forms
 	public class FormPagingFilterDto
 	{
 		public string? Title { get; set; }
+		public bool? IsTemplate { get; set; }
 		public int PageSize { get; set; } = 10;
 		public int PageIndex { get; set; } = 1;
 	}

@@ -58,6 +58,12 @@ export class CreateFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // "Dùng mẫu này": điền sẵn tiêu đề/nội dung/field của mẫu vào modal, KHÔNG tạo form thật
+    // cho tới khi người dùng bấm Lưu - tránh tạo rác khi họ chỉ xem thử rồi đóng modal
+    if (this.getParams.seedForm) {
+      this.formDto = this.getParams.seedForm;
+      this.lstAttribuite = this.getParams.seedFields || [];
+    }
     this.buildForm();
     this.getAllCate();
     if (this.getParams.id) {
@@ -65,6 +71,13 @@ export class CreateFormComponent implements OnInit {
       this.getFieldByForm(this.formId);
       this.getFormDetail(this.formId);
     }
+  }
+
+  get modalTitle(): string {
+    if (this.formId) return 'Sửa biểu mẫu';
+    if (this.getParams.forceTemplate) return 'Tạo mẫu mới';
+    if (this.getParams.seedForm) return 'Tạo biểu mẫu từ mẫu';
+    return 'Thêm mới biểu mẫu';
   }
   buildForm() {
     this.form = this.fb.group({
@@ -78,6 +91,8 @@ export class CreateFormComponent implements OnInit {
       content: [this.formDto.content || null],
       description: [this.formDto.description || null],
       categoryId: [this.formDto.categoryId || null, [Validators.required]],
+      requireApproval: [this.formDto.requireApproval || false],
+      notifyOnSubmit: [this.formDto.notifyOnSubmit || false],
       formFields: [null],
     });
   }
@@ -89,8 +104,14 @@ export class CreateFormComponent implements OnInit {
     }
 
     this.form.get('formFields')?.setValue(this.lstAttribuite);
+    // giữ nguyên isTemplate hiện có khi sửa form (this.formDto.isTemplate, lấy từ server lúc getFormDetail),
+    // chỉ ép isTemplate=true khi mở modal ở chế độ "Tạo mẫu mới" (forceTemplate)
+    const payload = {
+      ...this.form.value,
+      isTemplate: this.getParams.forceTemplate ?? this.formDto.isTemplate ?? false,
+    };
     this.formId
-      ? this.service.update(this.formId, this.form.value, { skipHandleError: true }).subscribe({
+      ? this.service.update(this.formId, payload, { skipHandleError: true }).subscribe({
         next: res => {
           this.toasterService.success(res.messages);
           this.nzModalRef.close({
@@ -100,7 +121,7 @@ export class CreateFormComponent implements OnInit {
         },
         error: err => this.toasterService.error(getApiErrorMessage(err)),
       })
-      : this.service.create(this.form.value, { skipHandleError: true }).subscribe({
+      : this.service.create(payload, { skipHandleError: true }).subscribe({
         next: res => {
           this.toasterService.success(res.messages);
           this.nzModalRef.close({
@@ -287,57 +308,7 @@ export class CreateFormComponent implements OnInit {
         icon: 'preview',
         onAction: () => {
           const originalContent = editor.getContent();
-          const temp = this.formRenderer.renderFieldsToElements(originalContent, this.lstAttribuite, this.formId);
-
-          // Hiển thị bản xem trước trong popup
-          const previewWindow = window.open('', 'previewWindow', 'width=800,height=600');
-          if (previewWindow) {
-            const resizeScript = `
-              <script>
-                function autoResizeInput(input) {
-                  let ghostSpan = document.getElementById('ghostSpan');
-                  if (!ghostSpan) {
-                    ghostSpan = document.createElement('span');
-                    ghostSpan.id = 'ghostSpan';
-                    ghostSpan.style.visibility = 'hidden';
-                    ghostSpan.style.position = 'absolute';
-                    ghostSpan.style.whiteSpace = 'pre';
-                    ghostSpan.style.fontSize = input.style.fontSize || '16px';
-                    ghostSpan.style.fontFamily = input.style.fontFamily || 'inherit';
-                    document.body.appendChild(ghostSpan);
-                  }
-          
-                  ghostSpan.textContent = input.value || input.placeholder || '';
-                  input.style.width = (ghostSpan.offsetWidth + 10) + 'px';
-                }
-          
-                window.addEventListener('DOMContentLoaded', () => {
-                  const inputs = document.querySelectorAll('input[type="text"]');
-                  inputs.forEach(input => {
-                    input.addEventListener('input', () => autoResizeInput(input));
-                    autoResizeInput(input);
-                  });
-                });
-              </script>
-            `;
-
-            previewWindow.document.write(`
-              <html>
-                <head>
-                  <title>Xem trước biểu mẫu</title>
-                  <style>body { font-family: 'Times New Roman'; padding: 20px; }</style>
-                </head>
-                <body>
-                  ${temp.innerHTML}
-                  ${resizeScript}
-                </body>
-              </html>
-            `);
-            previewWindow.document.close();
-          }
-          else {
-            alert('Trình duyệt đã chặn popup xem trước!');
-          }
+          this.formRenderer.openPreviewPopup(originalContent, this.lstAttribuite, this.formId);
         },
       });
     },
@@ -350,4 +321,9 @@ export class CreateFormComponent implements OnInit {
 export interface CategoryParams {
   id: string;
   isCreated: boolean;
+  // dùng khi mở modal từ trang "Mẫu có sẵn" (Dùng mẫu này): điền sẵn dữ liệu, không tạo form thật cho tới khi Lưu
+  seedForm?: FormDto;
+  seedFields?: FormFieldDto[];
+  // dùng khi mở modal từ nút "Tạo mẫu mới": ép isTemplate=true khi lưu
+  forceTemplate?: boolean;
 }

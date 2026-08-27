@@ -1,11 +1,20 @@
 <nz-page-header [nzGhost]="false">
 	<nz-page-header-title>Kết quả nộp form</nz-page-header-title>
-	<nz-page-header-extra *ngIf="page.formId">
+	<nz-page-header-extra>
 		<nz-space>
-			<button *nzSpaceItem nz-button nzType="primary" (click)="exportExcel()">
-				<i class="bi bi-file-earmark-excel"></i> Xuất Excel
-			</button>
-			<button *nzSpaceItem nz-button nzType="default" (click)="clearFilter()">Bỏ lọc theo form</button>
+			<ng-container *nzSpaceItem>
+				<label nz-checkbox [(ngModel)]="onlyPendingApproval" (ngModelChange)="toggleOnlyPendingApproval()">Chỉ hiện chờ duyệt</label>
+			</ng-container>
+			<ng-container *ngIf="page.formId">
+				<ng-container *nzSpaceItem>
+					<button nz-button nzType="primary" (click)="exportExcel()">
+						<i class="bi bi-file-earmark-excel"></i> Xuất Excel
+					</button>
+				</ng-container>
+				<ng-container *nzSpaceItem>
+					<button nz-button nzType="default" (click)="clearFilter()">Bỏ lọc theo form</button>
+				</ng-container>
+			</ng-container>
 		</nz-space>
 	</nz-page-header-extra>
 </nz-page-header>
@@ -16,8 +25,9 @@
 	<thead>
 		<tr>
 			<th style="width: 5%;">STT</th>
-			<th style="width: 45%;">Tiêu đề</th>
-			<th style="width: 30%;">Thời gian nộp</th>
+			<th [style.width]="currentFormRequireApproval ? '35%' : '45%'">Tiêu đề</th>
+			<th style="width: 25%;">Thời gian nộp</th>
+			<th style="width: 15%;" *ngIf="currentFormRequireApproval">Trạng thái duyệt</th>
 			<th style="width: 10%; text-align: center;"><i class="bi bi-gear-wide"></i></th>
 		</tr>
 	</thead>
@@ -26,6 +36,11 @@
 			<td>{{ i+1 }}</td>
 			<td>{{ data.title }}</td>
 			<td>{{ data.creationTime | date:'dd/MM/yyyy HH:mm' }}</td>
+			<td *ngIf="currentFormRequireApproval">
+				<nz-tag *ngIf="data.approvalStatus === ApprovalStatus.Pending" nzColor="warning">Chờ duyệt</nz-tag>
+				<nz-tag *ngIf="data.approvalStatus === ApprovalStatus.Approved" nzColor="success">Đã duyệt</nz-tag>
+				<nz-tag *ngIf="data.approvalStatus === ApprovalStatus.Rejected" nzColor="error">Từ chối</nz-tag>
+			</td>
 			<td style="text-align: center;">
 				<a nz-dropdown [nzDropdownMenu]="menu">
 					<i class="bi bi-three-dots-vertical"></i>

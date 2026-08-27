@@ -1,0 +1,31 @@
+<nz-page-header [nzGhost]="false">
+	<nz-page-header-title>Mẫu có sẵn</nz-page-header-title>
+	<nz-page-header-content>
+		<span class="text-muted">Chọn 1 mẫu, xem trước rồi bấm "Dùng mẫu này" để tạo nhanh biểu mẫu mới - chỉ tạo thật khi bạn Lưu.</span>
+	</nz-page-header-content>
+	<nz-page-header-extra>
+		<button *abpPermission="'EForm.Forms.Create'" nz-button nzType="primary" (click)="addTemplate()">
+			<i class="bi bi-plus-lg"></i> Tạo mẫu mới
+		</button>
+	</nz-page-header-extra>
+</nz-page-header>
+
+<nz-spin [nzSpinning]="loading">
+	<div nz-row [nzGutter]="[16, 16]" style="padding: 0 24px 24px;">
+		<div nz-col [nzXs]="24" [nzSm]="12" [nzMd]="8" [nzLg]="6" *ngFor="let data of lstTemplate">
+			<nz-card [nzTitle]="data.title" style="height: 100%;">
+				<p class="text-muted">{{ data.description || 'Chưa có mô tả' }}</p>
+				<div class="d-flex" style="gap: 8px;">
+					<button nz-button nzType="default" (click)="previewTemplate(data.id!)">
+						<i class="bi bi-eye"></i> Xem trước
+					</button>
+					<button *abpPermission="'EForm.Forms.Create'" nz-button nzType="primary" (click)="useTemplate(data.id!)">
+						<i class="bi bi-magic"></i> Dùng mẫu này
+					</button>
+				</div>
+			</nz-card>
+		</div>
+	</div>
+
+	<nz-empty *ngIf="!loading && lstTemplate.length === 0" nzNotFoundContent="Chưa có mẫu form nào"></nz-empty>
+</nz-spin>

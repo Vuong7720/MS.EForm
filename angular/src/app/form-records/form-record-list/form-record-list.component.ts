@@ -5,6 +5,7 @@ import { PagedResultDto } from '@abp/ng.core';
 import { ToasterService } from '@abp/ng.theme.shared';
 import { EFormService } from '@proxy/controllers';
 import { FormRecordDto, FormRecordPagingFilterDto } from '@proxy/form-models/form-records';
+import { ApprovalStatus } from '@proxy/enums';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { DeleteComfirmComponent } from '../../shared/delete-comfirm/delete-comfirm.component';
 import { getApiErrorMessage } from '../../shared/services/http-error.util';
@@ -24,6 +25,11 @@ export class FormRecordListComponent implements OnInit {
     pageSize: 10,
   } as FormRecordPagingFilterDto;
   loading = false;
+  // form đang lọc theo (page.formId) có bật "Cần phê duyệt" không - chỉ hiện cột/hành động duyệt khi có,
+  // tránh hiện tag "Chờ duyệt" vô nghĩa cho form không cần duyệt
+  currentFormRequireApproval = false;
+  ApprovalStatus = ApprovalStatus;
+  onlyPendingApproval = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -39,6 +45,23 @@ export class FormRecordListComponent implements OnInit {
     const pageSize = Number(this.route.snapshot.queryParamMap.get('pageSize'));
     if (pageIndex > 0) this.page.pageIndex = pageIndex;
     if (pageSize > 0) this.page.pageSize = pageSize;
+    this.loadCurrentFormRequireApproval();
+    this.getPaging(this.page);
+  }
+
+  private loadCurrentFormRequireApproval(): void {
+    if (!this.page.formId) {
+      this.currentFormRequireApproval = false;
+      return;
+    }
+    this.service.get(this.page.formId).subscribe(form => {
+      this.currentFormRequireApproval = !!form?.requireApproval;
+    });
+  }
+
+  toggleOnlyPendingApproval(): void {
+    this.page.approvalStatus = this.onlyPendingApproval ? this.ApprovalStatus.Pending : undefined;
+    this.page.pageIndex = 1;
     this.getPaging(this.page);
   }
 
@@ -84,6 +107,7 @@ export class FormRecordListComponent implements OnInit {
 
   clearFilter() {
     this.page.formId = undefined;
+    this.currentFormRequireApproval = false;
     this.router.navigate(['/form-records']);
     this.getPaging(this.page);
   }

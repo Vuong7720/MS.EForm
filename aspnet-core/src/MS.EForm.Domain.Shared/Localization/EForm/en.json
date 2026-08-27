@@ -12,6 +12,7 @@
     "Permission:FormRecords": "Form Records",
     "Permission:Create": "Create",
     "Permission:Edit": "Edit",
-    "Permission:Delete": "Delete"
+    "Permission:Delete": "Delete",
+    "Permission:Approve": "Approve"
   }
 }

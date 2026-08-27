@@ -13,5 +13,9 @@ namespace MS.EForm.FormModels.Forms
 		public string? Content { get; set; }
 		public string? Description { get; set; }
 		public Guid? CategoryId { get; set; }
+		public bool IsTemplate { get; set; }
+		public Guid? SourceTemplateId { get; set; }
+		public bool RequireApproval { get; set; }
+		public bool NotifyOnSubmit { get; set; }
 	}
 }

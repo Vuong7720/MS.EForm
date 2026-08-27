@@ -35,6 +35,16 @@ export class CreateAttributeComponent implements OnInit {
   typesWithFileUpload = [9];
   // kiểu Đánh giá/Rating hỗ trợ cấu hình số sao tối đa
   typesWithRating = [11];
+  // kiểu field mà giá trị điều kiện nên chọn từ danh sách lựa chọn có sẵn thay vì gõ tay
+  typesWithOptionsForConditional = [3, 4, 5];
+
+  operatorOptions = [
+    { label: 'Bằng', value: 'equals' },
+    { label: 'Khác', value: 'notEquals' },
+    { label: 'Chứa (dùng cho CheckBox)', value: 'contains' },
+    { label: 'Bỏ trống', value: 'isEmpty' },
+    { label: 'Đã nhập', value: 'isNotEmpty' },
+  ];
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -89,7 +99,39 @@ export class CreateAttributeComponent implements OnInit {
       maxRating: [fieldConfig.maxRating ?? 5],
       config: [null],
       options: [this.optionsText || null],
+      conditionalEnabled: [!!fieldConfig.conditional],
+      conditionalDependsOn: [fieldConfig.conditional?.dependsOnCode ?? null],
+      conditionalOperator: [fieldConfig.conditional?.operator ?? 'equals'],
+      conditionalValue: [fieldConfig.conditional?.value ?? null],
     });
+  }
+
+  // field khác (không tính chính nó) để chọn làm điều kiện phụ thuộc
+  get dependsOnFieldChoices(): FormFieldDto[] {
+    return this.lstAttribute.filter(a => a.code !== this.attribute.code);
+  }
+
+  // field đang được chọn làm điều kiện phụ thuộc - dùng để quyết định ô giá trị là dropdown hay text
+  get dependsOnField(): FormFieldDto | undefined {
+    const code = this.form?.get('conditionalDependsOn')?.value;
+    return this.lstAttribute.find(a => a.code === code);
+  }
+
+  // danh sách lựa chọn cho ô giá trị điều kiện, nếu field phụ thuộc là Select/CheckBox/Radio/Boolean;
+  // null nghĩa là field phụ thuộc thuộc kiểu tự do (Text/Number/...) -> ô giá trị là text nhập tay
+  get dependsOnValueChoices(): string[] | null {
+    const field = this.dependsOnField;
+    if (!field) return null;
+    if (field.type === 8) return ['Có', 'Không']; // Boolean: renderer hardcode 2 lựa chọn này
+    if (this.typesWithOptionsForConditional.includes(field.type as number)) {
+      try {
+        const options = JSON.parse(field.options || '[]');
+        return Array.isArray(options) ? options : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   save() {
@@ -118,6 +160,14 @@ export class CreateAttributeComponent implements OnInit {
       maxFileSizeMb: this.typesWithFileUpload.includes(type) ? value.maxFileSizeMb || null : null,
       maxFileCount: this.typesWithFileUpload.includes(type) ? value.maxFileCount || 1 : null,
       maxRating: this.typesWithRating.includes(type) ? value.maxRating || 5 : null,
+      conditional:
+        value.conditionalEnabled && value.conditionalDependsOn
+          ? {
+              dependsOnCode: value.conditionalDependsOn,
+              operator: value.conditionalOperator || 'equals',
+              value: value.conditionalValue || '',
+            }
+          : null,
     };
     this.form.get('config')?.setValue(serializeFieldConfig(fieldConfig));
 

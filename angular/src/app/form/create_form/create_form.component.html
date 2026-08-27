@@ -1,6 +1,6 @@
 <div *nzModalTitle>
 	<h3 class="fw-bold">
-	  Thêm mới biểu mẫu
+	  {{ modalTitle }}
 	</h3>
   </div>
 
@@ -36,6 +36,13 @@
 				</div>
 			</div>
 		</div>
+	</div>
+
+	<div class="mt-1">
+		<label nz-checkbox formControlName="requireApproval">Cần phê duyệt trước khi được xem là đã duyệt</label>
+	</div>
+	<div class="mt-1">
+		<label nz-checkbox formControlName="notifyOnSubmit">Gửi email thông báo cho tôi khi có người nộp</label>
 	</div>
 
 	<div class="mt-2 mb-1">

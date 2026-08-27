@@ -33,6 +33,7 @@ public static class EFormPermissions
         public const string Default = GroupName + ".FormRecords";
         public const string Edit = Default + ".Edit";
         public const string Delete = Default + ".Delete";
+        public const string Approve = Default + ".Approve";
         // không có Create: nộp form (submit-form-record) cố tình để public, không yêu cầu quyền
     }
 }

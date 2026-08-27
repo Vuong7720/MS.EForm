@@ -18,6 +18,11 @@ const routes: Routes = [
     loadChildren: () => import('./form/form.module').then(m => m.FormModule),
   },
   {
+    path: 'form-templates',
+    pathMatch: 'full',
+    loadChildren: () => import('./form-templates/form-templates.module').then(m => m.FormTemplatesModule),
+  },
+  {
     // không dùng pathMatch:'full' vì module này có route con 'view/:id'
     path: 'form-records',
     loadChildren: () => import('./form-records/form-records.module').then(m => m.FormRecordsModule),
