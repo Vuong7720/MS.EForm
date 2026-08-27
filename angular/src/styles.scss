@@ -301,3 +301,41 @@ textarea {
 .lpx-topbar-content lpx-icon {
   color: var(--text-secondary);
 }
+
+/* ==========================================================================
+   In / Xuất PDF bản ghi (form-record-detail) - dùng chính trình duyệt để in/lưu
+   PDF thay vì tự dựng lại tài liệu ở backend, để giữ nguyên ảnh nền/màu/layout
+   tuỳ ý mà CKEditor tạo ra cho form gốc (backend PDF generic không tái tạo được).
+   Đặt ở stylesheet toàn cục (không phải style của component) vì nội dung bên
+   trong .form-record-render được chèn bằng DOM API thuần (không qua Angular
+   template), nên style trong component sẽ không áp dụng được lên đó.
+   ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .print-area,
+  .print-area * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}

@@ -182,6 +182,12 @@ export class FormRecordDetailComponent implements OnInit {
     });
   }
 
+  // xuất PDF bằng cách in chính giao diện đã render (giữ nguyên ảnh nền/màu/layout của form gốc) -
+  // trình duyệt cho phép người dùng chọn "Lưu dưới dạng PDF" ngay trong hộp thoại in
+  exportPdf(): void {
+    window.print();
+  }
+
   back(): void {
     this.router.navigate(['/form-records'], {
       queryParams: {
