@@ -212,7 +212,55 @@ export class CreateFormComponent implements OnInit {
     });
     modalRef.componentInstance.success.subscribe(res => {
       this.lstAttribuite = this.lstAttribuite.filter(a => a.code !== code);
+      this.removeFieldFromContent(code);
     });
+  }
+
+  // Xoá thuộc tính khỏi danh sách bên phải không tự xoá span tương ứng đã kéo vào nội dung soạn thảo -
+  // nếu không dọn, field "chết" đó vẫn hiển thị và vẫn được thu thập dữ liệu lúc nộp form dù không còn
+  // quản lý được (không sửa/xoá được nữa vì đã biến mất khỏi lstAttribuite).
+  private removeFieldFromContent(code: string): void {
+    const tinymceEditor = this.editor?.editor;
+    if (!tinymceEditor) return;
+
+    const nodes = tinymceEditor.dom.select(`[id="${code}"]`);
+    if (!nodes.length) return;
+
+    nodes.forEach(node => tinymceEditor.dom.remove(node));
+    tinymceEditor.fire('change');
+  }
+
+  // Sao chép 1 thuộc tính - hữu ích với form kiểu văn bản hành chính có nhiều field cấu trúc giống
+  // nhau (VD "Họ và tên", "Ngày sinh" lặp lại cho bên A/bên B trong hợp đồng). Bản sao giữ nguyên
+  // toàn bộ cấu hình (type/config/options), chỉ đổi tên + mã để không trùng thuộc tính gốc.
+  cloneAttribute(item: FormFieldDto): void {
+    const baseTitle = item.title || '';
+    let title = `${baseTitle} (Copy)`;
+    let titleSuffix = 2;
+    while (this.lstAttribuite.some(a => a.title === title)) {
+      title = `${baseTitle} (Copy ${titleSuffix++})`;
+    }
+
+    const baseCode = item.code || '';
+    let code = `${baseCode}_2`;
+    let codeSuffix = 2;
+    while (this.lstAttribuite.some(a => a.code === code)) {
+      codeSuffix++;
+      code = `${baseCode}_${codeSuffix}`;
+    }
+
+    const clone: FormFieldDto = {
+      ...item,
+      id: '',
+      title,
+      code,
+      displayOrder: this.lstAttribuite.length,
+    };
+
+    const index = this.lstAttribuite.findIndex(a => a.code === item.code);
+    const list = [...this.lstAttribuite];
+    list.splice(index + 1, 0, clone);
+    this.lstAttribuite = list;
   }
 
   editorConfig = {
@@ -274,9 +322,18 @@ export class CreateFormComponent implements OnInit {
           // Parse chuỗi JSON thành object
           const data = JSON.parse(dataStr);
           if (data.type && data.code && data.title) {
+            // chặn kéo cùng 1 thuộc tính vào nội dung 2 lần - nếu không sẽ có 2 phần tử id trùng nhau
+            // trong DOM, gây lỗi khi thu thập dữ liệu (2 input trùng name khi nộp/xem kết quả)
+            if (editor.dom.select(`[id="${data.code}"]`).length > 0) {
+              this.toasterService.warn(`Thuộc tính "${data.title}" đã có trong nội dung, không thể thêm trùng`);
+              return;
+            }
+            // contenteditable="false": biến field thành 1 khối "nguyên vẹn" không cho con trỏ đi vào bên
+            // trong - contenteditable="true" (cũ) lồng bên trong vùng soạn thảo tạo ra 1 vùng soạn thảo con
+            // riêng biệt, khiến bấm Enter bên trong bị "kẹt" lại chứ không thoát ra dòng ngoài được.
             const html = `<span
             id="${data.code}"
-            contenteditable="true"
+            contenteditable="false"
             class="drag-field field-type-${data.type}"
             style="display: inline-block; text-align:center; resize: horizontal; overflow: auto; min-width: 100px; border: 1px dashed #ccc; padding: 2px 4px;">
             ..........<i>${data.title}</i>..........

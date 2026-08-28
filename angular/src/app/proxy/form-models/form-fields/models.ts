@@ -37,6 +37,31 @@ export interface FieldConfig {
   maxRating?: number | null;
   // chỉ hiện/bắt buộc field này khi field có code = dependsOnCode thỏa operator so với value
   conditional?: ConditionalRule | null;
+  // riêng cho field kiểu Radio/CheckBox: hướng xếp các lựa chọn
+  layout?: 'horizontal' | 'vertical' | null;
+  // riêng cho field kiểu DateTime: true = chỉ chọn ngày, không bắt chọn giờ
+  dateOnly?: boolean | null;
+  // riêng cho field kiểu Upload file/ảnh: hiện ảnh xem trước ngay trên form
+  showPreview?: boolean | null;
+  // áp dụng cho mọi kiểu field: màu chữ tùy chỉnh khi hiển thị (mặc định kế thừa màu văn bản xung quanh)
+  textColor?: string | null;
+  // riêng cho field kiểu Group (danh sách/nhóm lặp): số dòng lặp tối thiểu/tối đa + định nghĩa field con.
+  // required=true tương đương minRows tối thiểu là 1 (xem ValidateGroupField phía backend)
+  minRows?: number | null;
+  maxRows?: number | null;
+  children?: GroupChildField[] | null;
+}
+
+// 1 field con bên trong field kiểu Group - cấu trúc tối giản, KHÔNG hỗ trợ Upload file/Chữ ký/Rating/Group
+// lồng nhau (giữ đơn giản vì đính kèm file/chữ ký theo từng dòng lặp sẽ rất phức tạp để quản lý mồ côi)
+export interface GroupChildField {
+  code: string;
+  title: string;
+  type: TypeField;
+  // JSON của 1 FieldConfig con - chỉ dùng required/options-related, không hỗ trợ minLength/pattern/... để đơn giản
+  config?: string | null;
+  // JSON mảng lựa chọn - áp dụng khi type là Select/CheckBox/Radio
+  options?: string | null;
 }
 
 export type ConditionalOperator = 'equals' | 'notEquals' | 'contains' | 'isEmpty' | 'isNotEmpty';

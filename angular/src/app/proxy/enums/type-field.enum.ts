@@ -12,6 +12,7 @@ export enum TypeField {
   File = 9,
   Signature = 10,
   Rating = 11,
+  Group = 12,
 }
 
 export const typeFieldOptions = mapEnumToOptions(TypeField);

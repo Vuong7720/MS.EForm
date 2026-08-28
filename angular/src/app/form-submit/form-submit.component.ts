@@ -74,6 +74,7 @@ export class FormSubmitComponent implements OnInit {
     this.renderContainer.nativeElement.innerHTML = '';
     this.renderContainer.nativeElement.appendChild(rendered);
     this.renderer.applyConditionalVisibility(this.renderContainer.nativeElement);
+    this.renderer.attachAutoResizeInputs(this.renderContainer.nativeElement);
   }
 
   // dựng widget Cloudflare Turnstile (chống spam) - script tải async/defer (xem index.html) nên

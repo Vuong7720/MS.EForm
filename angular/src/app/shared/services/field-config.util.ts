@@ -28,6 +28,22 @@ export function serializeFieldConfig(config: FieldConfig): string {
   return JSON.stringify(config);
 }
 
+// sinh mã (code) gợi ý từ tên field: lấy chữ cái đầu mỗi từ, bỏ dấu - dùng chung cho field cấp 1
+// (create_attribute) và field con trong Group (cùng 1 quy tắc đặt mã)
+export function generateFieldCode(title: string): string {
+  const cleanedValue = title
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^\w\s]|_/g, '')
+    .replace(/\s+/g, ' ');
+
+  return cleanedValue
+    .trim()
+    .split(/\s+/)
+    .map(word => word[0]?.toUpperCase() || '')
+    .join('');
+}
+
 // So khớp giá trị hiện tại của field phụ thuộc (actual) với điều kiện cấu hình (operator/expected).
 // PHẢI khớp chính xác logic với EvaluateCondition() phía backend (FormRecordService.cs) - đây chỉ là
 // bản để ẩn/hiện UI ngay lập tức, quyết định cuối cùng (có chặn submit hay không) vẫn do backend validate.
