@@ -22,7 +22,7 @@
 	</div>
 	<div class="mt-1">
 		<label for="category-title" class="form-label fw-bold">Mã thuộc tính</label><span class="text-danger">*</span>
-		<input nz-input formControlName="code" placeholder="Gợi ý mã tự động sinh">
+		<input nz-input formControlName="code" placeholder="Gợi ý mã tự động sinh" (ngModelChange)="onCodeChange($event)">
 		<div class="text-danger" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
 			<div *ngIf="form.get('code')?.errors?.['required']">
 				Vui lòng nhập mã thuộc tính!
@@ -47,9 +47,26 @@
 	<div class="mt-1">
 		<label nz-checkbox formControlName="required">Bắt buộc nhập</label>
 	</div>
+	<div class="mt-1">
+		<label class="form-label fw-bold">Màu chữ khi hiển thị</label>
+		<div class="d-flex align-items-center">
+			<input type="color" formControlName="textColor" style="width:40px; height:32px; padding:2px; border:1px solid #d9d9d9; border-radius:4px;">
+			<button nz-button nzSize="small" type="button" class="ms-2" (click)="form.get('textColor')?.setValue(null)">Mặc định</button>
+		</div>
+	</div>
 	<div class="mt-1" *ngIf="typesWithOptions.includes(form.get('type')?.value)">
 		<label for="category-options" class="form-label fw-bold">Danh sách lựa chọn (cách nhau bởi dấu phẩy)</label>
 		<textarea nz-input formControlName="options" placeholder="Vd: Có, Không, Chưa rõ" rows="2"></textarea>
+	</div>
+	<div class="mt-1" *ngIf="typesWithLayout.includes(form.get('type')?.value)">
+		<label class="form-label fw-bold">Hướng xếp các lựa chọn</label>
+		<nz-select formControlName="layout" style="width: 100%;">
+			<nz-option nzLabel="Nằm ngang" nzValue="horizontal"></nz-option>
+			<nz-option nzLabel="Nằm dọc" nzValue="vertical"></nz-option>
+		</nz-select>
+	</div>
+	<div class="mt-1" *ngIf="typesWithDateOnly.includes(form.get('type')?.value)">
+		<label nz-checkbox formControlName="dateOnly">Chỉ chọn ngày (không bắt chọn giờ)</label>
 	</div>
 	<div class="row" *ngIf="typesWithLength.includes(form.get('type')?.value)">
 		<div class="mt-1 col-6">
@@ -90,10 +107,72 @@
 				<input nz-input type="number" min="1" formControlName="maxFileCount">
 			</div>
 		</div>
+		<div class="mt-1">
+			<label nz-checkbox formControlName="showPreview">Hiện ảnh xem trước ngay trên form (chỉ áp dụng cho file ảnh)</label>
+		</div>
 	</div>
 	<div class="mt-1" *ngIf="typesWithRating.includes(form.get('type')?.value)">
 		<label class="form-label fw-bold">Số sao tối đa</label>
 		<input nz-input type="number" min="2" formControlName="maxRating">
+	</div>
+
+	<div *ngIf="typesWithGroup.includes(form.get('type')?.value)">
+		<div class="row">
+			<div class="mt-1 col-6">
+				<label class="form-label fw-bold">Số dòng tối thiểu</label>
+				<input nz-input type="number" min="0" formControlName="minRows">
+			</div>
+			<div class="mt-1 col-6">
+				<label class="form-label fw-bold">Số dòng tối đa</label>
+				<input nz-input type="number" min="1" formControlName="maxRows" placeholder="Để trống = không giới hạn">
+			</div>
+		</div>
+
+		<label class="form-label fw-bold mt-2">Danh sách field con</label>
+		<div class="border rounded p-2 mb-2" *ngIf="groupChildren.length">
+			<div class="d-flex justify-content-between align-items-center" *ngFor="let child of groupChildren; let ci = index">
+				<span>{{ ci + 1 }}. {{ child.title }} <small class="text-muted">({{ child.code }})</small></span>
+				<div>
+					<i class="bi bi-pencil-square text-primary ms-2" (click)="editGroupChild(ci)" title="Sửa field con"></i>
+					<i class="bi bi-trash text-danger ms-2" (click)="removeGroupChild(ci)" title="Xóa field con"></i>
+				</div>
+			</div>
+		</div>
+
+		<div class="border rounded p-2">
+			<div class="mt-1">
+				<label class="form-label fw-bold">Tên field con</label>
+				<input nz-input [(ngModel)]="childDraft.title" [ngModelOptions]="{ standalone: true }" placeholder="Vd: Họ và tên">
+			</div>
+			<div class="row">
+				<div class="mt-1 col-8">
+					<label class="form-label fw-bold">Kiểu dữ liệu</label>
+					<nz-select [(ngModel)]="childDraft.type" [ngModelOptions]="{ standalone: true }" style="width: 100%;">
+						<nz-option *ngFor="let item of groupChildTypes" [nzLabel]="item.title" [nzValue]="item.value"></nz-option>
+					</nz-select>
+				</div>
+				<div class="mt-1 col-4 d-flex align-items-center">
+					<label nz-checkbox [(ngModel)]="childDraft.required" [ngModelOptions]="{ standalone: true }">Bắt buộc nhập</label>
+				</div>
+			</div>
+			<div class="mt-1" *ngIf="groupChildTypesWithOptions.includes(childDraft.type)">
+				<label class="form-label fw-bold">Danh sách lựa chọn (cách nhau bởi dấu phẩy)</label>
+				<input nz-input [(ngModel)]="childDraft.optionsText" [ngModelOptions]="{ standalone: true }" placeholder="Vd: Có, Không">
+			</div>
+			<button nz-button nzType="dashed" nzSize="small" type="button" class="mt-1" (click)="addGroupChild()">
+				{{ editingChildIndex != null ? 'Lưu field con' : '+ Thêm field con' }}
+			</button>
+			<button
+				*ngIf="editingChildIndex != null"
+				nz-button
+				nzSize="small"
+				type="button"
+				class="mt-1 ms-1"
+				(click)="cancelEditGroupChild()"
+			>
+				Hủy sửa
+			</button>
+		</div>
 	</div>
 
 	<div class="mt-2 pt-2 border-top">

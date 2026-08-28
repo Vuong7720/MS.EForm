@@ -60,6 +60,22 @@ namespace MS.EForm.FormServices
 			}
 		}
 
+		// check trùng mã code giữa các field truyền vào cùng lúc lưu form - CreateFormField/UpdateFormField
+		// (FormFieldServices) có check trùng nhưng luồng lưu cả form không đi qua đó, insert thẳng cả mảng
+		private void CheckDuplicateFieldCodes(List<CreateUpdateFormField> fields)
+		{
+			var duplicatedCode = fields
+				.Where(f => !string.IsNullOrEmpty(f.Code))
+				.GroupBy(f => f.Code)
+				.FirstOrDefault(g => g.Count() > 1)
+				?.Key;
+
+			if (duplicatedCode != null)
+			{
+				throw new UserFriendlyException($"Mã thuộc tính \"{duplicatedCode}\" bị trùng, mỗi thuộc tính phải có mã duy nhất trong form");
+			}
+		}
+
 		#endregion
 
 		// thêm mới form
@@ -74,6 +90,10 @@ namespace MS.EForm.FormServices
 			if (model.CategoryId != null) //-----> check tồn tại danh mục
 			{
 				await CheckFormCateMach(model.CategoryId.Value);
+			}
+			if (model.FormFields != null && model.FormFields.Any())
+			{
+				CheckDuplicateFieldCodes(model.FormFields); // ----> check trùng mã code giữa các field, check trước khi insert Form để không tạo form rỗng khi lỗi
 			}
 
 			var result = new Form
@@ -121,6 +141,10 @@ namespace MS.EForm.FormServices
 				throw new UserFriendlyException("Không có dữ liệu đầu vào");
 			}
 			await CheckTitleMach(model.Title, id); // ----> check trùng tên form
+			if (model.FormFields != null && model.FormFields.Any())
+			{
+				CheckDuplicateFieldCodes(model.FormFields); // ----> check trùng mã code giữa các field, check trước khi xoá field cũ để không mất dữ liệu khi lỗi
+			}
 
 			var result = await _repository.FindAsync(id);
 			if (result == null)

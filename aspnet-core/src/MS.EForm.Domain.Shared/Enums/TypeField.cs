@@ -18,6 +18,9 @@ namespace MS.EForm.Enums
 		Boolean = 8,
 		File = 9,
 		Signature = 10,
-		Rating = 11
+		Rating = 11,
+		// Nhóm field lặp lại (danh sách): 1 field Group chứa nhiều "field con" (định nghĩa trong
+		// FieldConfig.Children), người nộp form có thể thêm/xoá từng dòng lặp - xem FormRecordService
+		Group = 12
 	}
 }

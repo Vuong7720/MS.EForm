@@ -97,6 +97,21 @@ namespace MS.EForm.FormServices
 			public int? MaxFileCount { get; set; }
 			public int? MaxRating { get; set; }
 			public ConditionalRule? Conditional { get; set; }
+			// riêng cho field kiểu Group (danh sách/nhóm lặp): số dòng lặp tối thiểu/tối đa + định nghĩa field con
+			public int? MinRows { get; set; }
+			public int? MaxRows { get; set; }
+			public List<GroupChildField>? Children { get; set; }
+		}
+
+		// 1 field con bên trong field kiểu Group - cấu trúc tối giản, KHÔNG hỗ trợ File/Signature/Rating/Group
+		// lồng nhau (giữ đơn giản vì đính kèm file/chữ ký theo từng dòng lặp sẽ rất phức tạp để quản lý mồ côi)
+		private class GroupChildField
+		{
+			public string Code { get; set; } = "";
+			public string Title { get; set; } = "";
+			public TypeField Type { get; set; }
+			public string? Config { get; set; }
+			public string? Options { get; set; }
 		}
 
 		// field chỉ hiện/được validate khi field DependsOnCode thỏa điều kiện này - xem EvaluateCondition
@@ -223,6 +238,104 @@ namespace MS.EForm.FormServices
 			}
 		}
 
+		// validate 1 giá trị đơn theo type/config/options - dùng chung cho field cấp 1 của form (Text/Select/
+		// Number/...) LẪN từng field con bên trong 1 dòng lặp của field Group (xem ValidateGroupField), vì
+		// 2 nơi này validate cùng logic hệt nhau (required/độ dài/định dạng/khoảng giá trị/danh sách lựa chọn)
+		private void ValidateFieldValue(string title, TypeField type, FieldConfig config, List<string> options, string? value)
+		{
+			if (config.Required && string.IsNullOrWhiteSpace(value))
+			{
+				throw new UserFriendlyException($"Trường \"{title}\" là bắt buộc");
+			}
+
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				return;
+			}
+
+			if (type == TypeField.Select || type == TypeField.Radio || type == TypeField.CheckBox)
+			{
+				if (options.Any())
+				{
+					var selectedValues = type == TypeField.CheckBox
+						? value.Split(';').Select(v => v.Trim()).ToList()
+						: new List<string> { value };
+
+					if (selectedValues.Any(v => !options.Contains(v)))
+					{
+						throw new UserFriendlyException($"Giá trị nộp cho trường \"{title}\" không hợp lệ");
+					}
+				}
+			}
+
+			if (type == TypeField.Text || type == TypeField.AreaText)
+			{
+				if (config.MinLength.HasValue && value.Length < config.MinLength.Value)
+				{
+					throw new UserFriendlyException($"Trường \"{title}\" phải có ít nhất {config.MinLength.Value} ký tự");
+				}
+				if (config.MaxLength.HasValue && value.Length > config.MaxLength.Value)
+				{
+					throw new UserFriendlyException($"Trường \"{title}\" không được vượt quá {config.MaxLength.Value} ký tự");
+				}
+				if (!string.IsNullOrEmpty(config.Pattern) && !System.Text.RegularExpressions.Regex.IsMatch(value, config.Pattern))
+				{
+					throw new UserFriendlyException($"Trường \"{title}\" không đúng định dạng");
+				}
+			}
+
+			if (type == TypeField.Number && decimal.TryParse(value, out var numberValue))
+			{
+				if (config.Min.HasValue && numberValue < config.Min.Value)
+				{
+					throw new UserFriendlyException($"Trường \"{title}\" phải lớn hơn hoặc bằng {config.Min.Value}");
+				}
+				if (config.Max.HasValue && numberValue > config.Max.Value)
+				{
+					throw new UserFriendlyException($"Trường \"{title}\" phải nhỏ hơn hoặc bằng {config.Max.Value}");
+				}
+			}
+		}
+
+		// validate dữ liệu của field Group: value là chuỗi JSON mảng các dòng lặp, mỗi dòng là 1 object
+		// {childCode: value} - kiểm tra số dòng trong khoảng min/max rồi validate từng field con của từng dòng
+		private void ValidateGroupField(string title, FieldConfig config, string? value)
+		{
+			// Required của Group nghĩa là "phải có ít nhất 1 dòng" - không tách riêng khái niệm required
+			// khác với MinRows để tránh người dùng cấu hình 2 nơi cùng ý nghĩa gây nhầm lẫn
+			var minRows = config.Required ? Math.Max(config.MinRows ?? 1, 1) : (config.MinRows ?? 0);
+			var maxRows = config.MaxRows;
+			var children = config.Children ?? new List<GroupChildField>();
+
+			List<Dictionary<string, string>> rows;
+			try
+			{
+				rows = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(value ?? "[]") ?? new List<Dictionary<string, string>>();
+			}
+			catch
+			{
+				throw new UserFriendlyException($"Dữ liệu nộp cho trường \"{title}\" không đúng định dạng");
+			}
+
+			if (rows.Count < minRows)
+			{
+				throw new UserFriendlyException($"Trường \"{title}\" cần ít nhất {minRows} dòng");
+			}
+			if (maxRows.HasValue && rows.Count > maxRows.Value)
+			{
+				throw new UserFriendlyException($"Trường \"{title}\" chỉ được tối đa {maxRows.Value} dòng");
+			}
+
+			foreach (var row in rows)
+			{
+				foreach (var child in children)
+				{
+					row.TryGetValue(child.Code, out var childValue);
+					ValidateFieldValue(child.Title, child.Type, ParseConfig(child.Config), ParseOptions(child.Options), childValue);
+				}
+			}
+		}
+
 		// validate dữ liệu nộp lên theo danh sách field truyền vào (field hiện tại của form khi nộp mới,
 		// hoặc field đóng băng trong snapshot của chính bản ghi khi sửa bản ghi cũ); ném UserFriendlyException nếu vi phạm
 		private async Task ValidateData(string data, List<SnapshotField> fields)
@@ -253,58 +366,20 @@ namespace MS.EForm.FormServices
 					}
 				}
 
-				if (config.Required && string.IsNullOrWhiteSpace(value))
+				// field Group có cấu trúc dữ liệu (mảng JSON nhiều dòng lặp) khác hẳn field đơn nên validate
+				// riêng theo ValidateGroupField, không đi qua các nhánh validate field đơn bên dưới
+				if (field.Type == TypeField.Group)
 				{
-					throw new UserFriendlyException($"Trường \"{field.Title}\" là bắt buộc");
+					ValidateGroupField(field.Title, config, value);
+					continue;
 				}
+
+				var options = ParseOptions(field.Options);
+				ValidateFieldValue(field.Title, field.Type, config, options, value);
 
 				if (string.IsNullOrWhiteSpace(value))
 				{
 					continue;
-				}
-
-				if (field.Type == TypeField.Select || field.Type == TypeField.Radio || field.Type == TypeField.CheckBox)
-				{
-					var options = ParseOptions(field.Options);
-					if (options.Any())
-					{
-						var selectedValues = field.Type == TypeField.CheckBox
-							? value.Split(';').Select(v => v.Trim()).ToList()
-							: new List<string> { value };
-
-						if (selectedValues.Any(v => !options.Contains(v)))
-						{
-							throw new UserFriendlyException($"Giá trị nộp cho trường \"{field.Title}\" không hợp lệ");
-						}
-					}
-				}
-
-				if (field.Type == TypeField.Text || field.Type == TypeField.AreaText)
-				{
-					if (config.MinLength.HasValue && value.Length < config.MinLength.Value)
-					{
-						throw new UserFriendlyException($"Trường \"{field.Title}\" phải có ít nhất {config.MinLength.Value} ký tự");
-					}
-					if (config.MaxLength.HasValue && value.Length > config.MaxLength.Value)
-					{
-						throw new UserFriendlyException($"Trường \"{field.Title}\" không được vượt quá {config.MaxLength.Value} ký tự");
-					}
-					if (!string.IsNullOrEmpty(config.Pattern) && !System.Text.RegularExpressions.Regex.IsMatch(value, config.Pattern))
-					{
-						throw new UserFriendlyException($"Trường \"{field.Title}\" không đúng định dạng");
-					}
-				}
-
-				if (field.Type == TypeField.Number && decimal.TryParse(value, out var numberValue))
-				{
-					if (config.Min.HasValue && numberValue < config.Min.Value)
-					{
-						throw new UserFriendlyException($"Trường \"{field.Title}\" phải lớn hơn hoặc bằng {config.Min.Value}");
-					}
-					if (config.Max.HasValue && numberValue > config.Max.Value)
-					{
-						throw new UserFriendlyException($"Trường \"{field.Title}\" phải nhỏ hơn hoặc bằng {config.Max.Value}");
-					}
 				}
 
 				if (field.Type == TypeField.Rating && decimal.TryParse(value, out var ratingValue))
@@ -635,15 +710,69 @@ namespace MS.EForm.FormServices
 			var allRecords = await _repository.GetQueryableAsync();
 			var records = allRecords.Where(a => a.FormId == formId).OrderByDescending(a => a.CreationTime).ToList();
 
+			// mỗi field xuất 1 cột, RIÊNG field Group xuất 1 cột cho MỖI field con (không có cột cho chính
+			// field Group) - vì Group có nhiều dòng lặp nên không thể gói gọn trong 1 cột như field đơn
+			var columns = new List<(string Header, Func<Dictionary<string, string>, string> GetValue)>();
+			foreach (var field in fields)
+			{
+				if (field.Type == TypeField.Group)
+				{
+					var groupCode = field.Code;
+					var groupTitle = field.Title;
+					var children = ParseConfig(field.Config).Children ?? new List<GroupChildField>();
+
+					foreach (var child in children)
+					{
+						var childCode = child.Code;
+						columns.Add(($"{groupTitle} - {child.Title}", data =>
+						{
+							data.TryGetValue(groupCode, out var groupValue);
+							List<Dictionary<string, string>> rows;
+							try
+							{
+								rows = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(groupValue ?? "[]") ?? new List<Dictionary<string, string>>();
+							}
+							catch
+							{
+								rows = new List<Dictionary<string, string>>();
+							}
+
+							var values = rows
+								.Select(r => r.TryGetValue(childCode, out var v) ? v : "")
+								.Where(v => !string.IsNullOrWhiteSpace(v));
+							return string.Join("; ", values);
+						}));
+					}
+					continue;
+				}
+
+				var code = field.Code;
+				var type = field.Type;
+				columns.Add((field.Title, data =>
+				{
+					data.TryGetValue(code, out var value);
+					if (type == TypeField.File)
+					{
+						var names = ParseAttachments(value).Select(a => a.Name).Where(n => !string.IsNullOrWhiteSpace(n));
+						return string.Join("; ", names);
+					}
+					if (type == TypeField.Signature)
+					{
+						return ParseAttachments(value).Any() ? "Có chữ ký" : "";
+					}
+					return value ?? "";
+				}));
+			}
+
 			using var workbook = new XLWorkbook();
 			var worksheet = workbook.Worksheets.Add("Ket qua");
 
 			worksheet.Cell(1, 1).Value = "Tiêu đề bản ghi";
-			for (var i = 0; i < fields.Count; i++)
+			for (var i = 0; i < columns.Count; i++)
 			{
-				worksheet.Cell(1, i + 2).Value = fields[i].Title;
+				worksheet.Cell(1, i + 2).Value = columns[i].Header;
 			}
-			worksheet.Cell(1, fields.Count + 2).Value = "Thời gian nộp";
+			worksheet.Cell(1, columns.Count + 2).Value = "Thời gian nộp";
 			worksheet.Row(1).Style.Font.Bold = true;
 
 			for (var row = 0; row < records.Count; row++)
@@ -661,26 +790,12 @@ namespace MS.EForm.FormServices
 					data = new Dictionary<string, string>();
 				}
 
-				for (var i = 0; i < fields.Count; i++)
+				for (var i = 0; i < columns.Count; i++)
 				{
-					data.TryGetValue(fields[i].Code, out var value);
-
-					if (fields[i].Type == TypeField.File)
-					{
-						var names = ParseAttachments(value).Select(a => a.Name).Where(n => !string.IsNullOrWhiteSpace(n));
-						worksheet.Cell(row + 2, i + 2).Value = string.Join("; ", names);
-					}
-					else if (fields[i].Type == TypeField.Signature)
-					{
-						worksheet.Cell(row + 2, i + 2).Value = ParseAttachments(value).Any() ? "Có chữ ký" : "";
-					}
-					else
-					{
-						worksheet.Cell(row + 2, i + 2).Value = value ?? "";
-					}
+					worksheet.Cell(row + 2, i + 2).Value = columns[i].GetValue(data);
 				}
 
-				worksheet.Cell(row + 2, fields.Count + 2).Value = record.CreationTime.ToString("dd/MM/yyyy HH:mm");
+				worksheet.Cell(row + 2, columns.Count + 2).Value = record.CreationTime.ToString("dd/MM/yyyy HH:mm");
 			}
 
 			worksheet.Columns().AdjustToContents();

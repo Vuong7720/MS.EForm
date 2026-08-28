@@ -98,6 +98,8 @@ export class FormRecordDetailComponent implements OnInit {
     this.renderer.fillFormData(this.renderContainer.nativeElement, this.parseData(), true);
     // gọi SAU fillFormData để tính ẩn/hiện theo đúng dữ liệu ĐÃ LƯU của bản ghi, không phải theo form rỗng
     this.renderer.applyConditionalVisibility(this.renderContainer.nativeElement);
+    // gọi SAU fillFormData để đo đúng bề rộng theo giá trị đã có sẵn của bản ghi, không phải input rỗng
+    this.renderer.attachAutoResizeInputs(this.renderContainer.nativeElement);
   }
 
   private parseData(): Record<string, string> {

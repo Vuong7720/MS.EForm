@@ -4,8 +4,19 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { EditorConfig } from 'ckeditor5';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
-import { FormFieldDto } from '@proxy/form-models/form-fields';
-import { parseFieldConfig, serializeFieldConfig } from '../../shared/services/field-config.util';
+import { FormFieldDto, GroupChildField } from '@proxy/form-models/form-fields';
+import { TypeField } from '@proxy/enums';
+import { parseFieldConfig, serializeFieldConfig, generateFieldCode } from '../../shared/services/field-config.util';
+
+// bản nháp 1 field con trong lúc đang sửa ở modal - tách khỏi GroupChildField (kiểu dùng để lưu) vì
+// options/config ở đây là dạng dễ chỉnh sửa trên UI (text/boolean rời), chỉ gộp lại thành JSON lúc save()
+interface GroupChildDraft {
+  code: string;
+  title: string;
+  type: number;
+  required: boolean;
+  optionsText: string;
+}
 
 @Component({
   standalone: false,
@@ -35,8 +46,30 @@ export class CreateAttributeComponent implements OnInit {
   typesWithFileUpload = [9];
   // kiểu Đánh giá/Rating hỗ trợ cấu hình số sao tối đa
   typesWithRating = [11];
+  // kiểu CheckBox/Radio hỗ trợ chọn hướng xếp các lựa chọn
+  typesWithLayout = [4, 5];
+  // kiểu DateTime hỗ trợ tùy chọn chỉ chọn ngày (không bắt chọn giờ)
+  typesWithDateOnly = [6];
+  // kiểu Group (danh sách/nhóm lặp)
+  typesWithGroup = [12];
   // kiểu field mà giá trị điều kiện nên chọn từ danh sách lựa chọn có sẵn thay vì gõ tay
   typesWithOptionsForConditional = [3, 4, 5];
+
+  // field con bên trong Group chỉ giới hạn các kiểu đơn giản (không File/Signature/Rating/Group lồng nhau)
+  groupChildTypes = [
+    { title: 'Text', value: 1 },
+    { title: 'AreaText', value: 2 },
+    { title: 'Select', value: 3 },
+    { title: 'CheckBox', value: 4 },
+    { title: 'Radio', value: 5 },
+    { title: 'DateTime', value: 6 },
+    { title: 'Number', value: 7 },
+    { title: 'Boolean', value: 8 },
+  ];
+  groupChildTypesWithOptions = [3, 4, 5];
+  groupChildren: GroupChildDraft[] = [];
+  editingChildIndex: number | null = null;
+  childDraft: GroupChildDraft = this.emptyChildDraft();
 
   operatorOptions = [
     { label: 'Bằng', value: 'equals' },
@@ -97,12 +130,36 @@ export class CreateAttributeComponent implements OnInit {
       maxFileSizeMb: [fieldConfig.maxFileSizeMb ?? null],
       maxFileCount: [fieldConfig.maxFileCount ?? 1],
       maxRating: [fieldConfig.maxRating ?? 5],
+      layout: [fieldConfig.layout ?? 'horizontal'],
+      dateOnly: [fieldConfig.dateOnly ?? false],
+      showPreview: [fieldConfig.showPreview ?? false],
+      textColor: [fieldConfig.textColor ?? null],
+      minRows: [fieldConfig.minRows ?? 1],
+      maxRows: [fieldConfig.maxRows ?? null],
       config: [null],
       options: [this.optionsText || null],
       conditionalEnabled: [!!fieldConfig.conditional],
       conditionalDependsOn: [fieldConfig.conditional?.dependsOnCode ?? null],
       conditionalOperator: [fieldConfig.conditional?.operator ?? 'equals'],
       conditionalValue: [fieldConfig.conditional?.value ?? null],
+    });
+
+    this.groupChildren = (fieldConfig.children || []).map(child => {
+      const childConfig = parseFieldConfig(child.config);
+      let optionsText = '';
+      try {
+        const opts = JSON.parse(child.options || '[]');
+        if (Array.isArray(opts)) optionsText = opts.join(', ');
+      } catch {
+        optionsText = '';
+      }
+      return {
+        code: child.code,
+        title: child.title,
+        type: child.type as number,
+        required: !!childConfig.required,
+        optionsText,
+      };
     });
   }
 
@@ -160,6 +217,30 @@ export class CreateAttributeComponent implements OnInit {
       maxFileSizeMb: this.typesWithFileUpload.includes(type) ? value.maxFileSizeMb || null : null,
       maxFileCount: this.typesWithFileUpload.includes(type) ? value.maxFileCount || 1 : null,
       maxRating: this.typesWithRating.includes(type) ? value.maxRating || 5 : null,
+      layout: this.typesWithLayout.includes(type) ? value.layout || 'horizontal' : null,
+      dateOnly: this.typesWithDateOnly.includes(type) ? !!value.dateOnly : null,
+      showPreview: this.typesWithFileUpload.includes(type) ? !!value.showPreview : null,
+      textColor: value.textColor || null,
+      minRows: this.typesWithGroup.includes(type) ? value.minRows ?? 0 : null,
+      maxRows: this.typesWithGroup.includes(type) ? value.maxRows || null : null,
+      children: this.typesWithGroup.includes(type)
+        ? this.groupChildren.map(
+            (child): GroupChildField => ({
+              code: child.code,
+              title: child.title,
+              type: child.type as TypeField,
+              config: serializeFieldConfig({ required: child.required }),
+              options: this.groupChildTypesWithOptions.includes(child.type)
+                ? JSON.stringify(
+                    (child.optionsText || '')
+                      .split(',')
+                      .map(o => o.trim())
+                      .filter(o => !!o)
+                  )
+                : null,
+            })
+          )
+        : null,
       conditional:
         value.conditionalEnabled && value.conditionalDependsOn
           ? {
@@ -196,7 +277,11 @@ export class CreateAttributeComponent implements OnInit {
     if (value) {
       const trimmedTitle = value.trim().toLowerCase();
 
-      const isTitleDuplicate = this.lstAttribute.some(attr => attr.title?.trim().toLowerCase() === trimmedTitle);
+      // loại trừ chính field đang sửa - nếu không, giữ nguyên tên cũ (hoặc gõ rồi sửa lại y hệt) khi
+      // đang ở chế độ Sửa sẽ báo trùng với chính nó (lstAttribute vẫn còn field gốc chưa cập nhật)
+      const isTitleDuplicate = this.lstAttribute.some(
+        attr => attr.code !== this.attribute.code && attr.title?.trim().toLowerCase() === trimmedTitle
+      );
 
       if (isTitleDuplicate) {
         titleControl?.setErrors({ duplicate: true });
@@ -204,27 +289,10 @@ export class CreateAttributeComponent implements OnInit {
         titleControl?.setErrors(null);
       }
 
-      const cleanedValue = value
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/[^\w\s]|_/g, '')
-        .replace(/\s+/g, ' ');
-
-      const code = cleanedValue
-        .trim()
-        .split(/\s+/)
-        .map(word => word[0]?.toUpperCase() || '')
-        .join('');
-
-      const isCodeDuplicate = this.lstAttribute.some(attr => attr.code === code);
+      const code = generateFieldCode(value);
 
       codeControl?.setValue(code);
-
-      if (isCodeDuplicate) {
-        codeControl?.setErrors({ duplicate: true });
-      } else {
-        codeControl?.setErrors(null);
-      }
+      this.onCodeChange(code);
     } else {
       titleControl?.setErrors(null);
       codeControl?.setValue('');
@@ -232,8 +300,80 @@ export class CreateAttributeComponent implements OnInit {
     }
   }
 
+  // check trùng mã thuộc tính - chạy cả khi mã được tự sinh từ tên (onTitleChange) lẫn khi người dùng
+  // tự tay sửa ô Mã, để đảm bảo mã luôn duy nhất trong form trước khi cho lưu (mỗi field chỉ 1 mã)
+  onCodeChange(value: string) {
+    const codeControl = this.form.get('code');
+    if (!value) {
+      codeControl?.setErrors(null);
+      return;
+    }
+
+    const isCodeDuplicate = this.lstAttribute.some(attr => attr.code !== this.attribute.code && attr.code === value);
+    codeControl?.setErrors(isCodeDuplicate ? { duplicate: true } : null);
+  }
+
   onBack(): void {
     this.nzModalRef.destroy();
+  }
+
+  private emptyChildDraft(): GroupChildDraft {
+    return { code: '', title: '', type: 1, required: false, optionsText: '' };
+  }
+
+  // thêm mới field con (hoặc lưu lại nếu đang sửa - editingChildIndex != null) vào danh sách groupChildren.
+  // Mã được tự sinh lại từ tên mỗi lần lưu (giống cơ chế sinh mã cho field cấp 1), đảm bảo không trùng
+  // với mã của field con khác đã có trong cùng nhóm.
+  addGroupChild(): void {
+    const title = this.childDraft.title?.trim();
+    if (!title) {
+      this.toasterService.error('Vui lòng nhập tên field con');
+      return;
+    }
+
+    const baseCode = generateFieldCode(title) || 'FIELD';
+    let code = baseCode;
+    let suffix = 2;
+    while (this.groupChildren.some((c, idx) => c.code === code && idx !== this.editingChildIndex)) {
+      code = `${baseCode}${suffix++}`;
+    }
+
+    const draft: GroupChildDraft = {
+      code,
+      title,
+      type: this.childDraft.type,
+      required: this.childDraft.required,
+      optionsText: this.childDraft.optionsText,
+    };
+
+    if (this.editingChildIndex != null) {
+      const list = [...this.groupChildren];
+      list.splice(this.editingChildIndex, 1, draft);
+      this.groupChildren = list;
+    } else {
+      this.groupChildren = [...this.groupChildren, draft];
+    }
+
+    this.editingChildIndex = null;
+    this.childDraft = this.emptyChildDraft();
+  }
+
+  editGroupChild(index: number): void {
+    this.editingChildIndex = index;
+    const child = this.groupChildren[index];
+    this.childDraft = { ...child };
+  }
+
+  cancelEditGroupChild(): void {
+    this.editingChildIndex = null;
+    this.childDraft = this.emptyChildDraft();
+  }
+
+  removeGroupChild(index: number): void {
+    this.groupChildren = this.groupChildren.filter((_, i) => i !== index);
+    if (this.editingChildIndex === index) {
+      this.cancelEditGroupChild();
+    }
   }
 
   lstDataType = [
@@ -248,6 +388,7 @@ export class CreateAttributeComponent implements OnInit {
     { title: 'Upload file/ảnh', value: 9 },
     { title: 'Chữ ký điện tử', value: 10 },
     { title: 'Đánh giá (Rating)', value: 11 },
+    { title: 'Danh sách (nhóm field lặp)', value: 12 },
   ];
 }
 

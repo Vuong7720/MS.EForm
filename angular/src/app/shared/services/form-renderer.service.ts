@@ -25,6 +25,11 @@ interface AttachmentFieldHandle {
   setReadonly: (readonly: boolean) => void;
 }
 
+interface GroupFieldHandle {
+  setReadonly: (readonly: boolean) => void;
+  loadRows: (rows: Record<string, string>[]) => void;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -126,6 +131,36 @@ export class FormRendererService {
     previewWindow.document.close();
   }
 
+  private autoResizeGhost?: HTMLSpanElement;
+
+  // Tự giãn bề rộng các input[type=text] theo nội dung đang gõ, để chữ dài không bị cắt/ẩn trong khung
+  // cố định 100px (minWidth) - popup xem trước (openPreviewPopup) đã có cơ chế này riêng (chèn script vì
+  // popup là document.write() tách biệt); hàm này là bản dùng chung cho DOM thật (form-submit,
+  // form-record-detail) nơi có thể gọi thẳng API trình duyệt. Gọi SAU KHI đã gắn container vào DOM thật,
+  // vì cần getComputedStyle(input) để đo đúng font/size hiển thị.
+  attachAutoResizeInputs(container: HTMLElement): void {
+    if (!this.autoResizeGhost) {
+      const ghost = document.createElement('span');
+      ghost.style.cssText = 'visibility:hidden; position:absolute; white-space:pre; top:-9999px; left:-9999px;';
+      document.body.appendChild(ghost);
+      this.autoResizeGhost = ghost;
+    }
+    const ghost = this.autoResizeGhost;
+
+    const resize = (input: HTMLInputElement) => {
+      const style = getComputedStyle(input);
+      ghost.style.fontSize = style.fontSize;
+      ghost.style.fontFamily = style.fontFamily;
+      ghost.textContent = input.value || input.placeholder || '';
+      input.style.width = `${ghost.offsetWidth + 20}px`;
+    };
+
+    container.querySelectorAll<HTMLInputElement>('input[type="text"]').forEach(input => {
+      input.addEventListener('input', () => resize(input));
+      resize(input);
+    });
+  }
+
   // Chuyển content HTML (chứa các span.drag-field) thành DOM render input/select/... thật,
   // dùng chung cho preview (create_form) và trang nộp form/xem kết quả (form-submit, form-records).
   // formId cần cho field kiểu Upload file/ảnh để gọi API upload đúng thuộc tính của đúng form.
@@ -149,40 +184,12 @@ export class FormRendererService {
       let replacementEl: HTMLElement;
 
       switch (fieldType) {
-        case 2: {
-          replacementEl = document.createElement('textarea');
-          break;
-        }
-        case 3: {
-          const select = document.createElement('select');
-          select.appendChild(new Option('-- Chọn giá trị --', ''));
-          options.forEach(opt => select.appendChild(new Option(opt, opt)));
-          replacementEl = select;
-          break;
-        }
         case 4: {
-          replacementEl = this.buildOptionGroup(code, options.length ? options : ['Có'], 'checkbox');
+          replacementEl = this.buildOptionGroup(code, options.length ? options : ['Có'], 'checkbox', fieldConfig.layout);
           break;
         }
         case 5: {
-          replacementEl = this.buildOptionGroup(code, options.length ? options : ['Có', 'Không'], 'radio');
-          break;
-        }
-        case 6: {
-          replacementEl = document.createElement('input');
-          (replacementEl as HTMLInputElement).type = 'datetime-local';
-          break;
-        }
-        case 7: {
-          replacementEl = document.createElement('input');
-          (replacementEl as HTMLInputElement).type = 'number';
-          break;
-        }
-        case 8: {
-          const select = document.createElement('select');
-          select.appendChild(new Option('-- Chọn --', ''));
-          ['Có', 'Không'].forEach(text => select.appendChild(new Option(text, text)));
-          replacementEl = select;
+          replacementEl = this.buildOptionGroup(code, options.length ? options : ['Có', 'Không'], 'radio', fieldConfig.layout);
           break;
         }
         case 9: {
@@ -197,14 +204,19 @@ export class FormRendererService {
           replacementEl = this.buildRatingField(code, fieldConfig);
           break;
         }
+        case 12: {
+          replacementEl = this.buildGroupField(code, fieldConfig);
+          break;
+        }
         default: {
-          replacementEl = document.createElement('input');
-          (replacementEl as HTMLInputElement).type = 'text';
+          // các kiểu field "đơn giản" (Text/AreaText/Select/DateTime/Number/Boolean) dựng theo cùng 1 hàm
+          // dùng chung với field con bên trong Group (buildGroupField cũng gọi hàm này cho từng field con)
+          replacementEl = this.buildSimpleFieldElement(fieldType, options, fieldConfig);
           break;
         }
       }
 
-      if (fieldType !== 4 && fieldType !== 5 && fieldType !== 9 && fieldType !== 10 && fieldType !== 11) {
+      if (fieldType !== 4 && fieldType !== 5 && fieldType !== 9 && fieldType !== 10 && fieldType !== 11 && fieldType !== 12) {
         replacementEl.setAttribute('name', code);
         (replacementEl as HTMLInputElement | HTMLTextAreaElement).placeholder = placeholder;
       }
@@ -215,10 +227,14 @@ export class FormRendererService {
       replacementEl.style.borderBottom = replacementEl.style.borderBottom || '1px solid #ccc';
       replacementEl.style.outline = 'none';
       replacementEl.style.minWidth = '100px';
+      // Mặc định trình duyệt căn vertical-align:baseline cho input/textarea (là "replaced inline
+      // element") - với input 1 dòng thì không lộ vấn đề, nhưng textarea cao hơn hẳn 1 dòng nên
+      // baseline khiến nhãn đứng cùng dòng (canh theo baseline) bị "tụt" xuống gần đáy textarea.
+      replacementEl.style.verticalAlign = 'top';
       // Input/textarea/select don't inherit color/font from the surrounding text by
       // default (unlike the <span> they replace), so without this they always render
       // in the browser's default black/system font regardless of the document's styling.
-      replacementEl.style.color = 'inherit';
+      replacementEl.style.color = fieldConfig.textColor || 'inherit';
       replacementEl.style.fontFamily = 'inherit';
       replacementEl.style.fontSize = 'inherit';
       replacementEl.style.background = 'transparent';
@@ -332,6 +348,27 @@ export class FormRendererService {
           }
           return;
         }
+        if (kind === 'group') {
+          // tương tự file/signature: input hidden không tự hiện tooltip được -> tự kiểm tra số dòng tối
+          // thiểu (data-min-rows do buildGroupField gán) và báo lỗi inline
+          const wrapper = el.closest('.form-renderer-group-field');
+          const errorEl = wrapper?.querySelector<HTMLElement>('.form-renderer-attachment-error');
+          const minRows = parseInt(el.getAttribute('data-min-rows') || '0', 10);
+          let rowCount = 0;
+          try {
+            rowCount = (JSON.parse(el.value || '[]') as unknown[]).length;
+          } catch {
+            rowCount = 0;
+          }
+          if (minRows > 0 && rowCount < minRows) {
+            isValid = false;
+            if (errorEl) {
+              errorEl.textContent = `Cần ít nhất ${minRows} dòng`;
+              errorEl.style.display = 'block';
+            }
+          }
+          return;
+        }
         if (!el.reportValidity()) {
           isValid = false;
         }
@@ -382,6 +419,20 @@ export class FormRendererService {
         return;
       }
 
+      if (kind === 'group') {
+        let rows: Record<string, string>[] = [];
+        try {
+          rows = JSON.parse(value || '[]');
+          if (!Array.isArray(rows)) rows = [];
+        } catch {
+          rows = [];
+        }
+        const wrapper = el.closest('.form-renderer-group-field') as (HTMLElement & { __groupField?: GroupFieldHandle }) | null;
+        wrapper?.__groupField?.loadRows(rows);
+        wrapper?.__groupField?.setReadonly(readonly);
+        return;
+      }
+
       if (el instanceof HTMLInputElement && el.type === 'checkbox') {
         el.checked = value?.split(';').includes(el.value) ?? false;
       } else if (el instanceof HTMLInputElement && el.type === 'radio') {
@@ -408,6 +459,10 @@ export class FormRendererService {
           | null;
         wrapper?.__attachmentField?.setReadonly(!enabled);
       }
+      if (kind === 'group') {
+        const wrapper = el.closest('.form-renderer-group-field') as (HTMLElement & { __groupField?: GroupFieldHandle }) | null;
+        wrapper?.__groupField?.setReadonly(!enabled);
+      }
     });
   }
 
@@ -417,8 +472,8 @@ export class FormRendererService {
     if (config.required) {
       if (fieldType === 4 || fieldType === 5 || fieldType === 11) {
         el.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
-      } else if (fieldType !== 9 && fieldType !== 10) {
-        // field kiểu File/Signature tự set required lên input hidden bên trong hàm dựng riêng của nó
+      } else if (fieldType !== 9 && fieldType !== 10 && fieldType !== 12) {
+        // field kiểu File/Signature/Group tự quản lý required theo cách riêng (xem checkClientValidity)
         el.setAttribute('required', 'required');
       }
     }
@@ -438,12 +493,245 @@ export class FormRendererService {
     }
   }
 
-  private buildOptionGroup(code: string, options: string[], type: 'checkbox' | 'radio'): HTMLElement {
+  // Dựng phần tử cho các kiểu field "đơn giản" (Text/AreaText/Select/DateTime/Number/Boolean - mọi kiểu
+  // KHÔNG có hàm dựng riêng). Dùng chung cho field cấp 1 của form (qua switch ở renderFieldsToElements)
+  // LẪN field con bên trong 1 dòng lặp của Group (qua buildGroupField), vì 2 nơi cần render y hệt nhau.
+  private buildSimpleFieldElement(fieldType: number, options: string[], config: ReturnType<typeof parseFieldConfig>): HTMLElement {
+    switch (fieldType) {
+      case 2: {
+        return document.createElement('textarea');
+      }
+      case 3: {
+        const select = document.createElement('select');
+        select.appendChild(new Option('-- Chọn giá trị --', ''));
+        options.forEach(opt => select.appendChild(new Option(opt, opt)));
+        return select;
+      }
+      case 6: {
+        const input = document.createElement('input');
+        input.type = config.dateOnly ? 'date' : 'datetime-local';
+        return input;
+      }
+      case 7: {
+        const input = document.createElement('input');
+        input.type = 'number';
+        return input;
+      }
+      case 8: {
+        const select = document.createElement('select');
+        select.appendChild(new Option('-- Chọn --', ''));
+        ['Có', 'Không'].forEach(text => select.appendChild(new Option(text, text)));
+        return select;
+      }
+      default: {
+        const input = document.createElement('input');
+        input.type = 'text';
+        return input;
+      }
+    }
+  }
+
+  // Đọc/ghi giá trị hiện tại của 1 phần tử field "đơn giản" HOẶC field con kiểu CheckBox/Radio (option
+  // group) - dùng riêng cho field con trong Group vì các input đó KHÔNG có thuộc tính name (xem
+  // buildGroupField), nên không thể tái dùng collectFormData/fillFormData vốn đọc theo [name] trong container.
+  private readSimpleFieldValue(el: HTMLElement, fieldType: number): string {
+    if (fieldType === 4) {
+      return Array.from(el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'))
+        .filter(input => input.checked)
+        .map(input => input.value)
+        .join(';');
+    }
+    if (fieldType === 5) {
+      return el.querySelector<HTMLInputElement>('input[type="radio"]:checked')?.value ?? '';
+    }
+    return (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
+  }
+
+  private setSimpleFieldValue(el: HTMLElement, fieldType: number, value: string): void {
+    if (fieldType === 4) {
+      const values = value ? value.split(';') : [];
+      el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(input => {
+        input.checked = values.includes(input.value);
+      });
+      return;
+    }
+    if (fieldType === 5) {
+      el.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach(input => {
+        input.checked = input.value === value;
+      });
+      return;
+    }
+    (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value = value;
+  }
+
+  // Field kiểu "Danh sách (nhóm field lặp)": nhiều dòng lặp, mỗi dòng gồm các field con định nghĩa trong
+  // fieldConfig.children (giống hợp đồng có nhiều người ủy quyền, mỗi người 1 dòng Họ tên/Ngày sinh/...).
+  // Giá trị lưu là 1 input hidden name={code} giữ chuỗi JSON mảng [{childCode: value}] - CÙNG khuôn dạng
+  // "hidden giữ JSON tổng hợp" đã dùng cho field File/Signature, chỉ khác kiểu dữ liệu bên trong.
+  //
+  // Input của TỪNG field con KHÔNG có thuộc tính name (khác field cấp 1) - giá trị của chúng chỉ tồn tại
+  // trong `state.rows` (closure) và được đồng bộ vào input hidden mỗi khi thay đổi (syncHidden). Nếu để
+  // các input con có name riêng, collectFormData/fillFormData (vốn duyệt mọi [name] trong container) sẽ
+  // vô tình thu thập/điền nhầm chúng như thể là field cấp 1 độc lập.
+  private buildGroupField(code: string, fieldConfig: ReturnType<typeof parseFieldConfig>): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('form-renderer-group-field');
+    wrapper.style.cssText = 'display:block; border:1px dashed #ccc; border-radius:4px; padding:8px; margin:4px 0;';
+
+    const children = fieldConfig.children || [];
+    // required của Group nghĩa là "phải có ít nhất 1 dòng" - PHẢI khớp chính xác logic với
+    // ValidateGroupField phía backend (FormRecordService.cs)
+    const minRows = fieldConfig.required ? Math.max(fieldConfig.minRows ?? 1, 1) : fieldConfig.minRows ?? 0;
+    const maxRows = fieldConfig.maxRows ?? null;
+
+    const rowsEl = document.createElement('div');
+    rowsEl.className = 'form-renderer-group-rows';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.textContent = '+ Thêm dòng';
+    addBtn.style.cssText = 'font-size:12px; padding:2px 8px; margin-top:4px; cursor:pointer;';
+
+    const errorEl = document.createElement('div');
+    errorEl.className = 'form-renderer-attachment-error';
+    errorEl.style.cssText = 'color:#dc3545; font-size:12px; display:none; margin-top:2px;';
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = code;
+    hidden.setAttribute('data-render-kind', 'group');
+    hidden.setAttribute('data-min-rows', String(minRows));
+    hidden.value = '[]';
+
+    const state = { readonly: false, rows: [] as Record<string, string>[] };
+
+    const syncHidden = () => {
+      hidden.value = JSON.stringify(state.rows);
+    };
+
+    const renderRows = () => {
+      rowsEl.innerHTML = '';
+
+      state.rows.forEach((rowData, rowIndex) => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'form-renderer-group-row';
+        rowEl.style.cssText =
+          'display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; border-bottom:1px dashed #eee; padding:6px 0; margin-bottom:4px;';
+
+        children.forEach(child => {
+          const fieldWrap = document.createElement('div');
+          fieldWrap.style.cssText = 'display:flex; flex-direction:column; min-width:120px;';
+
+          const label = document.createElement('label');
+          label.textContent = child.title;
+          label.style.cssText = 'font-size:12px; color:#666; margin-bottom:2px;';
+
+          const childType = child.type as number;
+          const childConfig = parseFieldConfig(child.config);
+          const childOptions = this.parseOptions(child.options);
+
+          const inputEl =
+            childType === 4
+              ? this.buildOptionGroup('', childOptions.length ? childOptions : ['Có'], 'checkbox')
+              : childType === 5
+                ? this.buildOptionGroup('', childOptions.length ? childOptions : ['Có', 'Không'], 'radio')
+                : this.buildSimpleFieldElement(childType, childOptions, childConfig);
+
+          inputEl.style.fontSize = 'inherit';
+          this.setSimpleFieldValue(inputEl, childType, rowData[child.code] ?? '');
+
+          const onChange = () => {
+            rowData[child.code] = this.readSimpleFieldValue(inputEl, childType);
+            syncHidden();
+          };
+          inputEl.addEventListener('input', onChange);
+          inputEl.addEventListener('change', onChange);
+
+          if (state.readonly) {
+            inputEl.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('input, select, textarea').forEach(el => {
+              el.disabled = true;
+            });
+            if (inputEl instanceof HTMLInputElement || inputEl instanceof HTMLSelectElement || inputEl instanceof HTMLTextAreaElement) {
+              inputEl.disabled = true;
+            }
+          }
+
+          fieldWrap.appendChild(label);
+          fieldWrap.appendChild(inputEl);
+          rowEl.appendChild(fieldWrap);
+        });
+
+        if (!state.readonly) {
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Xóa dòng';
+          removeBtn.style.cssText = 'font-size:12px; padding:2px 8px; cursor:pointer; color:#dc3545; height:28px;';
+          removeBtn.disabled = state.rows.length <= minRows;
+          removeBtn.addEventListener('click', () => {
+            state.rows.splice(rowIndex, 1);
+            syncHidden();
+            renderRows();
+          });
+          rowEl.appendChild(removeBtn);
+        }
+
+        rowsEl.appendChild(rowEl);
+      });
+
+      addBtn.style.display = state.readonly || (maxRows != null && state.rows.length >= maxRows) ? 'none' : '';
+    };
+
+    addBtn.addEventListener('click', () => {
+      state.rows.push({});
+      syncHidden();
+      renderRows();
+    });
+
+    wrapper.appendChild(rowsEl);
+    wrapper.appendChild(addBtn);
+    wrapper.appendChild(errorEl);
+    wrapper.appendChild(hidden);
+
+    const handle: GroupFieldHandle = {
+      setReadonly: readonly => {
+        state.readonly = readonly;
+        renderRows();
+      },
+      loadRows: rows => {
+        state.rows = rows.map(row => ({ ...row }));
+        syncHidden();
+        renderRows();
+      },
+    };
+    (wrapper as HTMLElement & { __groupField?: GroupFieldHandle }).__groupField = handle;
+
+    // form mới/chưa có dữ liệu: dựng sẵn đúng số dòng tối thiểu thay vì bắt người nộp tự bấm "+ Thêm dòng"
+    // trước khi nhập được gì. fillFormData (khi xem/sửa bản ghi đã nộp) sẽ gọi loadRows() ghi đè lại sau.
+    state.rows = Array.from({ length: Math.max(minRows, 0) }, () => ({}));
+    syncHidden();
+    renderRows();
+
+    return wrapper;
+  }
+
+  private buildOptionGroup(
+    code: string,
+    options: string[],
+    type: 'checkbox' | 'radio',
+    layout?: 'horizontal' | 'vertical' | null
+  ): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-renderer-option-group';
+    if (layout === 'vertical') {
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+    }
     options.forEach(opt => {
       const label = document.createElement('label');
       label.style.marginRight = '12px';
+      if (layout === 'vertical') {
+        label.style.display = 'block';
+      }
       const input = document.createElement('input');
       input.type = type;
       input.name = code;
@@ -570,6 +858,16 @@ export class FormRendererService {
         }
 
         listEl.appendChild(chip);
+
+        if (config.showPreview && this.isImageFileName(entry.name)) {
+          const thumb = document.createElement('img');
+          thumb.style.cssText =
+            'display:block; width:80px; height:80px; object-fit:cover; border:1px solid #ccc; border-radius:4px; margin:2px 4px 6px 0;';
+          this.eformService.downloadFormAttachment(entry.blob, entry.name, { skipHandleError: true }).subscribe(blob => {
+            thumb.src = URL.createObjectURL(blob);
+          });
+          listEl.appendChild(thumb);
+        }
       });
     };
 
@@ -811,6 +1109,11 @@ export class FormRendererService {
     } catch {
       return [];
     }
+  }
+
+  private isImageFileName(name: string): boolean {
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
   }
 
   private parseOptions(options?: string): string[] {
