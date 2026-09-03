@@ -1,0 +1,83 @@
+<nz-page-header [nzGhost]="false">
+	<nz-page-header-title>Trang giới thiệu</nz-page-header-title>
+	<nz-page-header-extra>
+		<nz-space>
+			<ng-container *nzSpaceItem>
+				<button *abpPermission="'EForm.Pages.Create'" nz-button nzType="primary" (click)="addPage(null)">Thêm trang mới</button>
+			</ng-container>
+		</nz-space>
+	</nz-page-header-extra>
+	<nz-page-header-content>
+		<nz-descriptions nzSize="small" [nzColumn]="3">
+			<nz-descriptions-item nzTitle="Tìm kiếm" [nzSpan]="1">
+				<nz-input-group ([ngModel])="searchTitle" nzSearch>
+					<input type="text" nz-input placeholder="Nhập tên trang" (change)="search($event)" />
+				</nz-input-group>
+			</nz-descriptions-item>
+		</nz-descriptions>
+	</nz-page-header-content>
+</nz-page-header>
+
+<p class="text-muted px-3">
+	Mỗi trang giới thiệu có 1 đường dẫn (slug) riêng tại <code>/showcase/&lt;slug&gt;</code>, chứa nhiều khu vực
+	hiển thị (Page Section) - quản lý khu vực của từng trang tại mục "Khu vực hiển thị".
+</p>
+
+<nz-table
+	#basicTable
+	[nzData]="dataResultPaging.items"
+	[nzShowPagination]="true"
+	[nzFrontPagination]="false"
+	nzShowSizeChanger
+	[nzLoading]="loading"
+	[nzTotal]="totalCount"
+	(nzQueryParams)="onQueryParamsChange($event)"
+>
+	<thead>
+		<tr>
+			<th>TT</th>
+			<th>Tên trang</th>
+			<th>Thương hiệu</th>
+			<th>Đường dẫn (slug)</th>
+			<th>Mô tả</th>
+			<th>Trạng thái</th>
+			<th><i class="bi bi-gear-wide"></i></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr *ngFor="let data of basicTable.data; let i = index">
+			<td>{{ i + 1 }}</td>
+			<td>{{ data.title }}</td>
+			<td>
+				<span
+					class="d-inline-block rounded-circle me-1"
+					style="width:12px; height:12px; vertical-align:middle;"
+					[style.background]="data.primaryColor || '#4F46E5'"
+				></span>
+				{{ data.brandName || 'EForm' }}
+			</td>
+			<td><code>/showcase/{{ data.slug }}</code></td>
+			<td>{{ data.description }}</td>
+			<td>
+				<span class="badge" [ngClass]="data.isActive ? 'bg-success' : 'bg-secondary'">
+					{{ data.isActive ? 'Đang hiện' : 'Đang ẩn' }}
+				</span>
+			</td>
+			<td>
+				<a nz-dropdown [nzDropdownMenu]="menu">
+					<i class="bi bi-three-dots-vertical"></i>
+				</a>
+				<nz-dropdown-menu #menu="nzDropdownMenu">
+					<ul nz-menu nzSelectable>
+						<li nz-menu-item (click)="manageSections(data.id)"><i class="bi bi-window-stack text-primary"></i> Quản lý khu vực hiển thị</li>
+						<li nz-menu-item (click)="copyShowcaseLink(data.slug)"><i class="bi bi-link-45deg text-primary"></i> Sao chép đường dẫn</li>
+						<li nz-menu-item (click)="showQrCode(data.slug, data.title)"><i class="bi bi-qr-code text-primary"></i> Hiện mã QR</li>
+						<li *abpPermission="'EForm.Pages.Edit'" nz-menu-item (click)="addPage(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
+						<li *abpPermission="'EForm.Pages.Create'" nz-menu-item (click)="duplicatePage(data.id)"><i class="bi bi-files text-secondary"></i> Nhân bản</li>
+						<li *abpPermission="'EForm.Pages.Delete'" nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
+					</ul>
+				</nz-dropdown-menu>
+			</td>
+		</tr>
+	</tbody>
+</nz-table>

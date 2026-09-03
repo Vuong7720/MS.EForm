@@ -176,32 +176,63 @@
 	</div>
 
 	<div class="mt-2 pt-2 border-top">
-		<label nz-checkbox formControlName="conditionalEnabled">Chỉ hiện field này khi field khác thỏa điều kiện</label>
+		<label nz-checkbox formControlName="conditionalEnabled">Chỉ hiện field này khi thỏa các điều kiện sau</label>
 
-		<div class="row mt-1" *ngIf="form.get('conditionalEnabled')?.value">
-			<div class="mt-1 col-5">
-				<label class="form-label fw-bold">Phụ thuộc vào field</label>
-				<nz-select formControlName="conditionalDependsOn" nzPlaceHolder="Chọn field" style="width: 100%;">
-					<nz-option *ngFor="let item of dependsOnFieldChoices" [nzLabel]="item.title" [nzValue]="item.code"></nz-option>
+		<div class="mt-1" *ngIf="form.get('conditionalEnabled')?.value">
+			<div class="mt-1 mb-2" *ngIf="conditionalRules.length > 1">
+				<label class="form-label fw-bold">Kết hợp các điều kiện</label>
+				<nz-select [(ngModel)]="conditionalCombinator" [ngModelOptions]="{ standalone: true }" style="width: 100%;">
+					<nz-option nzLabel="Tất cả điều kiện đúng (AND)" nzValue="and"></nz-option>
+					<nz-option nzLabel="Chỉ cần 1 điều kiện đúng (OR)" nzValue="or"></nz-option>
 				</nz-select>
 			</div>
-			<div class="mt-1 col-3">
-				<label class="form-label fw-bold">Điều kiện</label>
-				<nz-select formControlName="conditionalOperator" style="width: 100%;">
-					<nz-option *ngFor="let item of operatorOptions" [nzLabel]="item.label" [nzValue]="item.value"></nz-option>
-				</nz-select>
+
+			<div class="row mt-1 align-items-end" *ngFor="let rule of conditionalRules; let ri = index">
+				<div class="mt-1 col-4">
+					<label class="form-label fw-bold" *ngIf="ri === 0">Phụ thuộc vào field</label>
+					<nz-select [(ngModel)]="rule.dependsOnCode" [ngModelOptions]="{ standalone: true }" nzPlaceHolder="Chọn field" style="width: 100%;">
+						<nz-option *ngFor="let item of dependsOnFieldChoices" [nzLabel]="item.title" [nzValue]="item.code"></nz-option>
+					</nz-select>
+				</div>
+				<div class="mt-1 col-3">
+					<label class="form-label fw-bold" *ngIf="ri === 0">Điều kiện</label>
+					<nz-select [(ngModel)]="rule.operator" [ngModelOptions]="{ standalone: true }" style="width: 100%;">
+						<nz-option *ngFor="let item of operatorOptions" [nzLabel]="item.label" [nzValue]="item.value"></nz-option>
+					</nz-select>
+				</div>
+				<div class="mt-1 col-4" *ngIf="rule.operator !== 'isEmpty' && rule.operator !== 'isNotEmpty'">
+					<label class="form-label fw-bold" *ngIf="ri === 0">Giá trị</label>
+					<nz-select
+						*ngIf="dependsOnValueChoicesOf(rule) as choices; else conditionalValueText"
+						[(ngModel)]="rule.value"
+						[ngModelOptions]="{ standalone: true }"
+						nzPlaceHolder="Chọn giá trị"
+						style="width: 100%;"
+					>
+						<nz-option *ngFor="let opt of choices" [nzLabel]="opt" [nzValue]="opt"></nz-option>
+					</nz-select>
+					<ng-template #conditionalValueText>
+						<input nz-input [(ngModel)]="rule.value" [ngModelOptions]="{ standalone: true }" placeholder="Nhập giá trị">
+					</ng-template>
+				</div>
+				<div class="mt-1 col-1">
+					<button
+						nz-button
+						nzDanger
+						nzSize="small"
+						type="button"
+						*ngIf="conditionalRules.length > 1"
+						(click)="removeConditionalRule(ri)"
+						title="Xóa điều kiện này"
+					>
+						<i class="bi bi-trash"></i>
+					</button>
+				</div>
 			</div>
-			<div class="mt-1 col-4"
-				*ngIf="form.get('conditionalOperator')?.value !== 'isEmpty' && form.get('conditionalOperator')?.value !== 'isNotEmpty'">
-				<label class="form-label fw-bold">Giá trị</label>
-				<nz-select *ngIf="dependsOnValueChoices as choices; else conditionalValueText" formControlName="conditionalValue"
-					nzPlaceHolder="Chọn giá trị" style="width: 100%;">
-					<nz-option *ngFor="let opt of choices" [nzLabel]="opt" [nzValue]="opt"></nz-option>
-				</nz-select>
-				<ng-template #conditionalValueText>
-					<input nz-input formControlName="conditionalValue" placeholder="Nhập giá trị">
-				</ng-template>
-			</div>
+
+			<button nz-button nzType="dashed" nzSize="small" type="button" class="mt-1" (click)="addConditionalRule()">
+				+ Thêm điều kiện
+			</button>
 		</div>
 	</div>
 </form>

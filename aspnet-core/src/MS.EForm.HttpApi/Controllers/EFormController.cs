@@ -17,6 +17,8 @@ using MS.EForm.FormModels.FormCategories;
 using MS.EForm.FormModels.FormFields;
 using MS.EForm.FormModels.Forms;
 using MS.EForm.FormModels.FormRecords;
+using MS.EForm.FormModels.PageSections;
+using MS.EForm.FormModels.Pages;
 
 namespace MS.EForm.Controllers;
 
@@ -29,17 +31,23 @@ public class EFormController : AbpControllerBase
 	private IFormField _formField;
 	private IFormService _formService;
 	private IFormRecord _formRecord;
+	private IPageSection _pageSection;
+	private IPage _page;
 	public EFormController(
 		IFormCategory formCategory,
 		IFormField formField,
 		IFormService formService,
-		IFormRecord formRecord
+		IFormRecord formRecord,
+		IPageSection pageSection,
+		IPage page
 		)
 	{
 		_formCategory = formCategory;
 		_formField = formField;
 		_formService = formService;
 		_formRecord = formRecord;
+		_pageSection = pageSection;
+		_page = page;
 	}
 
 	#region Danh mục form
@@ -164,6 +172,13 @@ public class EFormController : AbpControllerBase
 		return await _formService.UpdateAsync(id, model);
 	}
 
+	[Authorize(EFormPermissions.Forms.Create)]
+	[HttpPost("duplicate-form")]
+	public async Task<MessageDto> DuplicateForm(Guid id)
+	{
+		return await _formService.DuplicateAsync(id);
+	}
+
 	[Authorize(EFormPermissions.Forms.Delete)]
 	[HttpDelete("delete-form")]
 	public async Task<MessageDto> DeleteAsync(Guid id)
@@ -233,6 +248,27 @@ public class EFormController : AbpControllerBase
 		return await _formRecord.RejectAsync(id, note);
 	}
 
+	[Authorize(EFormPermissions.FormRecords.Delete)]
+	[HttpPost("bulk-delete-form-record")]
+	public async Task<MessageDto> BulkDeleteFormRecord(List<Guid> ids)
+	{
+		return await _formRecord.BulkDeleteAsync(ids);
+	}
+
+	[Authorize(EFormPermissions.FormRecords.Approve)]
+	[HttpPost("bulk-approve-form-record")]
+	public async Task<MessageDto> BulkApproveFormRecord(BulkFormRecordDto model)
+	{
+		return await _formRecord.BulkApproveAsync(model.Ids, model.Note);
+	}
+
+	[Authorize(EFormPermissions.FormRecords.Approve)]
+	[HttpPost("bulk-reject-form-record")]
+	public async Task<MessageDto> BulkRejectFormRecord(BulkFormRecordDto model)
+	{
+		return await _formRecord.BulkRejectAsync(model.Ids, model.Note);
+	}
+
 	[Authorize(EFormPermissions.FormRecords.Default)]
 	[HttpGet("get-form-record-by-id")]
 	public async Task<FormRecordDto> GetFormRecordById(Guid id)
@@ -285,6 +321,122 @@ public class EFormController : AbpControllerBase
 	{
 		var stream = await _formRecord.DownloadAttachmentAsync(blobName);
 		return File(stream, "application/octet-stream", fileName);
+	}
+
+	#endregion
+
+	#region PageSections (trang giới thiệu/showcase)
+
+	[Authorize(EFormPermissions.PageSections.Create)]
+	[HttpPost("create-page-section")]
+	public async Task<MessageDto> CreatePageSection(CreateUpdatePageSectionDto model)
+	{
+		return await _pageSection.CreatePageSection(model);
+	}
+
+	[Authorize(EFormPermissions.PageSections.Edit)]
+	[HttpPut("edit-page-section")]
+	public async Task<MessageDto> UpdatePageSection(Guid id, CreateUpdatePageSectionDto model)
+	{
+		return await _pageSection.UpdatePageSection(id, model);
+	}
+
+	[Authorize(EFormPermissions.PageSections.Delete)]
+	[HttpDelete("delete-page-section")]
+	public async Task<MessageDto> DeletePageSection(Guid id)
+	{
+		return await _pageSection.DeletePageSection(id);
+	}
+
+	[Authorize(EFormPermissions.PageSections.Default)]
+	[HttpGet("get-paging-page-section")]
+	public async Task<PagedResultDto<PageSectionDto>> GetAllPageSectionsPagedAsync(PageSectionPagingDto page)
+	{
+		return await _pageSection.GetAllPageSectionsPagedAsync(page);
+	}
+
+	[Authorize(EFormPermissions.PageSections.Default)]
+	[HttpGet("get-page-section-by-id")]
+	public async Task<PageSectionDto> GetPageSectionById(Guid id)
+	{
+		return await _pageSection.GetPageSectionById(id);
+	}
+
+	[Authorize(EFormPermissions.PageSections.Edit)]
+	[HttpPost("reorder-page-section")]
+	public async Task<MessageDto> ReorderPageSections(List<Guid> orderedIds)
+	{
+		return await _pageSection.ReorderPageSections(orderedIds);
+	}
+
+	// Cố tình để public, không Authorize: trang nhúng độc lập (/embed/section/:id) dùng để gắn 1 khu vực
+	// (form hoặc khối nội dung) vào bất kỳ website nào khác qua <iframe> - trả về null nếu section đã tắt/
+	// hết hạn lịch hiển thị/thuộc trang đã tắt (xem PageSectionService.GetEmbedSection)
+	[HttpGet("get-embed-section")]
+	public async Task<PageSectionDto?> GetEmbedSection(Guid id)
+	{
+		return await _pageSection.GetEmbedSection(id);
+	}
+
+	#endregion
+
+	#region Pages (nhiều trang giới thiệu)
+
+	[Authorize(EFormPermissions.Pages.Create)]
+	[HttpPost("create-page")]
+	public async Task<MessageDto> CreatePage(CreateUpdatePageDto model)
+	{
+		return await _page.CreatePage(model);
+	}
+
+	[Authorize(EFormPermissions.Pages.Edit)]
+	[HttpPut("edit-page")]
+	public async Task<MessageDto> UpdatePage(Guid id, CreateUpdatePageDto model)
+	{
+		return await _page.UpdatePage(id, model);
+	}
+
+	[Authorize(EFormPermissions.Pages.Delete)]
+	[HttpDelete("delete-page")]
+	public async Task<MessageDto> DeletePage(Guid id)
+	{
+		return await _page.DeletePage(id);
+	}
+
+	[Authorize(EFormPermissions.Pages.Create)]
+	[HttpPost("duplicate-page")]
+	public async Task<MessageDto> DuplicatePage(Guid id)
+	{
+		return await _page.DuplicateAsync(id);
+	}
+
+	[Authorize(EFormPermissions.Pages.Default)]
+	[HttpGet("get-paging-page")]
+	public async Task<PagedResultDto<PageDto>> GetAllPagesPagedAsync(PagePagingDto page)
+	{
+		return await _page.GetAllPagesPagedAsync(page);
+	}
+
+	[Authorize(EFormPermissions.Pages.Default)]
+	[HttpGet("get-page-by-id")]
+	public async Task<PageDto> GetPageById(Guid id)
+	{
+		return await _page.GetPageById(id);
+	}
+
+	[Authorize(EFormPermissions.Pages.Default)]
+	[HttpGet("get-all-page")]
+	public async Task<List<PageDto>> GetAllPages()
+	{
+		return await _page.GetAllPages();
+	}
+
+	// Cố tình để public, không Authorize: trang showcase public (/showcase hoặc /showcase/{slug}) gọi
+	// endpoint này để lấy Page + danh sách section đang bật của nó theo thứ tự - slug rỗng = trang mặc định
+	[HttpGet("get-showcase-page")]
+	public async Task<ShowcasePageDto> GetShowcasePage(string? slug)
+	{
+		return await _page.GetShowcasePage(slug);
 	}
 
 	#endregion

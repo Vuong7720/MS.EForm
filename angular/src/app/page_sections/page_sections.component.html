@@ -1,0 +1,107 @@
+<nz-page-header [nzGhost]="false">
+	<nz-page-header-title>Trang giới thiệu (Showcase)</nz-page-header-title>
+	<nz-page-header-extra>
+		<nz-space>
+			<ng-container *nzSpaceItem>
+				<a [href]="'/showcase/' + (selectedPageSlug || '')" target="_blank" nz-button nzType="default" [class.disabled]="!selectedPageSlug">
+					<i class="bi bi-box-arrow-up-right"></i> Xem trang giới thiệu
+				</a>
+			</ng-container>
+			<ng-container *nzSpaceItem>
+				<button *abpPermission="'EForm.PageSections.Create'" nz-button nzType="primary" (click)="addSection(null)">Thêm khu vực</button>
+			</ng-container>
+		</nz-space>
+	</nz-page-header-extra>
+	<nz-page-header-content>
+		<nz-descriptions nzSize="small" [nzColumn]="3">
+			<nz-descriptions-item nzTitle="Trang giới thiệu" [nzSpan]="1">
+				<nz-select [(ngModel)]="selectedPageId" (ngModelChange)="onPageChange()" style="width: 100%;">
+					<nz-option *ngFor="let p of lstPage" [nzLabel]="p.title" [nzValue]="p.id"></nz-option>
+				</nz-select>
+			</nz-descriptions-item>
+			<nz-descriptions-item nzTitle="Tìm kiếm" [nzSpan]="1">
+				<nz-input-group ([ngModel])="searchTitle" nzSearch>
+					<input type="text" nz-input placeholder="Nhập tên khu vực" (change)="search($event)" />
+				</nz-input-group>
+			</nz-descriptions-item>
+		</nz-descriptions>
+	</nz-page-header-content>
+</nz-page-header>
+
+<p class="text-muted px-3">
+	Mỗi khu vực là 1 form được nhúng sẵn, hoặc 1 khối nội dung tùy chỉnh (poster, thông báo...) không cần
+	tạo form - hiển thị trên trang giới thiệu công khai đã chọn ở trên, sắp xếp theo Thứ tự hiển thị.
+	<ng-container *ngIf="canReorder"> Kéo thả biểu tượng <i class="bi bi-grip-vertical"></i> ở đầu mỗi dòng để sắp xếp lại nhanh.</ng-container>
+	<ng-container *ngIf="!canReorder && totalCount > 0"> Danh sách trải dài nhiều trang nên không hỗ trợ kéo thả - sửa "Thứ tự hiển thị" thủ công ở từng khu vực.</ng-container>
+</p>
+
+<nz-table
+	#basicTable
+	[nzData]="dataResultPaging.items"
+	[nzShowPagination]="true"
+	[nzFrontPagination]="false"
+	nzShowSizeChanger
+	[nzLoading]="loading"
+	[nzTotal]="totalCount"
+	(nzQueryParams)="onQueryParamsChange($event)"
+>
+	<thead>
+		<tr>
+			<th style="width: 32px;"></th>
+			<th>TT</th>
+			<th>Tên khu vực</th>
+			<th>Mô tả</th>
+			<th>Loại / Nội dung</th>
+			<th>Thứ tự</th>
+			<th>Trạng thái</th>
+			<th><i class="bi bi-gear-wide"></i></th>
+		</tr>
+	</thead>
+	<tbody cdkDropList [cdkDropListData]="dataResultPaging.items" (cdkDropListDropped)="drop($event)">
+		<tr
+			*ngFor="let data of dataResultPaging.items; let i = index"
+			cdkDrag
+			[cdkDragDisabled]="!canReorder"
+			cdkDragPreviewClass="page-section-drag-preview"
+		>
+			<td>
+				<i *ngIf="canReorder" cdkDragHandle class="bi bi-grip-vertical text-muted drag-handle"></i>
+			</td>
+			<td>{{ i + 1 }}</td>
+			<td>{{ data.title }}</td>
+			<td>{{ data.description }}</td>
+			<td>
+				<span *ngIf="data.sectionType === PageSectionType.Form" class="badge bg-primary-subtle text-primary-emphasis">
+					<i class="bi bi-clipboard-data"></i> {{ data.formTitle }}
+				</span>
+				<span *ngIf="data.sectionType === PageSectionType.Content" class="badge bg-warning-subtle text-warning-emphasis">
+					<i class="bi bi-file-richtext"></i> Nội dung tùy chỉnh
+				</span>
+			</td>
+			<td>{{ data.displayOrder }}</td>
+			<td>
+				<span class="badge" [ngClass]="data.isActive ? 'bg-success' : 'bg-secondary'">
+					{{ data.isActive ? 'Đang hiện' : 'Đang ẩn' }}
+				</span>
+				<span *ngIf="scheduleStatus(data) === 'not-started'" class="badge bg-info-subtle text-info-emphasis" title="Sẽ tự hiện khi tới ngày bắt đầu">
+					<i class="bi bi-clock-history"></i> Chưa tới hạn
+				</span>
+				<span *ngIf="scheduleStatus(data) === 'expired'" class="badge bg-danger-subtle text-danger-emphasis" title="Đã tự ẩn do quá ngày kết thúc">
+					<i class="bi bi-calendar-x"></i> Đã hết hạn
+				</span>
+			</td>
+			<td>
+				<a nz-dropdown [nzDropdownMenu]="menu">
+					<i class="bi bi-three-dots-vertical"></i>
+				</a>
+				<nz-dropdown-menu #menu="nzDropdownMenu">
+					<ul nz-menu nzSelectable>
+						<li *abpPermission="'EForm.PageSections.Edit'" nz-menu-item (click)="addSection(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
+						<li nz-menu-item (click)="copyEmbedCode(data.id)"><i class="bi bi-code-slash text-secondary"></i> Sao chép mã nhúng (iframe)</li>
+						<li *abpPermission="'EForm.PageSections.Delete'" nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
+					</ul>
+				</nz-dropdown-menu>
+			</td>
+		</tr>
+	</tbody>
+</nz-table>

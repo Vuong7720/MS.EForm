@@ -194,6 +194,63 @@ namespace MS.EForm.FormServices
 			};
 		}
 
+		// nhân bản 1 form: sao chép Content + toàn bộ FormField sang 1 form mới, giữ nguyên cấu hình
+		// (danh mục, phê duyệt, thông báo...) - tự đặt tên "{Title} (Bản sao)" và cộng số nếu vẫn trùng.
+		// Không nhân bản kèm bản ghi đã nộp (FormRecord) của form gốc - đúng tinh thần "nhân bản mẫu để
+		// dùng lại", không phải sao lưu dữ liệu đã nộp.
+		public async Task<MessageDto> DuplicateAsync(Guid id)
+		{
+			var source = await _repository.FindAsync(id);
+			if (source == null)
+			{
+				throw new UserFriendlyException("Không tìm thấy form này");
+			}
+
+			var newTitle = $"{source.Title} (Bản sao)";
+			var suffix = 2;
+			while (await _repository.FirstOrDefaultAsync(a => a.Title == newTitle) != null)
+			{
+				newTitle = $"{source.Title} (Bản sao {suffix++})";
+			}
+
+			var newForm = new Form
+			{
+				Title = newTitle,
+				Content = source.Content,
+				CategoryId = source.CategoryId,
+				Description = source.Description,
+				IsTemplate = source.IsTemplate,
+				RequireApproval = source.RequireApproval,
+				NotifyOnSubmit = source.NotifyOnSubmit
+			};
+			var inserted = await _repository.InsertAsync(newForm);
+
+			var allFields = await _formFieldRepository.GetQueryableAsync();
+			var sourceFields = allFields.Where(a => a.FormId == id).ToList();
+			if (sourceFields.Any())
+			{
+				var newFields = sourceFields
+					.Select(f => new FormField
+					{
+						Title = f.Title,
+						Code = f.Code,
+						Type = f.Type,
+						Config = f.Config,
+						Options = f.Options,
+						DisplayOrder = f.DisplayOrder,
+						FormId = inserted.Id
+					})
+					.ToList();
+				await _formFieldRepository.InsertManyAsync(newFields);
+			}
+
+			return new MessageDto
+			{
+				Status = true,
+				Messages = "Nhân bản form thành công"
+			};
+		}
+
 		// Xóa form theo id
 		public async Task<MessageDto> DeleteAsync(Guid id)
 		{

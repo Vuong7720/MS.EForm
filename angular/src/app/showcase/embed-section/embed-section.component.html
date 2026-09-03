@@ -1,0 +1,9 @@
+<div *ngIf="loading" class="embed-state">
+	<i class="fa fa-spinner fa-spin"></i>
+</div>
+
+<div *ngIf="!loading && notFound" class="embed-state text-muted">
+	Không tìm thấy nội dung này (có thể đã bị tắt hoặc hết hạn hiển thị).
+</div>
+
+<app-showcase-section *ngIf="!loading && section" [section]="section"></app-showcase-section>

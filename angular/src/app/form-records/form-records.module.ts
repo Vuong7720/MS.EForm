@@ -9,6 +9,8 @@ import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { FormRecordListComponent } from './form-record-list/form-record-list.component';
 import { FormRecordDetailComponent } from './form-record-detail/form-record-detail.component';
 import { FormRecordsRoutingModule } from './form-records-routing.module';
@@ -27,6 +29,8 @@ import { FormRecordsRoutingModule } from './form-records-routing.module';
     NzTagModule,
     NzCheckboxModule,
     NzInputModule,
+    NzDescriptionsModule,
+    NzAlertModule,
   ],
 })
 export class FormRecordsModule {}

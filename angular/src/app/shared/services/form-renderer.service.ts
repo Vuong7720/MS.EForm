@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { EFormService } from '@proxy/controllers';
 import { TypeField } from '@proxy/enums';
-import { EVALUATE_CONDITION_RULE_JS, evaluateConditionRule, parseFieldConfig } from './field-config.util';
+import { EVALUATE_CONDITION_RULE_JS, evaluateConditionalGroup, parseFieldConfig, resolveConditionalGroup } from './field-config.util';
 
 interface AttachmentEntry {
   name: string;
@@ -101,10 +101,9 @@ export class FormRendererService {
         function evaluateConditionals() {
           var data = collectDataSimple();
           document.querySelectorAll('[data-conditional]').forEach(function (el) {
-            var rule;
-            try { rule = JSON.parse(el.getAttribute('data-conditional')); } catch (e) { return; }
-            if (!rule.dependsOnCode) return;
-            el.style.display = evaluateConditionRule(data[rule.dependsOnCode], rule.operator, rule.value) ? '' : 'none';
+            var group;
+            try { group = JSON.parse(el.getAttribute('data-conditional')); } catch (e) { return; }
+            el.style.display = evaluateConditionalGroup(data, group) ? '' : 'none';
           });
         }
         window.addEventListener('DOMContentLoaded', function () {
@@ -248,14 +247,14 @@ export class FormRendererService {
     // pass 2: với field có điều kiện phụ thuộc field khác, gắn data-conditional lên khối cần ẩn/hiện
     // (không phải lên chính input, vì nhãn field thường nằm ngoài input trong HTML tự do - xem findHideTarget)
     fields.forEach(field => {
-      const conditional = parseFieldConfig(field.config).conditional;
-      if (!conditional?.dependsOnCode) return;
+      const group = resolveConditionalGroup(parseFieldConfig(field.config));
+      if (!group) return;
 
       const fieldEl = container.querySelector<HTMLElement>(`[data-field-code="${field.code}"]`);
       if (!fieldEl) return;
 
       const hideTarget = this.findHideTarget(fieldEl, container);
-      hideTarget.setAttribute('data-conditional', JSON.stringify(conditional));
+      hideTarget.setAttribute('data-conditional', JSON.stringify(group));
     });
 
     return container;
@@ -291,15 +290,14 @@ export class FormRendererService {
       conditionalEls.forEach(el => {
         const raw = el.getAttribute('data-conditional');
         if (!raw) return;
-        let rule: { dependsOnCode?: string; operator?: any; value?: string };
+        let group: ReturnType<typeof resolveConditionalGroup>;
         try {
-          rule = JSON.parse(raw);
+          group = JSON.parse(raw);
         } catch {
           return;
         }
-        if (!rule.dependsOnCode) return;
 
-        const visible = evaluateConditionRule(data[rule.dependsOnCode], rule.operator, rule.value);
+        const visible = evaluateConditionalGroup(data, group);
         el.style.display = visible ? '' : 'none';
 
         // el chính là input/select (không có ancestor riêng để leo lên, VD input đứng trực tiếp trong

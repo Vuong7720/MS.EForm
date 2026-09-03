@@ -13,6 +13,8 @@ namespace EForm.IFormServices
 	{
 		Task<MessageDto> CreateAsync(CreateUpdateForm model);
 		Task<MessageDto> UpdateAsync(Guid id, CreateUpdateForm model);
+		// nhân bản 1 form đã có (nội dung + toàn bộ field) thành 1 form mới, tự đặt tên tránh trùng
+		Task<MessageDto> DuplicateAsync(Guid id);
 		Task<MessageDto> DeleteAsync(Guid id);
 		Task<List<FormDto>> GetAllForm();
 		Task<FormDto> GetAsync(Guid id);

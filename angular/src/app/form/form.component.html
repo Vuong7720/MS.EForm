@@ -34,6 +34,8 @@
 						<li *abpPermission="'EForm.Forms.Edit'" nz-menu-item (click)="addForm(data.id)"><i class="bi bi-gear text-primary"></i> Sửa</li>
 						<li *abpPermission="'EForm.FormRecords'" nz-menu-item (click)="viewRecords(data.id)"><i class="bi bi-card-checklist text-primary"></i> Xem kết quả nộp</li>
 						<li nz-menu-item (click)="copySubmitLink(data.id)"><i class="bi bi-link-45deg text-primary"></i> Sao chép link nộp form</li>
+						<li nz-menu-item (click)="showQrCode(data.id, data.title)"><i class="bi bi-qr-code text-primary"></i> Hiện mã QR</li>
+						<li *abpPermission="'EForm.Forms.Create'" nz-menu-item (click)="duplicateForm(data.id)"><i class="bi bi-files text-primary"></i> Nhân bản form</li>
 						<li *abpPermission="'EForm.Forms.Delete'" nz-menu-item (click)="delete(data.id)"><i class="bi bi-trash text-danger"></i> Xóa</li>
 					</ul>
 				</nz-dropdown-menu>

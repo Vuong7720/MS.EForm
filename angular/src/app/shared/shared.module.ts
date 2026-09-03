@@ -5,12 +5,13 @@ import { ThemeSharedModule } from '@abp/ng.theme.shared';
 import { NgxValidateCoreModule } from '@ngx-validate/core';
 import { NzResultModule } from 'ng-zorro-antd/result';
 import { DeleteComfirmComponent } from './delete-comfirm/delete-comfirm.component';
+import { QrCodeModalComponent } from './qr-code-modal/qr-code-modal.component';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { CmsEditorModule } from './components/cmsEditor/cms-editor.module';
 
 @NgModule({
-  declarations: [DeleteComfirmComponent],
+  declarations: [DeleteComfirmComponent, QrCodeModalComponent],
   imports: [
     CoreModule,
     ThemeSharedModule,

@@ -1,0 +1,43 @@
+<section class="showcase-card">
+	<header class="showcase-card-header" *ngIf="isContentType || section?.title">
+		<div class="showcase-card-header-top">
+			<h2>{{ section?.title }}</h2>
+			<span class="showcase-social-proof" *ngIf="!isContentType && section?.submissionCount > 0">
+				<i class="bi bi-people-fill"></i> {{ section.submissionCount }} lượt sử dụng
+			</span>
+		</div>
+		<p *ngIf="section?.description">{{ section?.description }}</p>
+	</header>
+
+	<!-- khối nội dung tự soạn (poster/thông báo...) - không cần form, không captcha, không nút nộp -->
+	<div *ngIf="isContentType" #contentContainer class="showcase-card-render"></div>
+
+	<ng-container *ngIf="!isContentType">
+		<div *ngIf="loading" class="showcase-card-state">
+			<i class="fa fa-spinner fa-spin"></i> Đang tải biểu mẫu...
+		</div>
+
+		<div *ngIf="!loading && notFound" class="showcase-card-state text-muted">
+			Không tìm thấy biểu mẫu được gán cho khu vực này.
+		</div>
+
+		<div *ngIf="!loading && !notFound && submitted" class="showcase-card-thanks">
+			<canvas #confettiCanvas class="showcase-confetti"></canvas>
+			<i class="bi bi-check-circle-fill"></i>
+			<p>Cảm ơn bạn đã nộp form!</p>
+			<button class="showcase-btn showcase-btn-outline" (click)="submitAnother()">Nộp thêm 1 lần nữa</button>
+		</div>
+
+		<div *ngIf="!loading && !notFound && !submitted">
+			<div #renderContainer class="showcase-card-render"></div>
+			<ng-container *ngIf="!isDisplayOnly">
+				<div #captchaContainer class="mt-3"></div>
+				<div class="mt-3">
+					<button class="showcase-btn showcase-btn-primary" [disabled]="!captchaToken" (click)="submit()">
+						<i class="fa fa-paper-plane" aria-hidden="true"></i> Nộp form
+					</button>
+				</div>
+			</ng-container>
+		</div>
+	</ng-container>
+</section>

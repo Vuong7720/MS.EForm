@@ -4,8 +4,10 @@ import { Injectable } from '@angular/core';
 import type { MessageDto } from '../eform/models';
 import type { CatePagingDto, CreateUpdateFormCateDto, FormCategoryDto } from '../form-models/form-categories/models';
 import type { CreateUpdateFormField, FormFieldDto } from '../form-models/form-fields/models';
-import type { CreateUpdateFormRecordDto, DashboardStatsDto, FormRecordDto, FormRecordPagingFilterDto, UploadAttachmentResultDto } from '../form-models/form-records/models';
+import type { BulkFormRecordDto, CreateUpdateFormRecordDto, DashboardStatsDto, FormRecordDto, FormRecordPagingFilterDto, UploadAttachmentResultDto } from '../form-models/form-records/models';
 import type { CreateUpdateForm, FormDto, FormPagingFilterDto } from '../form-models/forms/models';
+import type { CreateUpdatePageSectionDto, PageSectionDto, PageSectionPagingDto } from '../form-models/page-sections/models';
+import type { CreateUpdatePageDto, PageDto, PagePagingDto, ShowcasePageDto } from '../form-models/pages/models';
 
 @Injectable({
   providedIn: 'root',
@@ -172,7 +174,16 @@ export class EFormService {
       body: model,
     },
     { apiName: this.apiName,...config });
-  
+
+
+  duplicateForm = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/duplicate-form',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
 
   updateFormCategoryByIdAndModel = (id: string, model: CreateUpdateFormCateDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, MessageDto>({
@@ -235,7 +246,7 @@ export class EFormService {
     this.restService.request<any, PagedResultDto<FormRecordDto>>({
       method: 'GET',
       url: '/api/eform/get-paging-form-record',
-      params: { formId: page.formId, title: page.title, approvalStatus: page.approvalStatus, pageSize: page.pageSize, pageIndex: page.pageIndex },
+      params: { formId: page.formId, title: page.title, keyword: page.keyword, approvalStatus: page.approvalStatus, pageSize: page.pageSize, pageIndex: page.pageIndex },
     },
     { apiName: this.apiName,...config });
 
@@ -254,6 +265,33 @@ export class EFormService {
       method: 'POST',
       url: '/api/eform/reject-form-record',
       params: { id, note },
+    },
+    { apiName: this.apiName,...config });
+
+
+  bulkDeleteFormRecord = (ids: string[], config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/bulk-delete-form-record',
+      body: ids,
+    },
+    { apiName: this.apiName,...config });
+
+
+  bulkApproveFormRecord = (model: BulkFormRecordDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/bulk-approve-form-record',
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  bulkRejectFormRecord = (model: BulkFormRecordDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/bulk-reject-form-record',
+      body: model,
     },
     { apiName: this.apiName,...config });
 
@@ -296,6 +334,142 @@ export class EFormService {
       params: { blobName, fileName },
       responseType: 'blob',
     } as any,
+    { apiName: this.apiName,...config });
+
+
+  createPageSectionByModel = (model: CreateUpdatePageSectionDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/create-page-section',
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  updatePageSectionByIdAndModel = (id: string, model: CreateUpdatePageSectionDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'PUT',
+      url: '/api/eform/edit-page-section',
+      params: { id },
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  deletePageSectionById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'DELETE',
+      url: '/api/eform/delete-page-section',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getAllPageSectionsPaged = (page: PageSectionPagingDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PagedResultDto<PageSectionDto>>({
+      method: 'GET',
+      url: '/api/eform/get-paging-page-section',
+      params: { title: page.title, pageId: page.pageId, pageSize: page.pageSize, pageIndex: page.pageIndex },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getPageSectionByIdById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PageSectionDto>({
+      method: 'GET',
+      url: '/api/eform/get-page-section-by-id',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  reorderPageSections = (orderedIds: string[], config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/reorder-page-section',
+      body: orderedIds,
+    },
+    { apiName: this.apiName,...config });
+
+
+  getEmbedSection = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PageSectionDto>({
+      method: 'GET',
+      url: '/api/eform/get-embed-section',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  createPageByModel = (model: CreateUpdatePageDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/create-page',
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  updatePageByIdAndModel = (id: string, model: CreateUpdatePageDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'PUT',
+      url: '/api/eform/edit-page',
+      params: { id },
+      body: model,
+    },
+    { apiName: this.apiName,...config });
+
+
+  deletePageById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'DELETE',
+      url: '/api/eform/delete-page',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  duplicatePage = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, MessageDto>({
+      method: 'POST',
+      url: '/api/eform/duplicate-page',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getAllPagesPaged = (page: PagePagingDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PagedResultDto<PageDto>>({
+      method: 'GET',
+      url: '/api/eform/get-paging-page',
+      params: { title: page.title, pageSize: page.pageSize, pageIndex: page.pageIndex },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getPageByIdById = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PageDto>({
+      method: 'GET',
+      url: '/api/eform/get-page-by-id',
+      params: { id },
+    },
+    { apiName: this.apiName,...config });
+
+
+  getAllPages = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PageDto[]>({
+      method: 'GET',
+      url: '/api/eform/get-all-page',
+    },
+    { apiName: this.apiName,...config });
+
+
+  getShowcasePage = (slug?: string | null, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ShowcasePageDto>({
+      method: 'GET',
+      url: '/api/eform/get-showcase-page',
+      params: { slug },
+    },
     { apiName: this.apiName,...config });
 
   constructor(private restService: RestService) {}

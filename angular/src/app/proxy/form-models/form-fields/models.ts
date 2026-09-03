@@ -35,8 +35,12 @@ export interface FieldConfig {
   maxFileCount?: number | null;
   // riêng cho field kiểu Đánh giá/Rating (TypeField.Rating)
   maxRating?: number | null;
-  // chỉ hiện/bắt buộc field này khi field có code = dependsOnCode thỏa operator so với value
+  // ĐỊNH DẠNG CŨ - chỉ 1 điều kiện đơn, giữ lại để đọc được field đã lưu từ trước, không dùng khi lưu mới
+  // (xem resolveConditionalGroup trong field-config.util.ts - luôn ưu tiên conditionalGroup nếu có)
   conditional?: ConditionalRule | null;
+  // chỉ hiện/bắt buộc field này khi các điều kiện dưới đây thỏa theo combinator (and: tất cả đúng,
+  // or: ít nhất 1 đúng) - thay thế "conditional" (chỉ 1 điều kiện đơn) ở trên
+  conditionalGroup?: ConditionalGroup | null;
   // riêng cho field kiểu Radio/CheckBox: hướng xếp các lựa chọn
   layout?: 'horizontal' | 'vertical' | null;
   // riêng cho field kiểu DateTime: true = chỉ chọn ngày, không bắt chọn giờ
@@ -65,9 +69,15 @@ export interface GroupChildField {
 }
 
 export type ConditionalOperator = 'equals' | 'notEquals' | 'contains' | 'isEmpty' | 'isNotEmpty';
+export type ConditionalCombinator = 'and' | 'or';
 
 export interface ConditionalRule {
   dependsOnCode?: string;
   operator?: ConditionalOperator;
   value?: string;
+}
+
+export interface ConditionalGroup {
+  combinator?: ConditionalCombinator;
+  rules: ConditionalRule[];
 }

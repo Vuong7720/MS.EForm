@@ -4,9 +4,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { EditorConfig } from 'ckeditor5';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
-import { FormFieldDto, GroupChildField } from '@proxy/form-models/form-fields';
+import { ConditionalCombinator, ConditionalRule, FormFieldDto, GroupChildField } from '@proxy/form-models/form-fields';
 import { TypeField } from '@proxy/enums';
-import { parseFieldConfig, serializeFieldConfig, generateFieldCode } from '../../shared/services/field-config.util';
+import { generateFieldCode, parseFieldConfig, resolveConditionalGroup, serializeFieldConfig } from '../../shared/services/field-config.util';
 
 // bản nháp 1 field con trong lúc đang sửa ở modal - tách khỏi GroupChildField (kiểu dùng để lưu) vì
 // options/config ở đây là dạng dễ chỉnh sửa trên UI (text/boolean rời), chỉ gộp lại thành JSON lúc save()
@@ -70,6 +70,12 @@ export class CreateAttributeComponent implements OnInit {
   groupChildren: GroupChildDraft[] = [];
   editingChildIndex: number | null = null;
   childDraft: GroupChildDraft = this.emptyChildDraft();
+
+  // danh sách điều kiện hiển thị field - kết hợp bằng conditionalCombinator (and: mọi điều kiện phải
+  // đúng, or: chỉ cần 1 điều kiện đúng). Quản lý ngoài reactive form (giống groupChildren) vì độ dài thay
+  // đổi động (thêm/xóa điều kiện) và mỗi dòng cần logic riêng (đổi operator/value theo field phụ thuộc).
+  conditionalRules: ConditionalRule[] = [];
+  conditionalCombinator: ConditionalCombinator = 'and';
 
   operatorOptions = [
     { label: 'Bằng', value: 'equals' },
@@ -138,11 +144,15 @@ export class CreateAttributeComponent implements OnInit {
       maxRows: [fieldConfig.maxRows ?? null],
       config: [null],
       options: [this.optionsText || null],
-      conditionalEnabled: [!!fieldConfig.conditional],
-      conditionalDependsOn: [fieldConfig.conditional?.dependsOnCode ?? null],
-      conditionalOperator: [fieldConfig.conditional?.operator ?? 'equals'],
-      conditionalValue: [fieldConfig.conditional?.value ?? null],
+      conditionalEnabled: [false],
     });
+
+    const conditionalGroup = resolveConditionalGroup(fieldConfig);
+    this.form.get('conditionalEnabled')?.setValue(!!conditionalGroup);
+    this.conditionalCombinator = conditionalGroup?.combinator ?? 'and';
+    this.conditionalRules = conditionalGroup?.rules?.length
+      ? conditionalGroup.rules.map(r => ({ ...r }))
+      : [{ dependsOnCode: null, operator: 'equals', value: '' }];
 
     this.groupChildren = (fieldConfig.children || []).map(child => {
       const childConfig = parseFieldConfig(child.config);
@@ -168,16 +178,16 @@ export class CreateAttributeComponent implements OnInit {
     return this.lstAttribute.filter(a => a.code !== this.attribute.code);
   }
 
-  // field đang được chọn làm điều kiện phụ thuộc - dùng để quyết định ô giá trị là dropdown hay text
-  get dependsOnField(): FormFieldDto | undefined {
-    const code = this.form?.get('conditionalDependsOn')?.value;
-    return this.lstAttribute.find(a => a.code === code);
+  // field đang được 1 dòng điều kiện chọn làm phụ thuộc - dùng để quyết định ô giá trị của DÒNG ĐÓ là
+  // dropdown hay text (mỗi dòng điều kiện có thể phụ thuộc 1 field khác nhau, nên cần theo index riêng)
+  dependsOnFieldOf(rule: ConditionalRule): FormFieldDto | undefined {
+    return this.lstAttribute.find(a => a.code === rule.dependsOnCode);
   }
 
-  // danh sách lựa chọn cho ô giá trị điều kiện, nếu field phụ thuộc là Select/CheckBox/Radio/Boolean;
-  // null nghĩa là field phụ thuộc thuộc kiểu tự do (Text/Number/...) -> ô giá trị là text nhập tay
-  get dependsOnValueChoices(): string[] | null {
-    const field = this.dependsOnField;
+  // danh sách lựa chọn cho ô giá trị của 1 dòng điều kiện, nếu field phụ thuộc là Select/CheckBox/Radio/
+  // Boolean; null nghĩa là field phụ thuộc thuộc kiểu tự do (Text/Number/...) -> ô giá trị là text nhập tay
+  dependsOnValueChoicesOf(rule: ConditionalRule): string[] | null {
+    const field = this.dependsOnFieldOf(rule);
     if (!field) return null;
     if (field.type === 8) return ['Có', 'Không']; // Boolean: renderer hardcode 2 lựa chọn này
     if (this.typesWithOptionsForConditional.includes(field.type as number)) {
@@ -189,6 +199,14 @@ export class CreateAttributeComponent implements OnInit {
       }
     }
     return null;
+  }
+
+  addConditionalRule(): void {
+    this.conditionalRules = [...this.conditionalRules, { dependsOnCode: null, operator: 'equals', value: '' }];
+  }
+
+  removeConditionalRule(index: number): void {
+    this.conditionalRules = this.conditionalRules.filter((_, i) => i !== index);
   }
 
   save() {
@@ -241,12 +259,13 @@ export class CreateAttributeComponent implements OnInit {
             })
           )
         : null,
-      conditional:
-        value.conditionalEnabled && value.conditionalDependsOn
+      conditionalGroup:
+        value.conditionalEnabled && this.conditionalRules.some(r => r.dependsOnCode)
           ? {
-              dependsOnCode: value.conditionalDependsOn,
-              operator: value.conditionalOperator || 'equals',
-              value: value.conditionalValue || '',
+              combinator: this.conditionalCombinator,
+              rules: this.conditionalRules
+                .filter(r => r.dependsOnCode)
+                .map(r => ({ dependsOnCode: r.dependsOnCode, operator: r.operator || 'equals', value: r.value || '' })),
             }
           : null,
     };

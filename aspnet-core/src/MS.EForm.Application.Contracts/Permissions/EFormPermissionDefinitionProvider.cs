@@ -29,6 +29,16 @@ public class EFormPermissionDefinitionProvider : PermissionDefinitionProvider
         formRecords.AddChild(EFormPermissions.FormRecords.Edit, L("Permission:Edit"));
         formRecords.AddChild(EFormPermissions.FormRecords.Delete, L("Permission:Delete"));
         formRecords.AddChild(EFormPermissions.FormRecords.Approve, L("Permission:Approve"));
+
+        var pageSections = myGroup.AddPermission(EFormPermissions.PageSections.Default, L("Permission:PageSections"));
+        pageSections.AddChild(EFormPermissions.PageSections.Create, L("Permission:Create"));
+        pageSections.AddChild(EFormPermissions.PageSections.Edit, L("Permission:Edit"));
+        pageSections.AddChild(EFormPermissions.PageSections.Delete, L("Permission:Delete"));
+
+        var pages = myGroup.AddPermission(EFormPermissions.Pages.Default, L("Permission:Pages"));
+        pages.AddChild(EFormPermissions.Pages.Create, L("Permission:Create"));
+        pages.AddChild(EFormPermissions.Pages.Edit, L("Permission:Edit"));
+        pages.AddChild(EFormPermissions.Pages.Delete, L("Permission:Delete"));
     }
 
     private static LocalizableString L(string name)

@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PagedResultDto } from '@abp/ng.core';
 import { ToasterService } from '@abp/ng.theme.shared';
 import { EFormService } from '@proxy/controllers';
+import { MessageDto } from '@proxy/eform/models';
 import { FormRecordDto, FormRecordPagingFilterDto } from '@proxy/form-models/form-records';
 import { ApprovalStatus } from '@proxy/enums';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
@@ -30,6 +32,11 @@ export class FormRecordListComponent implements OnInit {
   currentFormRequireApproval = false;
   ApprovalStatus = ApprovalStatus;
   onlyPendingApproval = false;
+
+  // chọn nhiều dòng để duyệt/từ chối/xóa hàng loạt - giữ nguyên lựa chọn khi chuyển trang (Set không phụ
+  // thuộc trang hiện tại đang hiển thị những id nào), chỉ xóa khi đổi bộ lọc/form hoặc sau khi thao tác xong
+  selectedIds = new Set<string>();
+  bulkProcessing = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -61,6 +68,31 @@ export class FormRecordListComponent implements OnInit {
 
   toggleOnlyPendingApproval(): void {
     this.page.approvalStatus = this.onlyPendingApproval ? this.ApprovalStatus.Pending : undefined;
+    this.page.pageIndex = 1;
+    this.selectedIds.clear();
+    this.getPaging(this.page);
+  }
+
+  get allCheckedOnPage(): boolean {
+    return this.lstRecord.length > 0 && this.lstRecord.every(r => this.selectedIds.has(r.id));
+  }
+
+  get indeterminateOnPage(): boolean {
+    return this.lstRecord.some(r => this.selectedIds.has(r.id)) && !this.allCheckedOnPage;
+  }
+
+  onAllCheckedChange(checked: boolean): void {
+    this.lstRecord.forEach(r => (checked ? this.selectedIds.add(r.id) : this.selectedIds.delete(r.id)));
+  }
+
+  onItemCheckedChange(id: string, checked: boolean): void {
+    checked ? this.selectedIds.add(id) : this.selectedIds.delete(id);
+  }
+
+  // tìm theo nội dung đã nhập (bất kỳ field nào), khác tìm theo tiêu đề bản ghi - hữu ích khi không nhớ
+  // tiêu đề bản ghi nhưng nhớ 1 giá trị đã điền (vd tên người, số CCCD...)
+  searchKeyword(event: Event) {
+    this.page.keyword = (event.target as HTMLInputElement).value || undefined;
     this.page.pageIndex = 1;
     this.getPaging(this.page);
   }
@@ -108,8 +140,44 @@ export class FormRecordListComponent implements OnInit {
   clearFilter() {
     this.page.formId = undefined;
     this.currentFormRequireApproval = false;
+    this.selectedIds.clear();
     this.router.navigate(['/form-records']);
     this.getPaging(this.page);
+  }
+
+  private runBulkAction(action$: Observable<MessageDto>): void {
+    this.bulkProcessing = true;
+    action$.subscribe({
+      next: res => {
+        this.toasterService.success(res.messages);
+        this.selectedIds.clear();
+        this.bulkProcessing = false;
+        this.getPaging(this.page);
+      },
+      error: err => {
+        this.toasterService.error(getApiErrorMessage(err));
+        this.bulkProcessing = false;
+      },
+    });
+  }
+
+  bulkApprove(): void {
+    this.runBulkAction(this.service.bulkApproveFormRecord({ ids: Array.from(this.selectedIds) }, { skipHandleError: true }));
+  }
+
+  bulkReject(): void {
+    this.runBulkAction(this.service.bulkRejectFormRecord({ ids: Array.from(this.selectedIds) }, { skipHandleError: true }));
+  }
+
+  bulkDelete(): void {
+    const modalRef = this.modalService.open(DeleteComfirmComponent, {
+      size: 'confirm',
+      backdrop: 'static',
+      centered: true,
+    });
+    modalRef.componentInstance.success.subscribe(() => {
+      this.runBulkAction(this.service.bulkDeleteFormRecord(Array.from(this.selectedIds), { skipHandleError: true }));
+    });
   }
 
   exportExcel() {

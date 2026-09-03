@@ -10,6 +10,8 @@
     "Permission:FormCategories": "Danh mục biểu mẫu",
     "Permission:FormFields": "Thuộc tính biểu mẫu",
     "Permission:FormRecords": "Kết quả nộp form",
+    "Permission:PageSections": "Khu vực hiển thị",
+    "Permission:Pages": "Trang giới thiệu",
     "Permission:Create": "Tạo mới",
     "Permission:Edit": "Sửa",
     "Permission:Delete": "Xóa",

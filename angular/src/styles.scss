@@ -1,5 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
 
+// Dropdown của nz-select/date-picker/... (Angular CDK Overlay) render vào 1 container DUY NHẤT dùng
+// chung cho cả app (.cdk-overlay-container, gắn thẳng vào <body>, ngoài mọi component). Container này có
+// position:fixed + z-index riêng (mặc định 1000) nên tự tạo 1 "stacking context" độc lập - z-index gán
+// cho phần tử BÊN TRONG (dropdown pane) chỉ có tác dụng so với nhau, KHÔNG thể vượt qua z-index của
+// chính container cha để nổi lên trên các phần tử NGOÀI container (như modal Bootstrap của NgbModal,
+// z-index 1055) - đây là lý do trước đây set z-index cho riêng 1 dropdown không có tác dụng. Phải nâng
+// z-index của chính .cdk-overlay-container, và phải làm ở đây (global) vì nó không thuộc về component nào.
+.cdk-overlay-container {
+  z-index: 1070 !important;
+}
+
 @keyframes donut-spin {
   0% {
     transform: rotate(0deg);
