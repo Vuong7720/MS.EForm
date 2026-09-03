@@ -71,10 +71,10 @@
 			<td>{{ data.title }}</td>
 			<td>{{ data.description }}</td>
 			<td>
-				<span *ngIf="data.sectionType === PageSectionType.Form" class="badge bg-primary-subtle text-primary-emphasis">
+				<span *ngIf="data.sectionType === PageSectionType.Form" class="badge bg-primary soft">
 					<i class="bi bi-clipboard-data"></i> {{ data.formTitle }}
 				</span>
-				<span *ngIf="data.sectionType === PageSectionType.Content" class="badge bg-warning-subtle text-warning-emphasis">
+				<span *ngIf="data.sectionType === PageSectionType.Content" class="badge bg-warning soft">
 					<i class="bi bi-file-richtext"></i> Nội dung tùy chỉnh
 				</span>
 			</td>
@@ -83,10 +83,10 @@
 				<span class="badge" [ngClass]="data.isActive ? 'bg-success' : 'bg-secondary'">
 					{{ data.isActive ? 'Đang hiện' : 'Đang ẩn' }}
 				</span>
-				<span *ngIf="scheduleStatus(data) === 'not-started'" class="badge bg-info-subtle text-info-emphasis" title="Sẽ tự hiện khi tới ngày bắt đầu">
+				<span *ngIf="scheduleStatus(data) === 'not-started'" class="badge bg-info soft" title="Sẽ tự hiện khi tới ngày bắt đầu">
 					<i class="bi bi-clock-history"></i> Chưa tới hạn
 				</span>
-				<span *ngIf="scheduleStatus(data) === 'expired'" class="badge bg-danger-subtle text-danger-emphasis" title="Đã tự ẩn do quá ngày kết thúc">
+				<span *ngIf="scheduleStatus(data) === 'expired'" class="badge bg-danger soft" title="Đã tự ẩn do quá ngày kết thúc">
 					<i class="bi bi-calendar-x"></i> Đã hết hạn
 				</span>
 			</td>
