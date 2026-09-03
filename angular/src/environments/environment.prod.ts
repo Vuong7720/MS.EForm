@@ -1,6 +1,7 @@
 import { Environment } from '@abp/ng.core';
 
-const baseUrl = 'http://localhost:4200';
+// TODO-DEPLOY: thay bằng domain Cloudflare Pages thật sau khi deploy (vd: https://eform-xyz.pages.dev)
+const baseUrl = 'https://TODO-DEPLOY-cloudflare-pages-domain';
 
 export const environment = {
   production: true,
@@ -10,7 +11,8 @@ export const environment = {
     logoUrl: '',
   },
   oAuthConfig: {
-    issuer: 'https://localhost:44320/',
+    // TODO-DEPLOY: thay bằng domain AuthServer thật trên Render (vd: https://eform-authserver.onrender.com/)
+    issuer: 'https://TODO-DEPLOY-render-authserver-domain/',
     redirectUri: baseUrl,
     clientId: 'EForm_App',
     responseType: 'code',
@@ -19,7 +21,8 @@ export const environment = {
   },
   apis: {
     default: {
-      url: 'https://localhost:44383',
+      // TODO-DEPLOY: thay bằng domain HttpApi.Host thật trên Render (vd: https://eform-httpapi-host.onrender.com)
+      url: 'https://TODO-DEPLOY-render-httpapihost-domain',
       rootNamespace: 'MS.EForm',
     },
   },
@@ -27,4 +30,5 @@ export const environment = {
 
 // Cloudflare Turnstile site key (public, không phải bí mật) cho widget chống spam ở trang nộp form.
 // Đây là site key TEST do Cloudflare công bố (luôn pass) - PHẢI đổi sang site key thật (dash.cloudflare.com) khi deploy production.
+// TODO-DEPLOY: thay bằng site key thật sau khi tạo Turnstile site ở Cloudflare dashboard.
 export const captchaSiteKey = '1x00000000000000000000AA';

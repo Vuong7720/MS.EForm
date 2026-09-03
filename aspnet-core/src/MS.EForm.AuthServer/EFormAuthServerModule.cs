@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using Localization.Resources.AbpUi;
 using Medallion.Threading;
-using Medallion.Threading.Redis;
+using Medallion.Threading.FileSystem;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
@@ -12,7 +12,6 @@ using Microsoft.Extensions.Hosting;
 using MS.EForm.EntityFrameworkCore;
 using MS.EForm.Localization;
 using MS.EForm.MultiTenancy;
-using StackExchange.Redis;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
@@ -27,7 +26,6 @@ using Volo.Abp.Auditing;
 using Volo.Abp.Autofac;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Caching;
-using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.DistributedLocking;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
@@ -42,7 +40,6 @@ namespace MS.EForm;
 
 [DependsOn(
     typeof(AbpAutofacModule),
-    typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpDistributedLockingModule),
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpAccountApplicationModule),
@@ -137,23 +134,19 @@ public class EFormAuthServerModule : AbpModule
             options.IsJobExecutionEnabled = false;
         });
 
+        context.Services.AddDistributedMemoryCache();
         Configure<AbpDistributedCacheOptions>(options =>
         {
             options.KeyPrefix = "EForm:";
         });
 
-        var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("EForm");
-        if (!hostingEnvironment.IsDevelopment())
-        {
-            var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
-            dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "EForm-Protection-Keys");
-        }
+        context.Services.AddDataProtection()
+            .SetApplicationName("EForm")
+            .PersistKeysToDbContext<EFormDbContext>();
 
         context.Services.AddSingleton<IDistributedLockProvider>(sp =>
-        {
-            var connection = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
-            return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
-        });
+            new FileDistributedSynchronizationProvider(
+                new DirectoryInfo(Path.Combine(Path.GetTempPath(), "EForm-Locks"))));
 
         context.Services.AddCors(options =>
         {

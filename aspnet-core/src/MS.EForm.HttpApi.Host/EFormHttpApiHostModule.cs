@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Medallion.Threading;
-using Medallion.Threading.Redis;
+using Medallion.Threading.FileSystem;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +16,6 @@ using System.Net;
 using System.Threading.RateLimiting;
 using MS.EForm.EntityFrameworkCore;
 using MS.EForm.MultiTenancy;
-using StackExchange.Redis;
 using Microsoft.OpenApi.Models;
 using Volo.Abp;
 using Volo.Abp.AspNetCore.Authentication.JwtBearer;
@@ -26,7 +24,6 @@ using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.Caching;
-using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.DistributedLocking;
 using Volo.Abp.Identity;
 using Volo.Abp.Localization;
@@ -40,7 +37,6 @@ namespace MS.EForm;
 [DependsOn(
     typeof(EFormHttpApiModule),
     typeof(AbpAutofacModule),
-    typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpDistributedLockingModule),
     typeof(AbpAspNetCoreMvcUiMultiTenancyModule),
     typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
@@ -54,14 +50,13 @@ public class EFormHttpApiHostModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var configuration = context.Services.GetConfiguration();
-        var hostingEnvironment = context.Services.GetHostingEnvironment();
 
         ConfigureConventionalControllers();
         ConfigureAuthentication(context, configuration);
-        ConfigureCache(configuration);
+        ConfigureCache(context, configuration);
         ConfigureVirtualFileSystem(context);
-        ConfigureDataProtection(context, configuration, hostingEnvironment);
-        ConfigureDistributedLocking(context, configuration);
+        ConfigureDataProtection(context);
+        ConfigureDistributedLocking(context);
         ConfigureCors(context, configuration);
         ConfigureSwaggerServices(context, configuration);
         ConfigureRateLimiting(context);
@@ -87,8 +82,9 @@ public class EFormHttpApiHostModule : AbpModule
         });
     }
 
-    private void ConfigureCache(IConfiguration configuration)
+    private void ConfigureCache(ServiceConfigurationContext context, IConfiguration configuration)
     {
+        context.Services.AddDistributedMemoryCache();
         Configure<AbpDistributedCacheOptions>(options => { options.KeyPrefix = "EForm:"; });
     }
 
@@ -156,28 +152,18 @@ public class EFormHttpApiHostModule : AbpModule
             });
     }
 
-    private void ConfigureDataProtection(
-        ServiceConfigurationContext context,
-        IConfiguration configuration,
-        IWebHostEnvironment hostingEnvironment)
+    private void ConfigureDataProtection(ServiceConfigurationContext context)
     {
-        var dataProtectionBuilder = context.Services.AddDataProtection().SetApplicationName("EForm");
-        if (!hostingEnvironment.IsDevelopment())
-        {
-            var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
-            dataProtectionBuilder.PersistKeysToStackExchangeRedis(redis, "EForm-Protection-Keys");
-        }
+        context.Services.AddDataProtection()
+            .SetApplicationName("EForm")
+            .PersistKeysToDbContext<EFormDbContext>();
     }
 
-    private void ConfigureDistributedLocking(
-        ServiceConfigurationContext context,
-        IConfiguration configuration)
+    private void ConfigureDistributedLocking(ServiceConfigurationContext context)
     {
         context.Services.AddSingleton<IDistributedLockProvider>(sp =>
-        {
-            var connection = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
-            return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
-        });
+            new FileDistributedSynchronizationProvider(
+                new DirectoryInfo(Path.Combine(Path.GetTempPath(), "EForm-Locks"))));
     }
 
     private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)

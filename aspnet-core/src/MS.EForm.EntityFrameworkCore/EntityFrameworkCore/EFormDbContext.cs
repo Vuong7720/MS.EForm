@@ -1,4 +1,5 @@
 ﻿using EForm.Entities;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -22,7 +23,8 @@ namespace MS.EForm.EntityFrameworkCore;
 public class EFormDbContext :
     AbpDbContext<EFormDbContext>,
     IIdentityDbContext,
-    ITenantManagementDbContext
+    ITenantManagementDbContext,
+    IDataProtectionKeyContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
 
@@ -51,6 +53,7 @@ public class EFormDbContext :
     // Tenant Management
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
 	#endregion
 
