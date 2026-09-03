@@ -1,0 +1,95 @@
+:host {
+  display: block;
+  background: #f3f4f8;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.showcase-hero {
+  // gradient theo màu thương hiệu tùy biến (--brand-color, gán từ Page.PrimaryColor) - color-mix() pha
+  // thêm đen/tím để có 2 điểm dừng gradient từ 1 màu duy nhất admin chọn, không cần chọn 2 màu riêng
+  background: linear-gradient(
+    135deg,
+    var(--brand-color, #4f46e5) 0%,
+    color-mix(in srgb, var(--brand-color, #4f46e5) 65%, #1e1b4b) 100%
+  );
+  color: #fff;
+  padding: 72px 24px 96px;
+  text-align: center;
+}
+
+.showcase-hero-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.showcase-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 4px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.showcase-hero h1 {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+
+.showcase-hero p {
+  font-size: 1.05rem;
+  opacity: 0.92;
+  margin: 0;
+}
+
+.showcase-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  i {
+    font-size: 13px;
+  }
+}
+
+.showcase-body {
+  max-width: 760px;
+  margin: -56px auto 0;
+  padding: 0 20px 60px;
+}
+
+.showcase-loading,
+.showcase-empty {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.showcase-footer {
+  text-align: center;
+  padding: 24px;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}

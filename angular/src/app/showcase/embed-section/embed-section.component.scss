@@ -1,0 +1,17 @@
+// Nền trong suốt + không giới hạn max-width/min-height 100vh (khác trang showcase đầy đủ) - để khi nhúng
+// qua <iframe> vào website khác, khu vực này hòa vào layout của trang chủ thay vì mang theo cả 1 "trang".
+:host {
+	display: block;
+	background: transparent;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+::ng-deep .showcase-card {
+	margin-bottom: 0;
+}
+
+.embed-state {
+	padding: 32px 12px;
+	text-align: center;
+	color: #6b7280;
+}

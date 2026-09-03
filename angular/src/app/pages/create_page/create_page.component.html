@@ -1,0 +1,56 @@
+<div class="modal-content">
+	<div class="modal-header">
+		<h4 class="modal-title fw-bold">{{ Id ? 'Sửa trang giới thiệu' : 'Thêm trang giới thiệu' }}</h4>
+		<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" (click)="activeModal.close('Close click')"></button>
+	</div>
+	<form [formGroup]="form">
+		<div class="modal-body">
+			<div class="mt-1">
+				<label class="form-label fw-bold">Tên trang</label><span class="text-danger">*</span>
+				<input nz-input formControlName="title" placeholder="Vd: Giới thiệu Trung Thu 2026" (ngModelChange)="onTitleChange($event)">
+			</div>
+			<div class="mt-1">
+				<label class="form-label fw-bold">Đường dẫn (slug)</label><span class="text-danger">*</span>
+				<div class="input-group">
+					<span class="input-group-text">/showcase/</span>
+					<input nz-input formControlName="slug" placeholder="vd-trung-thu-2026">
+				</div>
+				<div class="text-danger" *ngIf="form.get('slug')?.invalid && form.get('slug')?.touched">
+					Chỉ được chứa chữ thường, số và dấu gạch ngang (vd: <code>gioi-thieu-2026</code>)
+				</div>
+			</div>
+			<div class="mt-1">
+				<label class="form-label fw-bold">Mô tả</label>
+				<textarea nz-input rows="2" formControlName="description" placeholder="Nhập mô tả"></textarea>
+			</div>
+			<div class="mt-2 pt-2 border-top">
+				<label class="form-label fw-bold d-block">Tùy biến giao diện (dùng khi demo/chào hàng theo thương hiệu khách hàng)</label>
+				<div class="row">
+					<div class="col-6">
+						<label class="form-label">Tên thương hiệu hiện ở đầu trang</label>
+						<input nz-input formControlName="brandName" placeholder="Vd: Công ty ABC (để trống = EForm)">
+					</div>
+					<div class="col-6">
+						<label class="form-label">Màu chủ đạo</label>
+						<div class="d-flex align-items-center">
+							<input type="color" formControlName="primaryColor" style="width:44px; height:32px; padding:2px; border:1px solid #d9d9d9; border-radius:4px;">
+							<span class="ms-2 text-muted">{{ form.get('primaryColor')?.value }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="mt-2">
+				<label nz-checkbox formControlName="isActive">Hiện trang này</label>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button (click)="activeModal.close('Close click')" class="btn btn-light btn-sm me-1" type="button">
+				<i class="fa fa-times" aria-hidden="true"></i> Đóng
+			</button>
+			&nbsp; &nbsp;
+			<button (click)="save()" class="btn btn-success btn-sm me-1">
+				<i class="fa fa-floppy-o" aria-hidden="true"></i> Lưu
+			</button>
+		</div>
+	</form>
+</div>

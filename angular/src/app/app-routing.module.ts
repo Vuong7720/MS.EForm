@@ -33,6 +33,23 @@ const routes: Routes = [
     loadChildren: () => import('./form-submit/form-submit.module').then(m => m.FormSubmitModule),
   },
   {
+    path: 'pages',
+    pathMatch: 'full',
+    loadChildren: () => import('./pages/pages.module').then(m => m.PagesModule),
+  },
+  {
+    path: 'page-sections',
+    pathMatch: 'full',
+    loadChildren: () => import('./page_sections/page_sections.module').then(m => m.PageSectionsModule),
+  },
+  {
+    // trang public giới thiệu EForm (showcase), nhúng nhiều form ngay tại chỗ theo cấu hình ở /page-sections.
+    // Không có slug (/showcase) = trang mặc định; có slug (/showcase/:slug) = trang cụ thể - xem
+    // showcase-routing.module.ts
+    path: 'showcase',
+    loadChildren: () => import('./showcase/showcase.module').then(m => m.ShowcaseModule),
+  },
+  {
     path: 'account',
     loadChildren: () => import('@abp/ng.account').then(m => m.AccountModule.forLazy()),
   },

@@ -34,9 +34,17 @@ export interface FormRecordDto extends FullAuditedEntityDto<string> {
   approvedAt?: string;
 }
 
+// dùng cho thao tác hàng loạt (chọn nhiều dòng) duyệt/từ chối - Note áp dụng chung cho mọi bản ghi được chọn
+export interface BulkFormRecordDto {
+  ids: string[];
+  note?: string;
+}
+
 export interface FormRecordPagingFilterDto {
   formId?: string;
   title?: string;
+  // tìm theo nội dung đã nhập (khớp bất kỳ đâu trong dữ liệu JSON đã nộp), khác title chỉ tìm theo tiêu đề bản ghi
+  keyword?: string;
   approvalStatus?: ApprovalStatus;
   pageSize: number;
   pageIndex: number;
@@ -48,10 +56,23 @@ export interface TopFormDto {
   count: number;
 }
 
+export interface DailyCountDto {
+  date: string;
+  count: number;
+}
+
+export interface ApprovalBreakdownDto {
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
 export interface DashboardStatsDto {
   totalForms: number;
   totalRecords: number;
   topForms: TopFormDto[];
+  recordsByDay: DailyCountDto[];
+  approvalBreakdown: ApprovalBreakdownDto;
 }
 
 // kết quả upload 1 file đính kèm (field kiểu Upload file/ảnh) - xem UploadAttachmentResultDto ở backend

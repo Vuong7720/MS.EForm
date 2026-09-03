@@ -1,4 +1,10 @@
 <div class="dashboard">
+	<div class="dashboard-header">
+		<a href="/showcase" target="_blank" class="showcase-cta">
+			<i class="bi bi-box-arrow-up-right"></i> Xem trang giới thiệu (Demo)
+		</a>
+	</div>
+
 	<div class="stat-grid">
 		<div class="stat-card">
 			<div class="stat-card__icon stat-card__icon--indigo"><i class="bi bi-clipboard2-data"></i></div>
@@ -12,6 +18,45 @@
 			<div class="stat-card__info">
 				<span class="stat-card__label">Tổng số lượt nộp</span>
 				<span class="stat-card__value">{{ stats?.totalRecords ?? 0 }}</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="panel mb-3" *ngIf="!loading">
+		<div class="panel__header">
+			<i class="bi bi-graph-up"></i>
+			<h3>Lượt nộp 14 ngày gần nhất</h3>
+		</div>
+		<div class="panel__body">
+			<div class="trend-chart">
+				<div class="trend-bar" *ngFor="let day of stats?.recordsByDay" [title]="day.count + ' lượt nộp'">
+					<span class="trend-bar__count" *ngIf="day.count > 0">{{ day.count }}</span>
+					<div class="trend-bar__col" [style.height.%]="barHeightPercent(day.count)"></div>
+					<span class="trend-bar__label">{{ formatDay(day.date) }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="panel mb-3" *ngIf="!loading && hasApprovalData">
+		<div class="panel__header">
+			<i class="bi bi-check2-square"></i>
+			<h3>Trạng thái phê duyệt</h3>
+		</div>
+		<div class="panel__body">
+			<div class="approval-grid">
+				<div class="approval-pill approval-pill--pending">
+					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.pending ?? 0 }}</span>
+					<span class="approval-pill__label">Chờ duyệt</span>
+				</div>
+				<div class="approval-pill approval-pill--approved">
+					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.approved ?? 0 }}</span>
+					<span class="approval-pill__label">Đã duyệt</span>
+				</div>
+				<div class="approval-pill approval-pill--rejected">
+					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.rejected ?? 0 }}</span>
+					<span class="approval-pill__label">Từ chối</span>
+				</div>
 			</div>
 		</div>
 	</div>

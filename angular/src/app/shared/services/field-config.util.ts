@@ -1,4 +1,4 @@
-import { ConditionalOperator, FieldConfig } from '@proxy/form-models/form-fields';
+import { ConditionalCombinator, ConditionalGroup, ConditionalOperator, ConditionalRule, FieldConfig } from '@proxy/form-models/form-fields';
 
 // Đọc config: hỗ trợ JSON {"required":true,"minLength":0,...} (chuẩn mới) và
 // chuỗi "required:true" (định dạng cũ, để tương thích dữ liệu đã tồn tại)
@@ -63,9 +63,36 @@ export function evaluateConditionRule(actual: string | undefined, op: Conditiona
   }
 }
 
-// bản JS thuần (chuỗi) của evaluateConditionRule ở trên, dùng để chèn vào popup xem trước (document.write) -
-// popup là 1 window/document riêng ngoài Angular nên không import được hàm TS trực tiếp.
-// LƯU Ý: sửa evaluateConditionRule() ở trên thì phải sửa cả đoạn JS này cho khớp.
+// chuẩn hóa cấu hình điều kiện của 1 field về 1 dạng duy nhất {combinator, rules[]} để mọi nơi đánh giá
+// (renderer, backend) chỉ cần xử lý 1 hình dạng - value tại field trên form là để tương thích với field
+// đã lưu từ TRƯỚC KHI có nhiều điều kiện (chỉ 1 "conditional" đơn); field lưu MỚI dùng conditionalGroup.
+// PHẢI khớp chính xác logic với ResolveConditionalGroup() phía backend (FormRecordService.cs).
+export function resolveConditionalGroup(config: FieldConfig): ConditionalGroup | null {
+  if (config.conditionalGroup?.rules?.length) {
+    return config.conditionalGroup;
+  }
+  if (config.conditional?.dependsOnCode) {
+    return { combinator: 'and', rules: [config.conditional] };
+  }
+  return null;
+}
+
+// Đánh giá 1 nhóm điều kiện theo combinator: 'and' = mọi rule phải đúng, 'or' = chỉ cần 1 rule đúng.
+// data: giá trị hiện tại của các field khác trên form (key = code field phụ thuộc).
+export function evaluateConditionalGroup(data: Record<string, string | undefined>, group: ConditionalGroup | null | undefined): boolean {
+  if (!group || !group.rules?.length) return true;
+
+  const results = group.rules
+    .filter(r => r.dependsOnCode)
+    .map(r => evaluateConditionRule(data[r.dependsOnCode!], r.operator, r.value));
+
+  if (results.length === 0) return true;
+  return group.combinator === 'or' ? results.some(Boolean) : results.every(Boolean);
+}
+
+// bản JS thuần (chuỗi) của evaluateConditionRule/evaluateConditionalGroup ở trên, dùng để chèn vào popup
+// xem trước (document.write) - popup là 1 window/document riêng ngoài Angular nên không import được hàm
+// TS trực tiếp. LƯU Ý: sửa 2 hàm TS ở trên thì phải sửa cả đoạn JS này cho khớp.
 export const EVALUATE_CONDITION_RULE_JS = `
   function evaluateConditionRule(actual, op, expected) {
     actual = (actual || '').trim();
@@ -77,5 +104,13 @@ export const EVALUATE_CONDITION_RULE_JS = `
       case 'contains': return !!actual && actual.split(';').map(v => v.trim().toLowerCase()).indexOf(expected.toLowerCase()) !== -1;
       default: return actual.toLowerCase() === expected.toLowerCase();
     }
+  }
+  function evaluateConditionalGroup(data, group) {
+    if (!group || !group.rules || !group.rules.length) return true;
+    var results = group.rules
+      .filter(function (r) { return r.dependsOnCode; })
+      .map(function (r) { return evaluateConditionRule(data[r.dependsOnCode], r.operator, r.value); });
+    if (!results.length) return true;
+    return group.combinator === 'or' ? results.some(function (v) { return v; }) : results.every(function (v) { return v; });
   }
 `;

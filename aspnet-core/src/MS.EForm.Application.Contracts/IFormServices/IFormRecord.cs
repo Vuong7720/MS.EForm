@@ -1,6 +1,7 @@
 using EForm.FormModels;
 using MS.EForm.FormModels.FormRecords;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
@@ -14,6 +15,9 @@ namespace EForm.IFormServices
 		Task<MessageDto> DeleteAsync(Guid id);
 		Task<MessageDto> ApproveAsync(Guid id, string? note);
 		Task<MessageDto> RejectAsync(Guid id, string? note);
+		Task<MessageDto> BulkDeleteAsync(List<Guid> ids);
+		Task<MessageDto> BulkApproveAsync(List<Guid> ids, string? note);
+		Task<MessageDto> BulkRejectAsync(List<Guid> ids, string? note);
 		Task<FormRecordDto> GetAsync(Guid id);
 		Task<PagedResultDto<FormRecordDto>> GetListAsync(FormRecordPagingFilterDto page);
 		Task<byte[]> ExportExcelAsync(Guid formId);

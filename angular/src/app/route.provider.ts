@@ -54,6 +54,31 @@ function configureRoutes(routesService: RoutesService) {
         name: 'Nộp form',
         invisible: true,
         layout: eLayoutType.empty,
+      },
+      {
+        path: '/pages',
+        name: 'Trang giới thiệu',
+        iconClass: 'bi bi-file-earmark-text',
+        order: 6,
+        layout: eLayoutType.application,
+        requiredPolicy: 'EForm.Pages',
+      },
+      {
+        path: '/page-sections',
+        name: 'Khu vực hiển thị',
+        iconClass: 'bi bi-window-stack',
+        order: 7,
+        layout: eLayoutType.application,
+        requiredPolicy: 'EForm.PageSections',
+      },
+      {
+        // hiện trong menu để bấm 1 phát vào xem trang giới thiệu public, không cần gõ URL tay -
+        // click sẽ chuyển layout sang 'empty' (ẩn sidebar) vì đây là trang public, không phải trang quản trị
+        path: '/showcase',
+        name: 'Xem trang giới thiệu (Demo)',
+        iconClass: 'bi bi-box-arrow-up-right',
+        order: 8,
+        layout: eLayoutType.empty,
       }
     ]);
   };

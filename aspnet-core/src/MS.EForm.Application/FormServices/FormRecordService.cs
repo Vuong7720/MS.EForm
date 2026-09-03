@@ -96,7 +96,10 @@ namespace MS.EForm.FormServices
 			public decimal? MaxFileSizeMb { get; set; }
 			public int? MaxFileCount { get; set; }
 			public int? MaxRating { get; set; }
+			// ĐỊNH DẠNG CŨ - chỉ 1 điều kiện đơn, giữ lại để đọc được field đã lưu từ trước, không dùng khi lưu mới
 			public ConditionalRule? Conditional { get; set; }
+			// chỉ hiện/bắt buộc field này khi các điều kiện dưới đây thỏa theo Combinator - thay thế Conditional
+			public ConditionalGroup? ConditionalGroup { get; set; }
 			// riêng cho field kiểu Group (danh sách/nhóm lặp): số dòng lặp tối thiểu/tối đa + định nghĩa field con
 			public int? MinRows { get; set; }
 			public int? MaxRows { get; set; }
@@ -122,6 +125,29 @@ namespace MS.EForm.FormServices
 			public string? Value { get; set; }
 		}
 
+		// nhiều điều kiện kết hợp bằng Combinator ("and": mọi rule phải đúng, "or": chỉ cần 1 rule đúng)
+		private class ConditionalGroup
+		{
+			public string? Combinator { get; set; }
+			public List<ConditionalRule>? Rules { get; set; }
+		}
+
+		// chuẩn hóa cấu hình điều kiện của 1 field về 1 dạng duy nhất {Combinator, Rules[]} - field lưu MỚI
+		// dùng ConditionalGroup, field lưu TỪ TRƯỚC (chỉ 1 điều kiện đơn) dùng Conditional -> quy về 1-rule
+		// group. PHẢI khớp chính xác logic với resolveConditionalGroup() phía frontend (field-config.util.ts).
+		private static ConditionalGroup? ResolveConditionalGroup(FieldConfig config)
+		{
+			if (config.ConditionalGroup?.Rules?.Any() == true)
+			{
+				return config.ConditionalGroup;
+			}
+			if (!string.IsNullOrWhiteSpace(config.Conditional?.DependsOnCode))
+			{
+				return new ConditionalGroup { Combinator = "and", Rules = new List<ConditionalRule> { config.Conditional! } };
+			}
+			return null;
+		}
+
 		// so khớp giá trị đã nộp của field phụ thuộc (actual) với điều kiện cấu hình (operator/expected).
 		// Phải khớp CHÍNH XÁC logic với evaluateConditionRule() phía frontend (form-renderer.service.ts)
 		// vì đây là lớp phòng vệ độc lập ở server, không tin tưởng frontend đã ẩn field đúng.
@@ -142,6 +168,27 @@ namespace MS.EForm.FormServices
 				default:
 					return string.Equals(actual?.Trim(), expected?.Trim(), StringComparison.OrdinalIgnoreCase);
 			}
+		}
+
+		// đánh giá 1 nhóm điều kiện theo Combinator: "and" = mọi rule phải đúng, "or" = chỉ cần 1 rule đúng.
+		// group == null (field không có điều kiện) -> luôn coi là thỏa (hiện field bình thường)
+		private static bool EvaluateConditionalGroup(Dictionary<string, string> submitted, ConditionalGroup? group)
+		{
+			var rules = group?.Rules?.Where(r => !string.IsNullOrWhiteSpace(r.DependsOnCode)).ToList();
+			if (rules == null || !rules.Any())
+			{
+				return true;
+			}
+
+			var results = rules.Select(r =>
+			{
+				submitted.TryGetValue(r.DependsOnCode!, out var dependsOnValue);
+				return EvaluateCondition(dependsOnValue, r.Operator, r.Value);
+			});
+
+			return string.Equals(group?.Combinator, "or", StringComparison.OrdinalIgnoreCase)
+				? results.Any(r => r)
+				: results.All(r => r);
 		}
 
 		// 1 field trong snapshot đóng băng - đủ thông tin để validate/render, không cần Id/FormId
@@ -355,15 +402,11 @@ namespace MS.EForm.FormServices
 				submitted.TryGetValue(field.Code, out var value);
 				var config = ParseConfig(field.Config);
 
-				// field có điều kiện phụ thuộc field khác nhưng điều kiện không thỏa theo dữ liệu nộp lên
+				// field có điều kiện phụ thuộc (1 hoặc nhiều) nhưng chưa thỏa theo dữ liệu nộp lên
 				// -> coi như field đang bị ẩn, bỏ qua toàn bộ validate (kể cả required) cho field này
-				if (config.Conditional != null && !string.IsNullOrWhiteSpace(config.Conditional.DependsOnCode))
+				if (!EvaluateConditionalGroup(submitted, ResolveConditionalGroup(config)))
 				{
-					submitted.TryGetValue(config.Conditional.DependsOnCode, out var dependsOnValue);
-					if (!EvaluateCondition(dependsOnValue, config.Conditional.Operator, config.Conditional.Value))
-					{
-						continue;
-					}
+					continue;
 				}
 
 				// field Group có cấu trúc dữ liệu (mảng JSON nhiều dòng lặp) khác hẳn field đơn nên validate
@@ -618,6 +661,66 @@ namespace MS.EForm.FormServices
 
 		public async Task<MessageDto> RejectAsync(Guid id, string? note) => await SetApprovalStatusAsync(id, note, ApprovalStatus.Rejected);
 
+		// thao tác hàng loạt (chọn nhiều dòng trong bảng danh sách) - xử lý TỪNG bản ghi độc lập, bản ghi
+		// lỗi (vd form không yêu cầu phê duyệt, hoặc đã bị xóa trước đó) bị bỏ qua thay vì hủy cả batch,
+		// vì người dùng có thể chọn nhầm lẫn nhiều loại bản ghi khác nhau trong 1 lần thao tác
+		private async Task<MessageDto> BulkSetApprovalAsync(List<Guid> ids, string? note, ApprovalStatus status)
+		{
+			if (ids == null || ids.Count == 0)
+			{
+				throw new UserFriendlyException("Vui lòng chọn ít nhất 1 bản ghi");
+			}
+
+			var successCount = 0;
+			foreach (var id in ids)
+			{
+				try
+				{
+					await SetApprovalStatusAsync(id, note, status);
+					successCount++;
+				}
+				catch (UserFriendlyException)
+				{
+				}
+			}
+
+			return new MessageDto
+			{
+				Status = successCount > 0,
+				Messages = $"Đã xử lý {successCount}/{ids.Count} bản ghi"
+			};
+		}
+
+		public async Task<MessageDto> BulkApproveAsync(List<Guid> ids, string? note) => await BulkSetApprovalAsync(ids, note, ApprovalStatus.Approved);
+
+		public async Task<MessageDto> BulkRejectAsync(List<Guid> ids, string? note) => await BulkSetApprovalAsync(ids, note, ApprovalStatus.Rejected);
+
+		public async Task<MessageDto> BulkDeleteAsync(List<Guid> ids)
+		{
+			if (ids == null || ids.Count == 0)
+			{
+				throw new UserFriendlyException("Vui lòng chọn ít nhất 1 bản ghi");
+			}
+
+			var successCount = 0;
+			foreach (var id in ids)
+			{
+				var query = await _repository.FindAsync(id);
+				if (query == null) continue;
+
+				var fields = await ResolveValidationFieldsAsync(query);
+				await DeleteOrphanedAttachmentsAsync(fields, query.Data);
+				await _repository.DeleteAsync(query);
+				successCount++;
+			}
+
+			return new MessageDto
+			{
+				Status = successCount > 0,
+				Messages = $"Đã xóa {successCount}/{ids.Count} bản ghi"
+			};
+		}
+
 		// get bản ghi theo id
 		public async Task<FormRecordDto> GetAsync(Guid id)
 		{
@@ -664,6 +767,12 @@ namespace MS.EForm.FormServices
 			if (!string.IsNullOrEmpty(page.Title))
 			{
 				query = query.Where(a => a.Title.ToLower().Contains(page.Title.ToLower()));
+			}
+			if (!string.IsNullOrEmpty(page.Keyword))
+			{
+				// tìm trong toàn bộ dữ liệu JSON đã nộp (Data) - đơn giản nhưng đủ dùng để tìm bản ghi
+				// theo giá trị đã điền ở BẤT KỲ field nào, không chỉ tiêu đề bản ghi
+				query = query.Where(a => a.Data.ToLower().Contains(page.Keyword.ToLower()));
 			}
 			if (page.ApprovalStatus.HasValue)
 			{
@@ -895,6 +1004,34 @@ namespace MS.EForm.FormServices
 				.Where(f => topFormIds.Contains(f.Id))
 				.ToDictionary(f => f.Id, f => f.Title);
 
+			// lượt nộp theo từng ngày trong 14 ngày gần nhất (kể cả hôm nay) - điền đủ 14 ngày kể cả
+			// ngày không có lượt nộp nào (Count = 0), để biểu đồ ở frontend không bị thiếu cột
+			var fromDate = DateTime.Today.AddDays(-13);
+			var recentRecords = records.Where(r => r.CreationTime >= fromDate).ToList();
+			var countByDate = recentRecords
+				.GroupBy(r => r.CreationTime.Date)
+				.ToDictionary(g => g.Key, g => g.Count());
+
+			var recordsByDay = new List<DailyCountDto>();
+			for (var day = fromDate; day <= DateTime.Today; day = day.AddDays(1))
+			{
+				recordsByDay.Add(new DailyCountDto
+				{
+					Date = day,
+					Count = countByDate.TryGetValue(day, out var c) ? c : 0
+				});
+			}
+
+			// thống kê trạng thái duyệt - chỉ tính bản ghi thuộc form có bật RequireApproval
+			var approvalFormIds = forms.Where(f => f.RequireApproval).Select(f => f.Id).ToHashSet();
+			var approvalRecords = records.Where(r => approvalFormIds.Contains(r.FormId)).ToList();
+			var approvalBreakdown = new ApprovalBreakdownDto
+			{
+				Pending = approvalRecords.Count(r => r.ApprovalStatus == ApprovalStatus.Pending),
+				Approved = approvalRecords.Count(r => r.ApprovalStatus == ApprovalStatus.Approved),
+				Rejected = approvalRecords.Count(r => r.ApprovalStatus == ApprovalStatus.Rejected)
+			};
+
 			return new DashboardStatsDto
 			{
 				TotalForms = totalForms,
@@ -904,7 +1041,9 @@ namespace MS.EForm.FormServices
 					FormId = t.FormId,
 					Title = formTitles.TryGetValue(t.FormId, out var title) ? title : "",
 					Count = t.Count
-				}).ToList()
+				}).ToList(),
+				RecordsByDay = recordsByDay,
+				ApprovalBreakdown = approvalBreakdown
 			};
 		}
 	}

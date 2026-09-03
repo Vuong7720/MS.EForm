@@ -10,6 +10,8 @@
     "Permission:FormCategories": "Form Categories",
     "Permission:FormFields": "Form Fields",
     "Permission:FormRecords": "Form Records",
+    "Permission:PageSections": "Page Sections",
+    "Permission:Pages": "Showcase Pages",
     "Permission:Create": "Create",
     "Permission:Edit": "Edit",
     "Permission:Delete": "Delete",

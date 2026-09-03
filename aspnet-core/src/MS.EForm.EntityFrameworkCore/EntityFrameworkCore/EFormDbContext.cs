@@ -59,6 +59,8 @@ public class EFormDbContext :
 	public DbSet<FormCategories> FormCategories { get; set; }
 	public DbSet<FormField> FormFields { get; set; }
 	public DbSet<FormRecord> FormRecords { get; set; }
+	public DbSet<PageSection> PageSections { get; set; }
+	public DbSet<Page> Pages { get; set; }
 	#endregion
 
 	public EFormDbContext(DbContextOptions<EFormDbContext> options)

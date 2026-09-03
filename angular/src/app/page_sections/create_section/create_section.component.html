@@ -1,0 +1,72 @@
+<div class="modal-content">
+	<div class="modal-header">
+		<h4 class="modal-title fw-bold">{{ Id ? 'Sửa khu vực hiển thị' : 'Thêm khu vực hiển thị' }}</h4>
+		<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" (click)="activeModal.close('Close click')"></button>
+	</div>
+	<form [formGroup]="form">
+		<div class="modal-body">
+			<div class="mt-1">
+				<label class="form-label fw-bold">Tên khu vực hiển thị</label><span class="text-danger">*</span>
+				<input nz-input type="text" formControlName="title" placeholder="Vd: Form đăng ký sự kiện">
+			</div>
+			<div class="mt-1">
+				<label class="form-label fw-bold">Mô tả ngắn (hiện kèm trên trang giới thiệu)</label>
+				<textarea nz-input rows="2" formControlName="description" placeholder="Nhập mô tả"></textarea>
+			</div>
+			<div class="mt-1">
+				<label class="form-label fw-bold">Trang giới thiệu</label><span class="text-danger">*</span>
+				<nz-select formControlName="pageId" nzPlaceHolder="Chọn trang" style="width: 100%;">
+					<nz-option *ngFor="let item of lstPage" [nzLabel]="item.title" [nzValue]="item.id"></nz-option>
+				</nz-select>
+			</div>
+			<div class="mt-1">
+				<label class="form-label fw-bold d-block">Loại khu vực</label>
+				<nz-radio-group formControlName="sectionType" (ngModelChange)="onSectionTypeChange($event)">
+					<label nz-radio-button [nzValue]="PageSectionType.Form">Nhúng biểu mẫu có sẵn</label>
+					<label nz-radio-button [nzValue]="PageSectionType.Content">Nội dung tùy chỉnh (không cần biểu mẫu)</label>
+				</nz-radio-group>
+			</div>
+			<div class="mt-1" *ngIf="form.get('sectionType')?.value === PageSectionType.Form">
+				<label class="form-label fw-bold">Form được nhúng</label><span class="text-danger">*</span>
+				<nz-select formControlName="formId" nzShowSearch nzPlaceHolder="Chọn form" style="width: 100%;">
+					<nz-option *ngFor="let item of lstForm" [nzLabel]="item.title" [nzValue]="item.id"></nz-option>
+				</nz-select>
+			</div>
+			<div class="mt-1" *ngIf="form.get('sectionType')?.value === PageSectionType.Content">
+				<label class="form-label fw-bold">Nội dung hiển thị</label><span class="text-danger">*</span>
+				<editor formControlName="content" [init]="editorConfig"></editor>
+			</div>
+			<div class="row mt-1">
+				<div class="col-6">
+					<label class="form-label fw-bold">Thứ tự hiển thị</label>
+					<input nz-input type="number" formControlName="displayOrder">
+				</div>
+				<div class="col-6 d-flex align-items-end">
+					<label nz-checkbox formControlName="isActive">Hiện trên trang giới thiệu</label>
+				</div>
+			</div>
+			<div class="row mt-2">
+				<div class="col-6">
+					<label class="form-label fw-bold">Hiển thị từ ngày (tùy chọn)</label>
+					<nz-date-picker formControlName="startDate" nzShowTime nzFormat="dd/MM/yyyy HH:mm" style="width: 100%;"></nz-date-picker>
+				</div>
+				<div class="col-6">
+					<label class="form-label fw-bold">Hiển thị đến ngày (tùy chọn)</label>
+					<nz-date-picker formControlName="endDate" nzShowTime nzFormat="dd/MM/yyyy HH:mm" style="width: 100%;"></nz-date-picker>
+				</div>
+				<div class="col-12 mt-1">
+					<small class="text-muted">Để trống = không giới hạn. Đặt lịch để khu vực tự động hiện/ẩn theo thời gian (vd poster theo sự kiện, không cần quay lại tắt tay).</small>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button (click)="activeModal.close('Close click')" class="btn btn-light btn-sm me-1" type="button">
+				<i class="fa fa-times" aria-hidden="true"></i> Đóng
+			</button>
+			&nbsp; &nbsp;
+			<button (click)="save()" class="btn btn-success btn-sm me-1">
+				<i class="fa fa-floppy-o" aria-hidden="true"></i> Lưu
+			</button>
+		</div>
+	</form>
+</div>

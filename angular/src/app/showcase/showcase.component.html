@@ -1,0 +1,43 @@
+<div class="showcase-page" [style.--brand-color]="accentColor">
+	<header class="showcase-hero">
+		<div class="showcase-hero-inner">
+			<span class="showcase-badge">{{ page?.brandName || 'EForm' }}</span>
+			<h1>{{ page?.title || 'Biểu mẫu điện tử linh hoạt, đổi nội dung không cần build lại' }}</h1>
+			<p>
+				{{
+					page?.description ||
+						'Đây là trang giới thiệu các biểu mẫu được tạo bằng EForm - điền thử ngay bên dưới để thấy cách biểu mẫu hành chính (hợp đồng, đơn từ, khảo sát...) hoạt động thực tế trên web.'
+				}}
+			</p>
+			<div class="showcase-highlights">
+				<span><i class="bi bi-lightning-charge-fill"></i> Nộp tức thì, không cần tài khoản</span>
+				<span><i class="bi bi-shield-check"></i> Tự động chống spam</span>
+				<span><i class="bi bi-phone"></i> Mượt mà trên mọi thiết bị</span>
+			</div>
+		</div>
+	</header>
+
+	<main class="showcase-body">
+		<div *ngIf="loading" class="showcase-loading">
+			<i class="fa fa-spinner fa-spin"></i> Đang tải...
+		</div>
+
+		<div *ngIf="!loading && loadError" class="showcase-empty">
+			Không tải được danh sách biểu mẫu (lỗi kết nối tới máy chủ). Vui lòng thử tải lại trang.
+		</div>
+
+		<div *ngIf="!loading && !loadError && notFound" class="showcase-empty">
+			Không tìm thấy trang giới thiệu này.
+		</div>
+
+		<div *ngIf="!loading && !loadError && !notFound && sections.length === 0" class="showcase-empty">
+			Chưa có biểu mẫu nào được cấu hình hiển thị ở đây.
+		</div>
+
+		<app-showcase-section *ngFor="let section of sections" [section]="section"></app-showcase-section>
+	</main>
+
+	<footer class="showcase-footer">
+		<p>Được xây dựng trên EForm - hệ thống biểu mẫu điện tử tùy biến.</p>
+	</footer>
+</div>

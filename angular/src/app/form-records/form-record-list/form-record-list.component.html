@@ -17,6 +17,37 @@
 			</ng-container>
 		</nz-space>
 	</nz-page-header-extra>
+	<nz-page-header-content *ngIf="selectedIds.size > 0">
+		<nz-alert
+			nzType="info"
+			[nzMessage]="bulkBarTpl"
+			nzShowIcon
+		></nz-alert>
+		<ng-template #bulkBarTpl>
+			<span>Đã chọn <b>{{ selectedIds.size }}</b> bản ghi.</span>
+			&nbsp;
+			<button *ngIf="currentFormRequireApproval" nz-button nzSize="small" nzType="primary" [nzLoading]="bulkProcessing" (click)="bulkApprove()">
+				<i class="bi bi-check-circle"></i> Duyệt đã chọn
+			</button>
+			&nbsp;
+			<button *ngIf="currentFormRequireApproval" nz-button nzSize="small" nzDanger [nzLoading]="bulkProcessing" (click)="bulkReject()">
+				<i class="bi bi-x-circle"></i> Từ chối đã chọn
+			</button>
+			&nbsp;
+			<button *abpPermission="'EForm.FormRecords.Delete'" nz-button nzSize="small" nzDanger [nzLoading]="bulkProcessing" (click)="bulkDelete()">
+				<i class="bi bi-trash"></i> Xóa đã chọn
+			</button>
+		</ng-template>
+	</nz-page-header-content>
+	<nz-page-header-content>
+		<nz-descriptions nzSize="small" [nzColumn]="3">
+			<nz-descriptions-item nzTitle="Tìm theo nội dung đã nhập" [nzSpan]="1">
+				<nz-input-group nzSearch>
+					<input type="text" nz-input placeholder="Vd: tên người, số CCCD..." (change)="searchKeyword($event)" />
+				</nz-input-group>
+			</nz-descriptions-item>
+		</nz-descriptions>
+	</nz-page-header-content>
 </nz-page-header>
 
 <nz-table #basicTable [nzData]="dataResultPaging.items" [nzShowPagination]="true" [nzFrontPagination]="false"
@@ -24,8 +55,9 @@
 	[nzScroll]="{ x: '1000px' }">
 	<thead>
 		<tr>
+			<th style="width: 4%;" nzShowCheckbox [nzChecked]="allCheckedOnPage" [nzIndeterminate]="indeterminateOnPage" (nzCheckedChange)="onAllCheckedChange($event)"></th>
 			<th style="width: 5%;">STT</th>
-			<th [style.width]="currentFormRequireApproval ? '35%' : '45%'">Tiêu đề</th>
+			<th [style.width]="currentFormRequireApproval ? '32%' : '42%'">Tiêu đề</th>
 			<th style="width: 25%;">Thời gian nộp</th>
 			<th style="width: 15%;" *ngIf="currentFormRequireApproval">Trạng thái duyệt</th>
 			<th style="width: 10%; text-align: center;"><i class="bi bi-gear-wide"></i></th>
@@ -33,6 +65,7 @@
 	</thead>
 	<tbody>
 		<tr *ngFor="let data of basicTable.data; let i = index">
+			<td nzShowCheckbox [nzChecked]="selectedIds.has(data.id)" (nzCheckedChange)="onItemCheckedChange(data.id, $event)"></td>
 			<td>{{ i+1 }}</td>
 			<td>{{ data.title }}</td>
 			<td>{{ data.creationTime | date:'dd/MM/yyyy HH:mm' }}</td>
