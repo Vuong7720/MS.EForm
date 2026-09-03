@@ -14,14 +14,19 @@
 	<div nz-row [nzGutter]="[16, 16]" style="padding: 0 24px 24px;">
 		<div nz-col [nzXs]="24" [nzSm]="12" [nzMd]="8" [nzLg]="6" *ngFor="let data of lstTemplate">
 			<nz-card [nzTitle]="data.title" style="height: 100%;">
-				<p class="text-muted">{{ data.description || 'Chưa có mô tả' }}</p>
-				<div class="d-flex" style="gap: 8px;">
-					<button nz-button nzType="default" (click)="previewTemplate(data.id!)">
-						<i class="bi bi-eye"></i> Xem trước
-					</button>
-					<button *abpPermission="'EForm.Forms.Create'" nz-button nzType="primary" (click)="useTemplate(data.id!)">
-						<i class="bi bi-magic"></i> Dùng mẫu này
-					</button>
+				<div class="template-card-body">
+					<p class="text-muted template-desc">{{ data.description || 'Chưa có mô tả' }}</p>
+					<div class="d-flex" style="gap: 8px; flex-wrap: wrap;">
+						<button nz-button nzType="default" (click)="previewTemplate(data.id!)">
+							<i class="bi bi-eye"></i> Xem trước
+						</button>
+						<button *abpPermission="'EForm.Forms.Create'" nz-button nzType="primary" (click)="useTemplate(data.id!)">
+							<i class="bi bi-magic"></i> Dùng mẫu này
+						</button>
+						<button *abpPermission="'EForm.Forms.Delete'" nz-button nzType="default" nzDanger (click)="deleteTemplate(data.id!)">
+							<i class="bi bi-trash"></i> Xóa
+						</button>
+					</div>
 				</div>
 			</nz-card>
 		</div>

@@ -29,6 +29,10 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/form-records'], { queryParams: { formId } });
   }
 
+  goTo(path: string) {
+    this.router.navigate([path]);
+  }
+
   // chiều cao cột (%) tỉ lệ theo ngày có lượt nộp nhiều nhất trong 14 ngày - dùng tối thiểu 1 để tránh
   // chia cho 0 khi cả 14 ngày đều chưa có lượt nộp nào (mọi cột sẽ ở mức 0% thay vì lỗi NaN)
   get maxDayCount(): number {
@@ -49,5 +53,17 @@ export class HomeComponent implements OnInit {
   get hasApprovalData(): boolean {
     const b = this.stats?.approvalBreakdown;
     return !!b && b.pending + b.approved + b.rejected > 0;
+  }
+
+  get todayCount(): number {
+    const days = this.stats?.recordsByDay || [];
+    return days.length ? days[days.length - 1].count : 0;
+  }
+
+  get avgPerDay(): number {
+    const days = this.stats?.recordsByDay || [];
+    if (!days.length) return 0;
+    const total = days.reduce((sum, d) => sum + d.count, 0);
+    return Math.round((total / days.length) * 10) / 10;
   }
 }
