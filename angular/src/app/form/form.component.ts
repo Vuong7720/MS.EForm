@@ -11,6 +11,7 @@ import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { PagedResultDto } from '@abp/ng.core';
 import { ToasterService } from '@abp/ng.theme.shared';
 import { getApiErrorMessage } from '../shared/services/http-error.util';
+import { FormRendererService } from '../shared/services/form-renderer.service';
 
 @Component({
   standalone: false,
@@ -36,7 +37,8 @@ export class FormComponent implements OnInit {
     private viewContainerRef: ViewContainerRef,
     private service: EFormService,
     private toasterService: ToasterService,
-    private router: Router
+    private router: Router,
+    private formRenderer: FormRendererService
   ) {}
 
   ngOnInit(): void {
@@ -80,6 +82,13 @@ onQueryParamsChange(params: NzTableQueryParams): void {
 
   viewRecords(id: string) {
     this.router.navigate(['/form-records'], { queryParams: { formId: id } });
+  }
+
+  // click vào tên biểu mẫu để xem nhanh preview - đỡ mất công bấm 3 chấm -> Sửa -> mới thấy nút preview
+  previewForm(data: FormDto) {
+    this.service.getFieldByFormIdByFormId(data.id).subscribe(fields => {
+      this.formRenderer.openPreviewPopup(data.content || '', fields, data.id);
+    });
   }
 
   copySubmitLink(id: string) {

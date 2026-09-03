@@ -1,3 +1,18 @@
 .text-muted {
 	color: rgba(0, 0, 0, 0.45);
 }
+
+.template-card-body {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.template-desc {
+	flex: 1;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	word-break: break-word;
+}

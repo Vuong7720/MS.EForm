@@ -67,7 +67,7 @@
 		<tr *ngFor="let data of basicTable.data; let i = index">
 			<td nzShowCheckbox [nzChecked]="selectedIds.has(data.id)" (nzCheckedChange)="onItemCheckedChange(data.id, $event)"></td>
 			<td>{{ i+1 }}</td>
-			<td>{{ data.title }}</td>
+			<td class="clickable-title" (click)="view(data.id)" title="Xem chi tiết">{{ data.title }}</td>
 			<td>{{ data.creationTime | date:'dd/MM/yyyy HH:mm' }}</td>
 			<td *ngIf="currentFormRequireApproval">
 				<nz-tag *ngIf="data.approvalStatus === ApprovalStatus.Pending" nzColor="warning">Chờ duyệt</nz-tag>

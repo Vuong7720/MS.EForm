@@ -4,8 +4,12 @@ import { FormDto, FormPagingFilterDto } from '@proxy/form-models/forms';
 import { FormFieldDto } from '@proxy/form-models/form-fields';
 import { PagedResultDto } from '@abp/ng.core';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CreateFormComponent } from '../form/create_form/create_form.component';
 import { FormRendererService } from '../shared/services/form-renderer.service';
+import { DeleteComfirmComponent } from '../shared/delete-comfirm/delete-comfirm.component';
+import { ToasterService } from '@abp/ng.theme.shared';
+import { getApiErrorMessage } from '../shared/services/http-error.util';
 
 @Component({
   standalone: false,
@@ -26,8 +30,10 @@ export class FormTemplatesComponent implements OnInit {
   constructor(
     private service: EFormService,
     private nzModal: NzModalService,
+    private modalService: NgbModal,
     private viewContainerRef: ViewContainerRef,
-    private formRenderer: FormRendererService
+    private formRenderer: FormRendererService,
+    private toasterService: ToasterService
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +77,25 @@ export class FormTemplatesComponent implements OnInit {
   // tạo mẫu mới hoàn toàn để lần sau tái sử dụng
   addTemplate() {
     this.openCreateForm({ forceTemplate: true }, () => this.getTemplates());
+  }
+
+  // xóa mẫu rác không còn dùng tới - mẫu chỉ là 1 Form với isTemplate=true nên dùng chung API delete Form
+  deleteTemplate(id: string) {
+    const modalRef = this.modalService.open(DeleteComfirmComponent, {
+      size: 'confirm',
+      backdrop: 'static',
+      centered: true,
+    });
+    modalRef.componentInstance.id = id;
+    modalRef.componentInstance.success.subscribe(() => {
+      this.service.delete(id, { skipHandleError: true }).subscribe({
+        next: res => {
+          this.toasterService.success(res.messages);
+          this.getTemplates();
+        },
+        error: err => this.toasterService.error(getApiErrorMessage(err)),
+      });
+    });
   }
 
   private openCreateForm(nzData: { seedForm?: FormDto; seedFields?: FormFieldDto[]; forceTemplate?: boolean }, onClose?: () => void) {

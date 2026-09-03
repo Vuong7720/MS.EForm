@@ -5,97 +5,140 @@
 		</a>
 	</div>
 
-	<div class="stat-grid">
-		<div class="stat-card">
-			<div class="stat-card__icon stat-card__icon--indigo"><i class="bi bi-clipboard2-data"></i></div>
-			<div class="stat-card__info">
-				<span class="stat-card__label">Tổng số biểu mẫu</span>
-				<span class="stat-card__value">{{ stats?.totalForms ?? 0 }}</span>
+	<div class="dashboard-body">
+		<div class="dashboard-main">
+			<div class="panel mb-3" *ngIf="!loading">
+				<div class="panel__header">
+					<i class="bi bi-graph-up"></i>
+					<h3>Lượt nộp 14 ngày gần nhất</h3>
+				</div>
+				<div class="panel__body">
+					<div class="trend-chart">
+						<div class="trend-bar" *ngFor="let day of stats?.recordsByDay" [title]="day.count + ' lượt nộp'">
+							<span class="trend-bar__count" *ngIf="day.count > 0">{{ day.count }}</span>
+							<div class="trend-bar__col" [style.height.%]="barHeightPercent(day.count)"></div>
+							<span class="trend-bar__label">{{ formatDay(day.date) }}</span>
+						</div>
+					</div>
+				</div>
 			</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-card__icon stat-card__icon--violet"><i class="bi bi-send-check"></i></div>
-			<div class="stat-card__info">
-				<span class="stat-card__label">Tổng số lượt nộp</span>
-				<span class="stat-card__value">{{ stats?.totalRecords ?? 0 }}</span>
-			</div>
-		</div>
-	</div>
 
-	<div class="panel mb-3" *ngIf="!loading">
-		<div class="panel__header">
-			<i class="bi bi-graph-up"></i>
-			<h3>Lượt nộp 14 ngày gần nhất</h3>
-		</div>
-		<div class="panel__body">
-			<div class="trend-chart">
-				<div class="trend-bar" *ngFor="let day of stats?.recordsByDay" [title]="day.count + ' lượt nộp'">
-					<span class="trend-bar__count" *ngIf="day.count > 0">{{ day.count }}</span>
-					<div class="trend-bar__col" [style.height.%]="barHeightPercent(day.count)"></div>
-					<span class="trend-bar__label">{{ formatDay(day.date) }}</span>
+			<div class="panel">
+				<div class="panel__header">
+					<i class="bi bi-trophy-fill"></i>
+					<h3>Top 5 biểu mẫu nhiều lượt nộp nhất</h3>
 				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="panel mb-3" *ngIf="!loading && hasApprovalData">
-		<div class="panel__header">
-			<i class="bi bi-check2-square"></i>
-			<h3>Trạng thái phê duyệt</h3>
-		</div>
-		<div class="panel__body">
-			<div class="approval-grid">
-				<div class="approval-pill approval-pill--pending">
-					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.pending ?? 0 }}</span>
-					<span class="approval-pill__label">Chờ duyệt</span>
-				</div>
-				<div class="approval-pill approval-pill--approved">
-					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.approved ?? 0 }}</span>
-					<span class="approval-pill__label">Đã duyệt</span>
-				</div>
-				<div class="approval-pill approval-pill--rejected">
-					<span class="approval-pill__value">{{ stats?.approvalBreakdown?.rejected ?? 0 }}</span>
-					<span class="approval-pill__label">Từ chối</span>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="panel">
-		<div class="panel__header">
-			<i class="bi bi-trophy-fill"></i>
-			<h3>Top 5 biểu mẫu nhiều lượt nộp nhất</h3>
-		</div>
-		<div class="panel__body">
-			<div *ngIf="loading" class="loading-state">
-				<i class="fa fa-spinner fa-spin"></i> Đang tải...
-			</div>
-			<nz-table
-				*ngIf="!loading"
-				#topTable
-				[nzData]="stats?.topForms || []"
-				[nzShowPagination]="false"
-				nzSize="middle"
-			>
-				<thead>
-					<tr>
-						<th style="width: 10%;">#</th>
-						<th>Tên biểu mẫu</th>
-						<th style="width: 20%; text-align: right;">Lượt nộp</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						*ngFor="let item of topTable.data; let i = index"
-						class="rank-row"
-						(click)="viewFormRecords(item.formId)"
+				<div class="panel__body">
+					<div *ngIf="loading" class="loading-state">
+						<i class="fa fa-spinner fa-spin"></i> Đang tải...
+					</div>
+					<nz-table
+						*ngIf="!loading"
+						#topTable
+						[nzData]="stats?.topForms || []"
+						[nzShowPagination]="false"
+						nzSize="middle"
 					>
-						<td><span class="rank-badge" [ngClass]="'rank-badge--' + (i + 1)">{{ i + 1 }}</span></td>
-						<td class="form-title">{{ item.title }}</td>
-						<td style="text-align: right;"><span class="count-pill">{{ item.count }}</span></td>
-					</tr>
-				</tbody>
-			</nz-table>
+						<thead>
+							<tr>
+								<th style="width: 10%;">#</th>
+								<th>Tên biểu mẫu</th>
+								<th style="width: 20%; text-align: right;">Lượt nộp</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								*ngFor="let item of topTable.data; let i = index"
+								class="rank-row"
+								(click)="viewFormRecords(item.formId)"
+							>
+								<td><span class="rank-badge" [ngClass]="'rank-badge--' + (i + 1)">{{ i + 1 }}</span></td>
+								<td class="form-title">{{ item.title }}</td>
+								<td style="text-align: right;"><span class="count-pill">{{ item.count }}</span></td>
+							</tr>
+						</tbody>
+					</nz-table>
+				</div>
+			</div>
+		</div>
+
+		<div class="dashboard-sidebar">
+			<div class="stat-grid">
+				<div class="stat-card">
+					<div class="stat-card__icon stat-card__icon--indigo"><i class="bi bi-clipboard2-data"></i></div>
+					<div class="stat-card__info">
+						<span class="stat-card__label">Tổng số biểu mẫu</span>
+						<span class="stat-card__value">{{ stats?.totalForms ?? 0 }}</span>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__icon stat-card__icon--violet"><i class="bi bi-send-check"></i></div>
+					<div class="stat-card__info">
+						<span class="stat-card__label">Tổng số lượt nộp</span>
+						<span class="stat-card__value">{{ stats?.totalRecords ?? 0 }}</span>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__icon stat-card__icon--emerald"><i class="bi bi-calendar-check"></i></div>
+					<div class="stat-card__info">
+						<span class="stat-card__label">Lượt nộp hôm nay</span>
+						<span class="stat-card__value">{{ todayCount }}</span>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__icon stat-card__icon--amber"><i class="bi bi-graph-up-arrow"></i></div>
+					<div class="stat-card__info">
+						<span class="stat-card__label">TB lượt nộp/ngày</span>
+						<span class="stat-card__value">{{ avgPerDay }}</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="panel mb-3" *ngIf="!loading && hasApprovalData">
+				<div class="panel__header">
+					<i class="bi bi-check2-square"></i>
+					<h3>Trạng thái phê duyệt</h3>
+				</div>
+				<div class="panel__body">
+					<div class="approval-grid">
+						<div class="approval-pill approval-pill--pending">
+							<span class="approval-pill__value">{{ stats?.approvalBreakdown?.pending ?? 0 }}</span>
+							<span class="approval-pill__label">Chờ duyệt</span>
+						</div>
+						<div class="approval-pill approval-pill--approved">
+							<span class="approval-pill__value">{{ stats?.approvalBreakdown?.approved ?? 0 }}</span>
+							<span class="approval-pill__label">Đã duyệt</span>
+						</div>
+						<div class="approval-pill approval-pill--rejected">
+							<span class="approval-pill__value">{{ stats?.approvalBreakdown?.rejected ?? 0 }}</span>
+							<span class="approval-pill__label">Từ chối</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="panel">
+				<div class="panel__header">
+					<i class="bi bi-lightning-charge-fill"></i>
+					<h3>Thao tác nhanh</h3>
+				</div>
+				<div class="panel__body">
+					<div class="quick-links">
+						<a href="javascript:void(0)" class="quick-link" (click)="goTo('/form')">
+							<i class="bi bi-clipboard-data"></i> Quản lý biểu mẫu
+						</a>
+						<a href="javascript:void(0)" class="quick-link" (click)="goTo('/form-templates')">
+							<i class="bi bi-stars"></i> Mẫu có sẵn
+						</a>
+						<a href="javascript:void(0)" class="quick-link" (click)="goTo('/form-category')">
+							<i class="bi bi-list"></i> Danh mục biểu mẫu
+						</a>
+						<a href="javascript:void(0)" class="quick-link" (click)="goTo('/form-records')">
+							<i class="bi bi-card-checklist"></i> Kết quả nộp form
+						</a>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
