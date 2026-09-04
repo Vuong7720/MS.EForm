@@ -205,10 +205,15 @@ export class CreateFormComponent implements OnInit {
   }
 
   delete(code: string) {
+    // modal này (NgbModal/Bootstrap) được mở TRONG khi form đang mở dưới dạng nz-modal (Ant Design,
+    // z-index 1070 - xem styles.scss). NgbModal mặc định chỉ 1055 nên bị nz-modal đè lên trên;
+    // windowClass/backdropClass bên dưới nâng riêng dialog xác nhận xóa này lên trên nz-modal.
     const modalRef = this.modalService.open(DeleteComfirmComponent, {
       size: 'confirm',
       backdrop: 'static',
       centered: true,
+      windowClass: 'attribute-delete-confirm',
+      backdropClass: 'attribute-delete-confirm-backdrop',
     });
     modalRef.componentInstance.success.subscribe(res => {
       this.lstAttribuite = this.lstAttribuite.filter(a => a.code !== code);
