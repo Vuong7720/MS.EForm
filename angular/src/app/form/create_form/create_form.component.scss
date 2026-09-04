@@ -21,6 +21,15 @@
     z-index: 1060 !important; /* cao hơn modal Bootstrap của NgbModal */
   }
 
+  /* Dialog xác nhận xóa thuộc tính mở khi form đang hiển thị dưới dạng nz-modal (z-index 1070,
+     xem .cdk-overlay-container trong styles.scss) - nâng lên trên nz-modal để không bị che khuất. */
+  ::ng-deep .attribute-delete-confirm {
+    z-index: 1080 !important;
+  }
+  ::ng-deep .attribute-delete-confirm-backdrop {
+    z-index: 1075 !important;
+  }
+
   .auto-fill {
     display: flex;
     align-items: center;
